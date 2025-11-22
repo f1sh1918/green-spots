@@ -10,8 +10,8 @@
  */
 // Make jwt token for one year valid for testing
 function custom_jwt_expiration( $expiration ) {
-    // Expire after 1 year
-    return 365 * 24 * 60 * 60;
+    // Expire after 5 hours
+    return 5 * 60 * 60;
 }
 
 add_filter('graphql_jwt_auth_expire', 'custom_jwt_expiration', 10);

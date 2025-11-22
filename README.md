@@ -8,20 +8,46 @@ Nice spots in the green
 - add ACF, WPGraphQL, WPGraphQL for ACF, WOGraphQL IDE, WPGraphQL Smart Cache
 - add auth plugin here: https://github.com/wp-graphql/wp-graphql-jwt-authentication
 - add salt in config.php -> change it to invalidate all tokens
-- add jwt token filter to keep token alive for 1 year (testing)
+- add jwt token filter to keep token alive for 5 hours (testing)
 
 ### API
 
 #### Example post query
 
 ```
-query getPosts {
-  posts(where: {status: PUBLISH}, first: 10) {
+query getSpots {
+  spots(where: {status: PUBLISH}, first: 10) {
     nodes {
+      author {
+        node {
+          name
+        }
+      }
+      date
       id
       title
       greenspots {
-        sterne
+        image {
+          node {
+            sourceUrl
+          }
+        }
+        image2 {
+          node {
+            sourceUrl
+          }
+        }
+        image3 {
+          node {
+            sourceUrl
+          }
+        }
+        lat
+        long
+        swim
+        space
+        secure
+        fire
       }
     }
   }
@@ -32,12 +58,11 @@ query getPosts {
 
 ```
 mutation LoginUser {
-  login( input: {
-    clientMutationId: "uniqueId",
-    username: "user",
-    password: "examplePw"
-  } ) {
+  login(
+    input: {clientMutationId: "uniqueId", username: "admin", password: ")(5rhuZTWO8oVYoLWN"}
+  ) {
     authToken
+    refreshToken
     user {
       id
       name
@@ -46,3 +71,17 @@ mutation LoginUser {
 }
 ```
 
+#### Example refresh token query
+
+```
+mutation RefreshAuthToken {
+  refreshJwtAuthToken(
+    input: {
+      clientMutationId: "uniqueId"
+      jwtRefreshToken: "your_refresh_token",
+  }) {
+    authToken
+  }
+}
+
+```

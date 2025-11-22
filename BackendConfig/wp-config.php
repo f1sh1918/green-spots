@@ -26,7 +26,7 @@ define( 'DB_NAME', 'dbs14992941' );
 define( 'DB_USER', 'dbu1201925' );
 
 /** Database password */
-define( 'DB_PASSWORD', 'QuSSu7j9PCcu' );
+define( 'DB_PASSWORD', 'db_password_here' );
 
 /** Database hostname */
 define( 'DB_HOST', 'db5019055899.hosting-data.io' );
@@ -90,7 +90,7 @@ define( 'WP_DEBUG', false );
 /* Add any custom values between this line and the "stop editing" line. */
 
 /* WP Graphql Salt for JWT Auth */
-define( 'GRAPHQL_JWT_AUTH_SECRET_KEY', 'Je97Nj`QNo[oah+o/a2n%$I/fbg-NvL1(XDoM}9t`+-tAd|TG_$TM]CY+#F+1Z|[' );
+define( 'GRAPHQL_JWT_AUTH_SECRET_KEY', 'example salt' );
 
 
 /* That's all, stop editing! Happy publishing. */
