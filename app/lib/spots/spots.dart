@@ -28,8 +28,11 @@ class _SpotsState extends State<Spots> {
 
         if (snapshot.hasError) {
           return Center(
-              child: Text('❌ Error: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.red)));
+            child: Text(
+              '❌ Error: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
         }
         final spots = snapshot.data!;
         if (spots.isEmpty) {
@@ -43,20 +46,23 @@ class _SpotsState extends State<Spots> {
             return ListTile(
               leading: spot.image1 != null
                   ? Image.network(
-                spot.image1!,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-              )
+                      spot.image1!,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                    )
                   : const Icon(Icons.place, size: 36),
               title: Text(spot.title),
-              subtitle: SpotsSubtitle(spot: spot),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => SpotDetailPage(spot: spot),
-                ),
+              subtitle: SpotsSubtitle(
+                spot: spot,
+                textStyle: Theme.of(context).textTheme.bodyMedium!,
+                sizeFactor: 1.0,
+                showLabel: false,
               ),
 
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => SpotDetailPage(spot: spot)),
+              ),
             );
           },
         );
@@ -64,4 +70,3 @@ class _SpotsState extends State<Spots> {
     );
   }
 }
-

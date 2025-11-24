@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+// TODO make more fields required to avoid null checks, set bool default false
+
 class Spot {
   final int id;
   final String title;
