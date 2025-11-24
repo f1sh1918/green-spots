@@ -5,83 +5,38 @@ Nice spots in the green
 ## Backend Basic
 
 - add redirect in .htaccess to directly go to login
-- add ACF, WPGraphQL, WPGraphQL for ACF, WOGraphQL IDE, WPGraphQL Smart Cache
-- add auth plugin here: https://github.com/wp-graphql/wp-graphql-jwt-authentication
+- add ACF plugin 
+- add auth plugin here: https://github.com/usefulteam/jwt-auth
 - add salt in config.php -> change it to invalidate all tokens
 - add jwt token filter to keep token alive for 5 hours (testing)
 
-### API
+### REST API
 
-#### Example post query
+#### Example spot query
 
 ```
-query getSpots {
-  spots(where: {status: PUBLISH}, first: 10) {
-    nodes {
-      author {
-        node {
-          name
-        }
-      }
-      date
-      id
-      title
-      greenspots {
-        image {
-          node {
-            sourceUrl
-          }
-        }
-        image2 {
-          node {
-            sourceUrl
-          }
-        }
-        image3 {
-          node {
-            sourceUrl
-          }
-        }
-        lat
-        long
-        swim
-        space
-        secure
-        fire
-      }
+https://backend.ballonfabrik.org/wp-json/wp/v2/spot/
+```
+
+#### Example authentication
+Query:
+```
+https://backend.ballonfabrik.org/wp-json/jwt-auth/v1/token?username={username}&password={password}
+```
+Response:
+```json
+"success": true,
+    "statusCode": 200,
+    "code": "jwt_auth_valid_credential",
+    "message": "Credential is valid",
+    "data": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2JhY2tlbmQuYmFsbG9uZmFicmlrLm9yZyIsImlhdCI6MTc2Mzk3NTc3OSwibmJmIjoxNzYzOTc1Nzc5LCJleHAiOjE3NjM5NzYzNzksImRhdGEiOnsidXNlciI6eyJpZCI6MSwiZGV2aWNlIjoiIiwicGFzcyI6IjdlY2EzZmIyMjlmYzQwNmYxMjQwOTI1ZTE2NmZlZTZjIn19fQ.vr9AosuYeA8Lbq4pvvkDVBVf9DXdP0RO4tLg32Y-PhM",
+        "id": 1,
+        "email": "mail@test.com",
+        "nicename": "admin",
+        "firstName": "",
+        "lastName": "",
+        "displayName": "admin"
     }
-  }
 }
-```
-
-#### Example auth token query
-
-```
-mutation LoginUser {
-  login(
-    input: {clientMutationId: "uniqueId", username: "admin", password: ")(5rhuZTWO8oVYoLWN"}
-  ) {
-    authToken
-    refreshToken
-    user {
-      id
-      name
-    }
-  }
-}
-```
-
-#### Example refresh token query
-
-```
-mutation RefreshAuthToken {
-  refreshJwtAuthToken(
-    input: {
-      clientMutationId: "uniqueId"
-      jwtRefreshToken: "your_refresh_token",
-  }) {
-    authToken
-  }
-}
-
 ```

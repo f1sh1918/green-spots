@@ -89,8 +89,8 @@ define( 'WP_DEBUG', false );
 
 /* Add any custom values between this line and the "stop editing" line. */
 
-/* WP Graphql Salt for JWT Auth */
-define( 'GRAPHQL_JWT_AUTH_SECRET_KEY', 'example salt' );
+/* WP Salt for JWT Auth */
+define( 'JWT_AUTH_SECRET_KEY', 'j(XICYEtb+Dxk5_YQyfHm0+#f>nJewl>j:2>^0Uc-:[t=m(XZz[UTFe]LuuIQ&va' );
 
 
 /* That's all, stop editing! Happy publishing. */
