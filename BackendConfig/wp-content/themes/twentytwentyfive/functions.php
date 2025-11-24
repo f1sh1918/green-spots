@@ -8,13 +8,47 @@
  * @subpackage Twenty_Twenty_Five
  * @since Twenty Twenty-Five 1.0
  */
-// Make jwt token for one year valid for testing
-function custom_jwt_expiration( $expiration ) {
-    // Expire after 5 hours
-    return 5 * 60 * 60;
-}
+add_filter(
+    'jwt_auth_expire',
+    function ( $expire, $issued_at ) {
+        // Modify the "expire" here.
+        return $expire;
+    },
+    300,
+    2
+);
 
-add_filter('graphql_jwt_auth_expire', 'custom_jwt_expiration', 10);
+// Adjust ACF Fields to expose image urls
+
+add_action( 'rest_api_init', function () {
+    $fields = [ 'image', 'image2', 'image3' ];   // ← add as many as you want
+
+    foreach ( $fields as $field ) {
+        // full‑size URL
+        register_rest_field( 'spot', $field . '_url', [
+            'get_callback' => function ( $obj ) use ( $field ) {
+                $val = get_post_meta( $obj['id'], $field, true );
+                if ( is_string( $val ) && filter_var( $val, FILTER_VALIDATE_URL ) ) {
+                    return $val;
+                }
+                return is_numeric( $val ) ? wp_get_attachment_url( (int) $val ) : null;
+            },
+            'schema' => [ 'type' => 'string', 'format' => 'uri' ],
+        ] );
+
+        // thumbnail URL (change 'thumbnail' to any size you like)
+        register_rest_field( 'spot', $field . '_thumb', [
+            'get_callback' => function ( $obj ) use ( $field ) {
+                $id = get_post_meta( $obj['id'], $field, true );
+                if ( ! is_numeric( $id ) ) return null;
+                $src = wp_get_attachment_image_src( (int) $id, 'thumbnail' );
+                return $src[0] ?? null;
+            },
+            'schema' => [ 'type' => 'string', 'format' => 'uri' ],
+        ] );
+    }
+} );
+
 // Adds theme support for post formats.
 if ( ! function_exists( 'twentytwentyfive_post_format_setup' ) ) :
 	/**
