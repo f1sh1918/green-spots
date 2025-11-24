@@ -14,7 +14,6 @@ class Spot {
   final double? lat;
   final double? long;
   final List<dynamic>? specials;
-  final String user;
 
   Spot({
     required this.id,
@@ -30,7 +29,6 @@ class Spot {
     this.lat,
     this.long,
     this.specials,
-    required this.user
   });
 
   // --------------------------------------------------------------
@@ -39,8 +37,6 @@ class Spot {
   factory Spot.fromJson(Map<String, dynamic> json) {
     // WP returns the "title" and "content" wrapped in a `rendered` key.
     final title = json['title']?['rendered'] as String? ?? '';
-    // TODO fix get username
-    final user = json['_embedded']?['author']?['name'] as String? ?? '';
 
     // Advanced Custom Fields (ACF) is optional; guard against null.
     final acf = json['acf'] as Map<String, dynamic>?;
@@ -61,11 +57,10 @@ class Spot {
       swim:acf?['swim'] as bool?,
       fire:acf?['fire'] as bool?,
       space:parseDouble(acf?['space']),
-      secure:parseDouble(['secure']),
+      secure:parseDouble(acf?['secure']),
       lat:parseDouble(['lat']),
       long:parseDouble(['long']),
       specials:acf?['specials'] as List<dynamic>,
-      user: user
     );
   }
 
