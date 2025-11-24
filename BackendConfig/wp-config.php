@@ -90,14 +90,14 @@ define( 'WP_DEBUG', false );
 /* Add any custom values between this line and the "stop editing" line. */
 
 /* WP Salt for JWT Auth */
-define( 'JWT_AUTH_SECRET_KEY', 'j(XICYEtb+Dxk5_YQyfHm0+#f>nJewl>j:2>^0Uc-:[t=m(XZz[UTFe]LuuIQ&va' );
+define( 'JWT_AUTH_SECRET_KEY', 'enterSecret' );
 
 
 /* That's all, stop editing! Happy publishing. */
 
 /** Absolute path to the WordPress directory. */
 if ( ! defined( 'ABSPATH' ) ) {
-	define( 'ABSPATH', __DIR__ . '/' );
+    define( 'ABSPATH', __DIR__ . '/' );
 }
 
 /** Sets up WordPress vars and included files. */
