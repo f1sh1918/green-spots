@@ -30,6 +30,9 @@ class SpotDetailPage extends StatelessWidget {
             if (spot.space != null)
               Text('Space: ${spot.space}',
                   style: Theme.of(context).textTheme.bodyMedium),
+            if (spot.secure != null)
+              Text('Secure: ${spot.secure}',
+                  style: Theme.of(context).textTheme.bodyMedium),
             const Divider(height: 30),
             // The WP `content.rendered` field is HTML. Use `flutter_html` if you want rich rendering.
             if (spot.fire != null)

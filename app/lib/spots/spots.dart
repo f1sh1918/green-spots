@@ -1,5 +1,6 @@
 import 'package:app/spots/services/spot_service.dart';
 import 'package:app/spots/widgets/spots_detail.dart';
+import 'package:app/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
 
 import 'models/spot.dart';
@@ -10,6 +11,8 @@ class Spots extends StatefulWidget {
   @override
   State<Spots> createState() => _SpotsState();
 }
+
+// TODO add anzahl ergebnisse, improve subtitle with icons
 
 class _SpotsState extends State<Spots> {
   final SpotService _service = SpotService();
@@ -47,6 +50,7 @@ class _SpotsState extends State<Spots> {
               )
                   : const Icon(Icons.place, size: 36),
               title: Text(spot.title),
+              subtitle: SpotsSubtitle(spot: spot),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => SpotDetailPage(spot: spot),
