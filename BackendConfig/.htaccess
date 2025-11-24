@@ -14,5 +14,9 @@ RewriteRule . /index.php [L]
 </IfModule>
 
 # END WordPress
+# Enable HTTP Auth Header
+RewriteEngine on
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]
 
 RewriteRule ^$ /wp-login.php [R=301,L]
