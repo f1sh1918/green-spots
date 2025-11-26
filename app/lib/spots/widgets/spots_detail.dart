@@ -11,29 +11,15 @@ class SpotDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> images = [
-      if (spot.image1 != null)
-        Image.network(
-          spot.image1!,
-          width: double.infinity,
-          height: 200,
-          fit: BoxFit.cover,
-        ),
-      if (spot.image2 != null)
-        Image.network(
-          spot.image2!,
-          width: double.infinity,
-          height: 200,
-          fit: BoxFit.cover,
-        ),
-      if (spot.image3 != null)
-        Image.network(
-          spot.image3!,
-          width: double.infinity,
-          height: 200,
-          fit: BoxFit.cover,
-        ),
-    ];
+    List<Widget> imageWidgets = (spot.images ?? [])
+        .where((url) => url is String && (url as String).trim().isNotEmpty)
+        .map<Widget>((url) => Image.network(
+              url, // cast from dynamic → String
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+            ))
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -44,7 +30,7 @@ class SpotDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (images.isNotEmpty) ImageCarousel(images: images),
+            if (imageWidgets.isNotEmpty) ImageCarousel(images: imageWidgets),
             Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

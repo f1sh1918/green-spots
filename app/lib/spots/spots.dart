@@ -42,9 +42,9 @@ class _SpotsState extends State<Spots> {
           itemBuilder: (context, index) {
             final spot = spots[index];
             return ListTile(
-              leading: spot.image1 != null
+              leading: spot.thumbnail != null
                   ? Image.network(
-                      spot.image1!,
+                      spot.thumbnail!,
                       width: 56,
                       height: 56,
                       fit: BoxFit.cover,
