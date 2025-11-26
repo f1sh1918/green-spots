@@ -4,13 +4,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 
 class ImageCarousel extends StatefulWidget {
   final List<Widget> images;
-  final int imageIndex;
 
-  const ImageCarousel({
-    super.key,
-    required this.images,
-    required this.imageIndex,
-  });
+  const ImageCarousel({super.key, required this.images});
 
   @override
   ImageCarouselState createState() => ImageCarouselState();
@@ -20,7 +15,7 @@ const double indicatorHeight = 32;
 
 class ImageCarouselState extends State<ImageCarousel> {
   CarouselSliderController carouselController = CarouselSliderController();
-  int cardIndex = 0;
+  int imageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +58,7 @@ class ImageCarouselState extends State<ImageCarousel> {
                                       ? Colors.white
                                       : Colors.black)
                                   .withValues(
-                                    alpha: widget.imageIndex == index
-                                        ? 0.9
-                                        : 0.4,
+                                    alpha: imageIndex == index ? 0.9 : 0.4,
                                   ),
                         ),
                       ),
@@ -80,7 +73,7 @@ class ImageCarouselState extends State<ImageCarousel> {
 
   Future<void> _updateIndex(int index) async {
     setState(() {
-      cardIndex = index;
+      imageIndex = index;
     });
   }
 }

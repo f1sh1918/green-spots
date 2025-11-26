@@ -1,18 +1,17 @@
 import 'dart:convert';
 
-// TODO make more fields required to avoid null checks, set bool default false
-
 class Spot {
   final int id;
+  final bool swim;
+  final bool fire;
+  final double space;
+  final double secure;
   final String title;
+  final String water;
   final String? note;
   final String? image1;
   final String? image2;
   final String? image3;
-  final bool? swim;
-  final bool? fire;
-  final double? space;
-  final double? secure;
   final double? lat;
   final double? long;
   final List<dynamic>? specials;
@@ -20,16 +19,17 @@ class Spot {
   Spot({
     required this.id,
     required this.title,
+    required this.space,
+    required this.secure,
+    required this.water,
+    required this.swim,
+    required this.fire,
+    this.lat,
+    this.long,
     this.note,
     this.image1,
     this.image2,
     this.image3,
-    this.swim,
-    this.fire,
-    this.space,
-    this.secure,
-    this.lat,
-    this.long,
     this.specials,
   });
 
@@ -50,19 +50,20 @@ class Spot {
     }
 
     return Spot(
-      id: json['id'] as int,
+      id: json['id'],
       title: title,
       note: acf?['note'] as String?,
       image1: json['image_url'] as String?,
       image2: json['image2_url'] as String?,
       image3: json['image3_url'] as String?,
-      swim:acf?['swim'] as bool?,
-      fire:acf?['fire'] as bool?,
-      space:parseDouble(acf?['space']),
-      secure:parseDouble(acf?['secure']),
-      lat:parseDouble(['lat']),
-      long:parseDouble(['long']),
-      specials:acf?['specials'] as List<dynamic>,
+      swim: acf?['swim'] ?? false,
+      fire: acf?['fire'] ?? false,
+      space: parseDouble(acf?['space'])!,
+      secure: parseDouble(acf?['secure'])!,
+      lat: parseDouble(['lat']),
+      long: parseDouble(['long']),
+      specials: acf?['specials'],
+      water: acf?['waterquality'],
     );
   }
 
@@ -71,6 +72,8 @@ class Spot {
   // --------------------------------------------------------------
   static List<Spot> listFromJson(String jsonStr) {
     final List<dynamic> decoded = json.decode(jsonStr);
-    return decoded.map((e) => Spot.fromJson(e as Map<String, dynamic>)).toList();
+    return decoded
+        .map((e) => Spot.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

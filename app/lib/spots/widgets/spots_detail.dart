@@ -36,27 +36,31 @@ class SpotDetailPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(spot.title)),
+
+      appBar: AppBar(title: Text(spot.title), backgroundColor:Theme.of(context).colorScheme.inversePrimary),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (spot.image1 != null)
-              ImageCarousel(images: images, imageIndex: 0),
+            if (images.isNotEmpty)
+              ImageCarousel(images: images),
+            Divider(height: 50),
             SpotsSubtitle(
               spot: spot,
               textStyle: Theme.of(context).textTheme.bodyLarge!,
-              sizeFactor: 1.4,
+              sizeFactor: 1.2,
               showLabel: true,
             ),
-            Divider(height: 30),
-            if(spot.note != null)
-            Text('Hinweis:', style:Theme.of(context).textTheme.headlineSmall!),
-            Text(spot.note!, style: Theme.of(context).textTheme.bodyLarge!),
+
+            Divider(height: 50),
+            if(spot.note != null) ...[
+            Text(spot.note!, style: Theme.of(context).textTheme.bodyLarge),
+              Divider(height: 50),
+            ],
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(8.0),
                 child: OutlinedButton(
                   onPressed: () => {},
                   child: Text('Auf Karte anzeigen'),

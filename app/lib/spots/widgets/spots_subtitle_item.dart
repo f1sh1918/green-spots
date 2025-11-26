@@ -19,15 +19,20 @@ class SpotsSubtitleItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (label != null)
+        if (label != null) ...[
           Text(label!, style: TextStyle(fontSize: 14 * sizeFactor)),
-        const SizedBox(width: 12),
-        if (icon != null) Icon(icon, size: 16 * sizeFactor, color: color),
-        const SizedBox(width: 4),
-        if (value != null)
+          const SizedBox(width: 12),
+        ],
+        if (icon != null) ...[
+          Icon(icon, size: 20 * sizeFactor, color: color),
+          const SizedBox(width: 4),
+        ],
+        if (value != null) ...[
           Text(value!, style: TextStyle(fontSize: 14 * sizeFactor)),
-        const SizedBox(width: 12),
+          const SizedBox(width: 12),
+        ],
       ],
     );
   }

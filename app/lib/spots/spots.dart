@@ -12,8 +12,6 @@ class Spots extends StatefulWidget {
   State<Spots> createState() => _SpotsState();
 }
 
-// TODO add anzahl ergebnisse, improve subtitle with icons
-
 class _SpotsState extends State<Spots> {
   final SpotService _service = SpotService();
 
@@ -51,7 +49,10 @@ class _SpotsState extends State<Spots> {
                       height: 56,
                       fit: BoxFit.cover,
                     )
-                  : const Icon(Icons.place, size: 36),
+                  : const SizedBox(
+                      width: 56,
+                      child: Icon(Icons.place, size: 32),
+                    ),
               title: Text(spot.title),
               subtitle: SpotsSubtitle(
                 spot: spot,
