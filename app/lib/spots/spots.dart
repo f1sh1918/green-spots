@@ -1,6 +1,6 @@
-import 'package:app/spots/services/spot_service.dart';
-import 'package:app/spots/widgets/spots_detail.dart';
-import 'package:app/spots/widgets/spots_subtitle.dart';
+import 'package:spots/spots/services/spot_service.dart';
+import 'package:spots/spots/widgets/spots_detail.dart';
+import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
 
 import 'models/spot.dart';
@@ -60,7 +60,6 @@ class _SpotsState extends State<Spots> {
                 sizeFactor: 1.0,
                 showLabel: false,
               ),
-
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => SpotDetailPage(spot: spot)),
               ),

@@ -5,8 +5,7 @@ class SpotService {
   static const _baseUrl = 'https://backend.ballonfabrik.org/wp-json/wp/v2';
 
   Future<List<Spot>> fetchSpots({int perPage = 20, int page = 1}) async {
-    final uri = Uri.parse('$_baseUrl/spot')
-        .replace(queryParameters: {
+    final uri = Uri.parse('$_baseUrl/spot').replace(queryParameters: {
       'per_page': '$perPage',
       'page': '$page',
     });
@@ -17,8 +16,7 @@ class SpotService {
       return Spot.listFromJson(response.body);
     } else {
       // You can create a custom exception type if you like.
-      throw Exception(
-          'Failed to load spots – HTTP ${response.statusCode}: ${response.reasonPhrase}');
+      throw Exception('Failed to load spots – HTTP ${response.statusCode}: ${response.reasonPhrase}');
     }
   }
 }

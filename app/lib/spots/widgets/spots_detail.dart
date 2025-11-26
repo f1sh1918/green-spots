@@ -1,7 +1,7 @@
 // lib/main.dart
-import 'package:app/spots/models/spot.dart';
-import 'package:app/spots/widgets/image_carousel.dart';
-import 'package:app/spots/widgets/spots_subtitle.dart';
+import 'package:spots/spots/models/spot.dart';
+import 'package:spots/spots/widgets/image_carousel.dart';
+import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
 
 class SpotDetailPage extends StatelessWidget {
@@ -36,15 +36,16 @@ class SpotDetailPage extends StatelessWidget {
     ];
 
     return Scaffold(
-
-      appBar: AppBar(title: Text(spot.title), backgroundColor:Theme.of(context).colorScheme.inversePrimary),
+      appBar: AppBar(
+        title: Text(spot.title),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (images.isNotEmpty)
-              ImageCarousel(images: images),
+            if (images.isNotEmpty) ImageCarousel(images: images),
             Divider(height: 50),
             SpotsSubtitle(
               spot: spot,
@@ -52,10 +53,9 @@ class SpotDetailPage extends StatelessWidget {
               sizeFactor: 1.2,
               showLabel: true,
             ),
-
             Divider(height: 50),
-            if(spot.note != null) ...[
-            Text(spot.note!, style: Theme.of(context).textTheme.bodyLarge),
+            if (spot.note != null) ...[
+              Text(spot.note!, style: Theme.of(context).textTheme.bodyLarge),
               Divider(height: 50),
             ],
             Center(

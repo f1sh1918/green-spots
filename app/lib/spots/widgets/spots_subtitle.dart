@@ -1,5 +1,5 @@
-import 'package:app/spots/models/spot.dart';
-import 'package:app/spots/widgets/spots_subtitle_item.dart';
+import 'package:spots/spots/models/spot.dart';
+import 'package:spots/spots/widgets/spots_subtitle_item.dart';
 import 'package:flutter/material.dart';
 
 class SpotsSubtitle extends StatelessWidget {
@@ -33,29 +33,29 @@ class SpotsSubtitle extends StatelessWidget {
         value: spot.space.toString(),
         label: showLabel ? 'Platz:' : null,
       ),
-    if (spot.swim == true) ...[
-      SpotsSubtitleItem(
-        sizeFactor: sizeFactor,
-        color: Colors.black,
-        icon: Icons.pool,
-        label: showLabel ? 'Badestelle:' : null,
-      ),
-    ],
-    if (spot.fire == true) ...[
-      SpotsSubtitleItem(
-        sizeFactor: sizeFactor,
-        color: Colors.orange,
-        icon: Icons.local_fire_department,
-        label: showLabel ? 'Feuerstelle:' : null,
-      ),
-      ],
+      if (spot.swim == true) ...[
         SpotsSubtitleItem(
           sizeFactor: sizeFactor,
-          color: Colors.blue,
-          icon: Icons.water_drop,
-          value: spot.water,
-          label: showLabel ? 'Wasser:' : null,
+          color: Colors.black,
+          icon: Icons.pool,
+          label: showLabel ? 'Badestelle:' : null,
         ),
+      ],
+      if (spot.fire == true) ...[
+        SpotsSubtitleItem(
+          sizeFactor: sizeFactor,
+          color: Colors.orange,
+          icon: Icons.local_fire_department,
+          label: showLabel ? 'Feuerstelle:' : null,
+        ),
+      ],
+      SpotsSubtitleItem(
+        sizeFactor: sizeFactor,
+        color: Colors.blue,
+        icon: Icons.water_drop,
+        value: spot.water,
+        label: showLabel ? 'Wasser:' : null,
+      ),
       if (spot.specials != null && spot.specials!.isNotEmpty) ...[
         SpotsSubtitleItem(
           sizeFactor: sizeFactor,
@@ -72,7 +72,7 @@ class SpotsSubtitle extends StatelessWidget {
     if (showLabel) {
       return Padding(
         padding: EdgeInsets.only(top: 8.0, bottom: 8),
-        child: Column(spacing: 8,crossAxisAlignment: CrossAxisAlignment.stretch,children: items),
+        child: Column(spacing: 8, crossAxisAlignment: CrossAxisAlignment.stretch, children: items),
       );
     } else {
       return Wrap(

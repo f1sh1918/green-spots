@@ -53,13 +53,10 @@ class ImageCarouselState extends State<ImageCarousel> {
                         margin: EdgeInsets.symmetric(horizontal: 4.0),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color:
-                              (Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black)
-                                  .withValues(
-                                    alpha: imageIndex == index ? 0.9 : 0.4,
-                                  ),
+                          color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)
+                              .withValues(
+                            alpha: imageIndex == index ? 0.9 : 0.4,
+                          ),
                         ),
                       ),
                     ),
