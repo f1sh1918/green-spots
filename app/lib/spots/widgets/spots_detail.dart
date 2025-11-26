@@ -41,32 +41,35 @@ class SpotDetailPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (images.isNotEmpty) ImageCarousel(images: images),
-            Divider(height: 50),
-            SpotsSubtitle(
-              spot: spot,
-              textStyle: Theme.of(context).textTheme.bodyLarge!,
-              sizeFactor: 1.2,
-              showLabel: true,
-            ),
-            Divider(height: 50),
-            if (spot.note != null) ...[
-              Text(spot.note!, style: Theme.of(context).textTheme.bodyLarge),
-              Divider(height: 50),
-            ],
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: OutlinedButton(
-                  onPressed: () => {},
-                  child: Text('Auf Karte anzeigen'),
-                ),
-              ),
-            ),
+            Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Divider(height: 50),
+                  SpotsSubtitle(
+                    spot: spot,
+                    textStyle: Theme.of(context).textTheme.bodyLarge!,
+                    sizeFactor: 1.2,
+                    showLabel: true,
+                  ),
+                  Divider(height: 50),
+                  if (spot.note != null) ...[
+                    Text(spot.note!, style: Theme.of(context).textTheme.bodyLarge),
+                    Divider(height: 50),
+                  ],
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: OutlinedButton(
+                        onPressed: () => {},
+                        child: Text('Auf Karte anzeigen'),
+                      ),
+                    ),
+                  ),
+                ])),
           ],
         ),
       ),
