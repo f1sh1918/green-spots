@@ -31,7 +31,7 @@ class ImageCarouselState extends State<ImageCarousel> {
               carouselController: carouselController,
               options: CarouselOptions(
                 enableInfiniteScroll: false,
-                viewportFraction: 1,
+                viewportFraction: 1.0,
                 height: constraints.maxHeight,
                 onPageChanged: (index, reason) => _updateIndex(index),
               ),
