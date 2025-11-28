@@ -1,8 +1,7 @@
 import 'package:spots/settings/settings.dart';
+import 'package:spots/spots/map_page.dart';
 import 'package:spots/spots/spots.dart';
 import 'package:flutter/material.dart';
-
-import 'map/map.dart';
 
 void main() {
   runApp(const MyApp());

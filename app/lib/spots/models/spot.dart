@@ -57,8 +57,8 @@ class Spot {
         fire: acf?['fire'] ?? false,
         space: parseDouble(acf?['space'])!,
         secure: parseDouble(acf?['secure'])!,
-        lat: parseDouble(['lat']),
-        long: parseDouble(['long']),
+        lat: parseDouble(acf?['lat']),
+        long: parseDouble(acf?['long']),
         specials: acf?['specials'],
         water: acf?['waterquality'],
         thumbnail: json['image_thumb']);
