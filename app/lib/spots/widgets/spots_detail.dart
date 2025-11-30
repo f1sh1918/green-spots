@@ -3,6 +3,7 @@ import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/widgets/image_carousel.dart';
 import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SpotDetailPage extends StatelessWidget {
   final Spot spot;
@@ -23,6 +24,7 @@ class SpotDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        actions: [IconButton(onPressed: ()=> _launchUrl(spot), icon: Icon(Icons.edit), )],
         title: Text(spot.title),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
@@ -61,4 +63,9 @@ class SpotDetailPage extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _launchUrl(Spot spot) async {
+  final Uri url = Uri.parse('https://backend.ballonfabrik.org/wp-admin/post.php?post=${spot.id}&action=edit');
+  launchUrl(url, mode: LaunchMode.externalApplication);
 }

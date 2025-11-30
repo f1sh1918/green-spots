@@ -53,6 +53,7 @@ class _MapPageState extends State<Map> {
         iconImage: "marker_40", // Standard-Icon verwenden
         iconSize: 1.0,
         iconAnchor: "bottom",
+        // TODO Font hinzufügen
         // textField: [
         //   "get",
         //   "title" // Zeigt den Titel aus den Properties an
@@ -74,7 +75,7 @@ class _MapPageState extends State<Map> {
       "features": spots
           .map((spot) => {
                 "type": "Feature",
-                "properties": {"title": "Marker 1", "description": "Beschreibung für Marker 1"},
+                "properties": {"title": spot.title, "description": spot.note},
                 "geometry": {
                   "type": "Point",
                   "coordinates": [spot.long, spot.lat]

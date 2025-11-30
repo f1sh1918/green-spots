@@ -46,7 +46,7 @@ class Spot {
       return double.tryParse('$raw');
     }
 
-    final images = [json['image_url'], json['image2_url'], json['image2_url']];
+    final images = [json['image_url'], json['image2_url'], json['image3_url']];
 
     return Spot(
         id: json['id'],
