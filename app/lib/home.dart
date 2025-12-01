@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:spots/location/determine_position.dart';
 import 'package:spots/map/map_page.dart';
 import 'package:spots/settings/settings.dart';
 import 'package:spots/spots/models/spot.dart';
@@ -6,11 +8,22 @@ import 'package:spots/spots/spots.dart';
 
 class Home extends StatefulWidget {
   final List<Spot> spots;
+  final bool locationPermissionGiven;
+  final Position? userPosition;
+  final LocationStatus? locationStatus;
   final Spot? activeSpot;
   final Future<List<Spot>> Function()? refetch;
   final int? initialIndex;
 
-  const Home({super.key, required this.spots, this.refetch, this.initialIndex, this.activeSpot});
+  const Home(
+      {super.key,
+      required this.spots,
+      this.locationPermissionGiven = false,
+      this.refetch,
+      this.initialIndex,
+      this.activeSpot,
+      this.locationStatus,
+      this.userPosition});
 
   @override
   State<Home> createState() => _HomeState();
@@ -19,18 +32,29 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late int _selectedIndex = widget.initialIndex ?? 1;
   late List<Spot> _currentSpots;
+  Position? _userPosition;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _currentSpots = widget.spots;
+    _userPosition = widget.userPosition;
   }
 
   List<Widget> _getPages() {
     return <Widget>[
-      MapPage(spots: _currentSpots, activeSpot: widget.activeSpot),
-      Spots(spots: _currentSpots),
+      MapPage(
+          spots: _currentSpots,
+          activeSpot: widget.activeSpot,
+          userPosition: _userPosition,
+          locationPermissionGiven: widget.locationPermissionGiven,
+          locationStatus: widget.locationStatus),
+      Spots(
+          spots: _currentSpots,
+          userPosition: _userPosition,
+          locationPermissionGiven: widget.locationPermissionGiven,
+          locationStatus: widget.locationStatus),
       const Settings(),
     ];
   }

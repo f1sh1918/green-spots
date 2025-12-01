@@ -1,13 +1,19 @@
-import 'package:spots/spots/services/spot_service.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:spots/spots/widgets/spots_detail.dart';
 import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
 
+import '../location/determine_position.dart';
 import 'models/spot.dart';
 
 class Spots extends StatefulWidget {
   final List<Spot> spots;
-  const Spots({super.key, required this.spots});
+  final Position? userPosition;
+  final bool locationPermissionGiven;
+  final LocationStatus? locationStatus;
+
+  const Spots(
+      {super.key, required this.spots, this.locationPermissionGiven = false, this.userPosition, this.locationStatus});
 
   @override
   State<Spots> createState() => _SpotsState();
@@ -41,7 +47,14 @@ class _SpotsState extends State<Spots> {
             showLabel: false,
           ),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => SpotDetailPage(currentSpot: spot, spots: widget.spots)),
+            MaterialPageRoute(
+                builder: (_) => SpotDetailPage(
+                      currentSpot: spot,
+                      spots: widget.spots,
+                      userPosition: widget.userPosition,
+                      locationPermissionGiven: widget.locationPermissionGiven,
+                      locationStatus: widget.locationStatus,
+                    )),
           ),
         );
       },

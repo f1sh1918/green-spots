@@ -7,19 +7,29 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/location/location_button.dart';
 import 'package:spots/spots/widgets/spots_detail.dart';
+import 'package:spots/utils/distance.dart';
 
 import '../spots/models/spot.dart';
 import '../spots/widgets/spot_dialog.dart';
 
-// TODO move position to HOME to show distance everywhere, Navigation cleanup, fix refresh
+// TODO Navigation cleanup
 
 double detailZoom = 14;
 
 class MapPage extends StatefulWidget {
   final List<Spot> spots;
+  final bool locationPermissionGiven;
   final Spot? activeSpot;
+  final Position? userPosition;
+  final LocationStatus? locationStatus;
 
-  const MapPage({super.key, required this.spots, this.activeSpot});
+  const MapPage(
+      {super.key,
+      required this.spots,
+      required this.locationPermissionGiven,
+      this.activeSpot,
+      this.userPosition,
+      this.locationStatus});
 
   @override
   State<MapPage> createState() => _MapPagePageState();
@@ -36,62 +46,35 @@ class _MapPagePageState extends State<MapPage> {
     zoom: widget.activeSpot != null ? detailZoom : 7,
   );
   bool _styleLoaded = false;
-  Position? _userPosition;
-  LocationStatus? _locationStatus;
 
   late MapLibreMapController _controller;
-
-  late var _permissionGiven = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUserPosition();
+    if (widget.activeSpot == null) {
+      _animateToUserPosition(widget.userPosition);
+    }
   }
 
   Future<void> _animateToUserPosition(Position? position) async {
     if (position != null) {
-      try {
-        final controller = await _controllerCompleter.future;
-        final cameraUpdate = CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            zoom: detailZoom, // Etwas näher heranzoomen
-          ),
-        );
-        await controller.animateCamera(
-          cameraUpdate,
-          duration: Duration(seconds: 1),
-        );
-        print(
-          'Kamera zur Benutzerposition bewegt: ${position.latitude}, ${position.longitude}',
-        );
-      } catch (e) {
-        print('Fehler beim Bewegen der Kamera: $e');
-      }
+      final controller = await _controllerCompleter.future;
+      final cameraUpdate = CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(position.latitude, position.longitude),
+          zoom: detailZoom, // Etwas näher heranzoomen
+        ),
+      );
+      await controller.animateCamera(
+        cameraUpdate,
+        duration: Duration(seconds: 1),
+      );
     }
 
-    if (_locationStatus == LocationStatus.deniedForever || _locationStatus == LocationStatus.denied && mounted) {
+    if (widget.locationStatus == LocationStatus.deniedForever ||
+        widget.locationStatus == LocationStatus.denied && mounted) {
       _showFeatureDisabled(context);
-    }
-  }
-
-  Future<void> _loadUserPosition() async {
-    RequestedPosition? requestedPosition = await determinePosition(
-      context,
-      requestIfNotGranted: true,
-    );
-    if (requestedPosition != null && mounted) {
-      setState(() {
-        _userPosition = requestedPosition.position;
-        _permissionGiven = true;
-        _locationStatus = requestedPosition.locationStatus;
-      });
-
-      // Wenn Karte bereits geladen ist und kein aktiver Spot, zur Benutzerposition navigieren
-      if (_styleLoaded && widget.activeSpot == null) {
-        await _animateToUserPosition(requestedPosition.position);
-      }
     }
   }
 
@@ -103,7 +86,7 @@ class _MapPagePageState extends State<MapPage> {
           styleString: 'https://maps.tuerantuer.org/styles/integreat/style.json',
           initialCameraPosition: _initial,
           // Hide non working attributes
-          myLocationEnabled: _permissionGiven,
+          myLocationEnabled: widget.locationPermissionGiven,
           // required to prevent mapbox iOS from requesting location
           // permissions on startup, as discussed in #249
           myLocationRenderMode: MyLocationRenderMode.normal,
@@ -122,8 +105,8 @@ class _MapPagePageState extends State<MapPage> {
           bottom: 12,
           right: -4,
           child: LocationButton(
-            followUserLocation: _permissionGiven,
-            bringCameraToUser: () => _animateToUserPosition(_userPosition),
+            followUserLocation: widget.locationPermissionGiven,
+            bringCameraToUser: () => _animateToUserPosition(widget.userPosition),
           ),
         ),
       ],
@@ -198,14 +181,8 @@ class _MapPagePageState extends State<MapPage> {
         (spot) => spot.id == feature['id'],
       );
 
-      if (selectedSpot != null) {
-        final distance = Geolocator.distanceBetween(
-              selectedSpot.lat!,
-              selectedSpot.long!,
-              _userPosition!.latitude,
-              _userPosition!.longitude,
-            ) /
-            1000;
+      if (selectedSpot != null && widget.userPosition != null) {
+        final distance = calculateDistanceFromSpot(selectedSpot, widget.userPosition!);
         _showSpotDialog(context, selectedSpot, widget.spots, distance);
       }
     }
@@ -235,7 +212,13 @@ class _MapPagePageState extends State<MapPage> {
   void _showSpotDetails(Spot selectedSpot, List<Spot> spots) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => SpotDetailPage(currentSpot: selectedSpot, spots: spots),
+        builder: (_) => SpotDetailPage(
+          currentSpot: selectedSpot,
+          spots: spots,
+          userPosition: widget.userPosition,
+          locationPermissionGiven: widget.locationPermissionGiven,
+          locationStatus: widget.locationStatus,
+        ),
       ),
     );
   }

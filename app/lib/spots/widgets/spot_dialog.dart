@@ -57,10 +57,8 @@ class SpotDialog extends StatelessWidget {
                           spot.title,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                        Text(
-                          '${distance.toStringAsFixed(1)} km entfernt',
-                          style: Theme.of(context).textTheme.bodySmall
-                        ),
+                        Text('${distance.toStringAsFixed(1)} km entfernt',
+                            style: Theme.of(context).textTheme.bodySmall),
                         const SizedBox(height: 16),
                         SpotsSubtitle(
                           spot: spot,
