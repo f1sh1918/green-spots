@@ -166,21 +166,21 @@
         <entry key="maplibre_gl">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl-0.24.1/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl-0.22.0/lib" />
             </list>
           </value>
         </entry>
         <entry key="maplibre_gl_platform_interface">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_platform_interface-0.24.1/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_platform_interface-0.22.0/lib" />
             </list>
           </value>
         </entry>
         <entry key="maplibre_gl_web">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_web-0.24.1/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_web-0.22.0/lib" />
             </list>
           </value>
         </entry>
@@ -396,9 +396,9 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/leak_tracker_flutter_testing-3.0.10/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/leak_tracker_testing-3.0.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/lints-5.1.1/lib" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl-0.24.1/lib" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_platform_interface-0.24.1/lib" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_web-0.24.1/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl-0.22.0/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_platform_interface-0.22.0/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/maplibre_gl_web-0.22.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/matcher-0.12.17/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/material_color_utilities-0.11.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/meta-1.16.0/lib" />

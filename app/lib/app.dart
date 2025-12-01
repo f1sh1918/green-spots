@@ -1,17 +1,17 @@
+import 'package:spots/home.dart';
 import 'package:spots/spots/services/spot_service.dart';
-import 'package:spots/map/map.dart';
 import 'package:flutter/material.dart';
 
-import 'models/spot.dart';
+import 'spots/models/spot.dart';
 
-class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+class App extends StatefulWidget {
+  const App({super.key});
 
   @override
-  State<MapPage> createState() => _MapPageState();
+  State<App> createState() => _AppState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _AppState extends State<App> {
   final SpotService _service = SpotService();
 
   @override
@@ -35,7 +35,7 @@ class _MapPageState extends State<MapPage> {
         if (spots.isEmpty) {
           return const Center(child: Text('Keine Spots gefunden'));
         }
-        return Map(spots: spots);
+        return Home(spots: spots, refetch: _service.fetchSpots);
       },
     );
   }
