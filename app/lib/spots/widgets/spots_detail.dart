@@ -57,56 +57,74 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
         )
         .toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: () => _launchUrl(widget.currentSpot),
-            icon: Icon(Icons.edit),
-          ),
-        ],
-        title: Text(widget.currentSpot.title),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (imageWidgets.isNotEmpty) ImageCarousel(images: imageWidgets),
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Divider(height: 50),
-                  SpotsSubtitle(
-                    spot: widget.currentSpot,
-                    textStyle: Theme.of(context).textTheme.bodyLarge!,
-                    sizeFactor: 1.2,
-                    showLabel: true,
-                  ),
-                  Divider(height: 50),
-                  if (widget.currentSpot.note != null) ...[
-                    Text(
-                      widget.currentSpot.note!,
-                      style: Theme.of(context).textTheme.bodyLarge,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (context.mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => Home(
+                    activeSpot: widget.currentSpot,
+                    spots: widget.spots,
+                    initialIndex: 1,
+                    locationPermissionGiven: _currentLocationPermissionGiven,
+                    userPosition: _currentUserPosition,
+                    locationStatus: _currentLocationStatus),
+              ),
+              (route) => false);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              onPressed: () => _launchUrl(widget.currentSpot),
+              icon: Icon(Icons.edit),
+            ),
+          ],
+          title: Text(widget.currentSpot.title),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (imageWidgets.isNotEmpty) ImageCarousel(images: imageWidgets),
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Divider(height: 50),
+                    SpotsSubtitle(
+                      spot: widget.currentSpot,
+                      textStyle: Theme.of(context).textTheme.bodyLarge!,
+                      sizeFactor: 1.2,
+                      showLabel: true,
                     ),
                     Divider(height: 50),
-                    if (widget.userPosition != null) ...[
+                    if (widget.currentSpot.note != null) ...[
                       Text(
-                        '${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km entfernt',
+                        widget.currentSpot.note!,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
+                      Divider(height: 50),
+                      if (widget.userPosition != null) ...[
+                        Text(
+                          '${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km entfernt',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ],
+                      Divider(height: 50),
                     ],
-                    Divider(height: 50),
-                  ],
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: OutlinedButton(
-                        onPressed: _isLoadingPosition
-                            ? null
-                            : () => Navigator.of(context).push(
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: OutlinedButton(
+                          onPressed: _isLoadingPosition
+                              ? null
+                              : () => Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
                                     builder: (_) => Home(
                                         activeSpot: widget.currentSpot,
@@ -116,15 +134,16 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                                         userPosition: _currentUserPosition,
                                         locationStatus: _currentLocationStatus),
                                   ),
-                                ),
-                        child: Text('Auf Karte anzeigen'),
+                                  (route) => false),
+                          child: Text('Auf Karte anzeigen'),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
