@@ -210,17 +210,17 @@ class _MapPagePageState extends State<MapPage> {
   }
 
   void _showSpotDetails(Spot selectedSpot, List<Spot> spots) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SpotDetailPage(
-          currentSpot: selectedSpot,
-          spots: spots,
-          userPosition: widget.userPosition,
-          locationPermissionGiven: widget.locationPermissionGiven,
-          locationStatus: widget.locationStatus,
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => SpotDetailPage(
+            currentSpot: selectedSpot,
+            spots: spots,
+            userPosition: widget.userPosition,
+            locationPermissionGiven: widget.locationPermissionGiven,
+            locationStatus: widget.locationStatus,
+          ),
         ),
-      ),
-    );
+        (route) => route.isFirst);
   }
 
   void _showFeatureDisabled(BuildContext context) {
