@@ -12,7 +12,16 @@ add_filter(
     'jwt_auth_expire',
     function ( $expire, $issued_at ) {
         // 1 Tage * 24 Stunden * 60 Minuten * 60 Sekunden
-        return $issued_at + (1 * 24 * 60 * 60);;
+        return $issued_at + (1 * 24 * 60 * 60);
+    },
+    10,
+    2
+);
+add_filter(
+    'jwt_auth_refresh_expire',
+    function ( $expire, $issued_at ) {
+        // 5 Jahre *365 Tage * 24 Stunden * 60 Minuten * 60 Sekunden
+        return $issued_at + (5 * 365 * 24 * 60 * 60);
     },
     10,
     2

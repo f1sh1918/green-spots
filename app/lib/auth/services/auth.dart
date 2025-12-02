@@ -9,7 +9,9 @@ import '../models/settings.dart';
 
 class AuthService {
   static const String validateEndpoint = '/wp-json/jwt-auth/v1/token/validate';
+  String? _refreshTokenCookie;
 
+// TODO Auto-Login with refresh token on startup, remove token validation, save refresh cookie expiration instead of LoginExpires
   Future<AuthResult> login({
     required String username,
     required String password,
@@ -30,8 +32,15 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
+        _refreshTokenCookie = _extractRefreshTokenNew(response.headers);
+        if (_refreshTokenCookie != null && context.mounted) {
+          final settingsModel = Provider.of<SettingsModel>(context, listen: false);
+          _saveRefreshToken(_refreshTokenCookie!, settingsModel);
+          print('refresh:$_refreshTokenCookie');
+        }
         final Map<String, dynamic> data = json.decode(response.body);
         final authResult = AuthResult.fromJson(data);
+        print('Token:${authResult.token}');
 
         if (context.mounted) {
           final settingsModel = Provider.of<SettingsModel>(context, listen: false);
@@ -97,8 +106,24 @@ class AuthService {
     await settingsModel.setExpireLogin(expireLogin: DateTime.now().add(const Duration(days: 7)).toIso8601String());
   }
 
+  // Private Methoden
+  Future<void> _saveRefreshToken(String token, SettingsModel settingsModel) async {
+    await settingsModel.setRefreshToken(refreshToken: token);
+  }
+
   Future<void> _saveUserInfo(AuthResult authResult, SettingsModel settingsModel) async {
     await settingsModel.setUser(user: authResult.userDisplayName);
     await settingsModel.setEmail(email: authResult.userEmail);
+  }
+
+  String? _extractRefreshTokenNew(Map<String, String> headers) {
+    final setCookie = headers['set-cookie'];
+    if (setCookie == null) return null;
+
+    // RegExp für präzise Extraktion des refresh_token Wertes
+    final refreshTokenRegex = RegExp(r'refresh_token=([^;]+)');
+    final match = refreshTokenRegex.firstMatch(setCookie);
+
+    return match?.group(1); // Gibt nur den Wert zurück, nicht den ganzen Cookie
   }
 }
