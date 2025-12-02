@@ -107,7 +107,7 @@ class _AddSpotsState extends State<AddSpots> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Spot hinzufügen'),
       ),
-      body: Form(
+      body: SafeArea(child: Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -334,6 +334,7 @@ class _AddSpotsState extends State<AddSpots> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
