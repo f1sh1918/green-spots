@@ -8,6 +8,7 @@ import 'package:spots/location/determine_position.dart';
 import 'package:spots/location/location_button.dart';
 import 'package:spots/spots/widgets/spots_detail.dart';
 import 'package:spots/utils/distance.dart';
+import 'package:spots/widgets/add_spot_dialog.dart';
 
 import '../spots/models/spot.dart';
 import '../spots/widgets/spot_dialog.dart';
@@ -73,7 +74,9 @@ class _MapPagePageState extends State<MapPage> {
 
     if (widget.locationStatus == LocationStatus.deniedForever ||
         widget.locationStatus == LocationStatus.denied && mounted) {
-      _showFeatureDisabled(context);
+      if (mounted) {
+        _showFeatureDisabled(context);
+      }
     }
   }
 
@@ -180,11 +183,22 @@ class _MapPagePageState extends State<MapPage> {
         (spot) => spot.id == feature['id'],
       );
 
-      if (selectedSpot != null && widget.userPosition != null) {
+      if (widget.userPosition != null) {
         final distance = calculateDistanceFromSpot(selectedSpot, widget.userPosition!);
         _showSpotDialog(context, selectedSpot, widget.spots, distance);
       }
+    } else {
+      _showAddSpotDialog(context, clickCoordinates as LatLng);
     }
+  }
+
+  void _showAddSpotDialog(BuildContext context, LatLng coordinates) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddSpotDialog(coordinates: coordinates);
+      },
+    );
   }
 
   void _showSpotDialog(
