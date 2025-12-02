@@ -1,11 +1,10 @@
 import 'package:http/http.dart' as http;
+import 'package:spots/constants/api.dart';
 import '../models/spot.dart';
 
 class SpotService {
-  static const _baseUrl = 'https://backend.ballonfabrik.org/wp-json/wp/v2';
-
   Future<List<Spot>> fetchSpots({int perPage = 20, int page = 1}) async {
-    final uri = Uri.parse('$_baseUrl/spot').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl$spotsEndpoint').replace(queryParameters: {
       'per_page': '$perPage',
       'page': '$page',
     });

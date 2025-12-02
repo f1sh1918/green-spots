@@ -11,10 +11,10 @@
 add_filter(
     'jwt_auth_expire',
     function ( $expire, $issued_at ) {
-        // Modify the "expire" here.
-        return $expire;
+        // 1 Woche = 7 Tage * 24 Stunden * 60 Minuten * 60 Sekunden
+        return $issued_at + (7 * 24 * 60 * 60);;
     },
-    300,
+    10,
     2
 );
 
