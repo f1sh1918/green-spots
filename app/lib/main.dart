@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:spots/auth/provider/settings_provider.dart';
 
 import 'app.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(SettingsProvider(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
