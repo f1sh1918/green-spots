@@ -12,8 +12,6 @@ import 'package:spots/utils/distance.dart';
 import '../spots/models/spot.dart';
 import '../spots/widgets/spot_dialog.dart';
 
-// TODO Navigation cleanup
-
 double detailZoom = 14;
 
 class MapPage extends StatefulWidget {
@@ -22,12 +20,13 @@ class MapPage extends StatefulWidget {
   final Spot? activeSpot;
   final Position? userPosition;
   final LocationStatus? locationStatus;
-
+  final Future<void> Function() refresh;
   const MapPage(
       {super.key,
       required this.spots,
       required this.locationPermissionGiven,
       this.activeSpot,
+      required this.refresh,
       this.userPosition,
       this.locationStatus});
 
@@ -227,6 +226,7 @@ class _MapPagePageState extends State<MapPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.orange,
         content: Text('Die Standortfreigabe ist deaktiviert.'),
         action: SnackBarAction(
           label: 'Einstellungen',

@@ -42,34 +42,11 @@ class _HomeState extends State<Home> {
     _userPosition = widget.userPosition;
   }
 
-  List<Widget> _getPages() {
-    return <Widget>[
-      MapPage(
-          spots: _currentSpots,
-          activeSpot: widget.activeSpot,
-          userPosition: _userPosition,
-          locationPermissionGiven: widget.locationPermissionGiven,
-          locationStatus: widget.locationStatus),
-      Spots(
-          spots: _currentSpots,
-          userPosition: _userPosition,
-          locationPermissionGiven: widget.locationPermissionGiven,
-          locationStatus: widget.locationStatus),
-      const Settings(),
-    ];
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   Future<void> _handleRefresh() async {
     if (widget.refetch != null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Daten werden aktualisiert...')),
+          SnackBar(content: Text('Daten werden aktualisiert...'), backgroundColor: Colors.orange),
         );
       }
       setState(() {
@@ -88,11 +65,43 @@ class _HomeState extends State<Home> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Fehler beim Laden: $error')),
+            SnackBar(
+              content: Text('Fehler beim Laden: $error'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
     }
+  }
+
+  List<Widget> _getPages() {
+    return <Widget>[
+      MapPage(
+          spots: _currentSpots,
+          activeSpot: widget.activeSpot,
+          userPosition: _userPosition,
+          locationPermissionGiven: widget.locationPermissionGiven,
+          locationStatus: widget.locationStatus,
+          refresh: _handleRefresh),
+      Spots(
+          spots: _currentSpots,
+          userPosition: _userPosition,
+          locationPermissionGiven: widget.locationPermissionGiven,
+          locationStatus: widget.locationStatus,
+          refresh: _handleRefresh),
+      const Settings(),
+    ];
+  }
+
+  List<String> _getTitles() {
+    return ['Karte', 'Übersicht', 'Einstellungen'];
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
@@ -100,7 +109,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Green Spots'),
+        title: Text(_getTitles()[_selectedIndex]),
         actions: [
           IconButton(onPressed: _handleRefresh, icon: Icon(Icons.refresh)),
         ],

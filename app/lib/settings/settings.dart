@@ -10,8 +10,6 @@ class Settings extends StatefulWidget {
   State<Settings> createState() => _SettingsState();
 }
 
-// TODO check token expireTime or enable auto login on app start (but needs at least 1h validity, fix logout snackbar on autoLogout, unify snachbar color
-
 class _SettingsState extends State<Settings> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
@@ -24,6 +22,7 @@ class _SettingsState extends State<Settings> {
   String? _userEmail;
   String? _errorMessage;
   bool _obscurePassword = true;
+  String? _loginExpires;
 
   @override
   void initState() {
@@ -43,6 +42,8 @@ class _SettingsState extends State<Settings> {
     final token = settingsProvider.token;
     final userName = settingsProvider.user;
     final userEmail = settingsProvider.email;
+    final loginExpires = settingsProvider.expireLogin;
+    print(token);
 
     setState(() {
       _isLoading = true;
@@ -58,15 +59,16 @@ class _SettingsState extends State<Settings> {
           _userDisplayName = userName ?? 'Unbekannt';
           _userEmail = userEmail ?? 'Keine Mailadresse';
           _isLoading = false;
+          _loginExpires = loginExpires;
         });
       } else {
         if (mounted) {
-          _logout(context);
+          _logout(context, false);
         }
       }
     } else {
       if (mounted) {
-        _logout(context);
+        _logout(context, false);
       }
     }
   }
@@ -96,7 +98,7 @@ class _SettingsState extends State<Settings> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Erfolgreich angemeldet als ${result.userDisplayName}!'),
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.orange,
               duration: Duration(seconds: 3),
             ),
           );
@@ -118,7 +120,7 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  Future<void> _logout(BuildContext context) async {
+  Future<void> _logout(BuildContext context, bool showSnackbar) async {
     await _authService.logout(context);
     setState(() {
       _isLoggedIn = false;
@@ -128,7 +130,7 @@ class _SettingsState extends State<Settings> {
       _isLoading = false;
     });
 
-    if (mounted) {
+    if (mounted && showSnackbar) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Erfolgreich abgemeldet'),
@@ -350,6 +352,13 @@ class _SettingsState extends State<Settings> {
                               color: Colors.grey,
                             ),
                           ),
+                          Text(
+                            _loginExpires ?? 'N/A',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -371,7 +380,7 @@ class _SettingsState extends State<Settings> {
         SizedBox(
           height: 48,
           child: ElevatedButton(
-            onPressed: () => _logout(context),
+            onPressed: () => _logout(context, false),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,

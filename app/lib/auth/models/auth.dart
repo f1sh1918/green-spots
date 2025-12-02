@@ -44,11 +44,11 @@ class AuthResult {
 class UserInfo {
   final String displayName;
   final String userEmail;
-  final DateTime? loginTime;
+  final DateTime? loginExpiration;
 
   UserInfo({
     required this.displayName,
     required this.userEmail,
-    this.loginTime,
+    this.loginExpiration,
   });
 }

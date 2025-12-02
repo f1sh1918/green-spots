@@ -92,13 +92,13 @@ class SettingsModel extends ChangeNotifier {
     _notifyChange(currentEmail, email);
   }
 
-  String lastLoginKey = 'lastLogin';
-  String? get lastLogin => _getString(lastLoginKey);
+  String expireLoginKey = 'expireLogin';
+  String? get expireLogin => _getString(expireLoginKey);
 
-  Future<void> setLastLogin({required String lastLogin}) async {
-    String? currentLogin = lastLogin;
-    await _preferences?.setString(lastLoginKey, lastLogin);
-    _notifyChange(currentLogin, lastLogin);
+  Future<void> setExpireLogin({required String expireLogin}) async {
+    String? currentLogin = expireLogin;
+    await _preferences?.setString(expireLoginKey, expireLogin);
+    _notifyChange(currentLogin, expireLogin);
   }
 
   @override

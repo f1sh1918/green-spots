@@ -77,26 +77,24 @@ class AuthService {
     settingsModel.clearSettings();
   }
 
-  // TODO check if needed
-  Future<UserInfo?> getUserInfo(SettingsModel settingsModel) async {
-    final displayName = settingsModel.user;
-    final loginTime = settingsModel.lastLogin;
-    final userEmail = settingsModel.email;
+  bool isTokenExpired(String? expireDateString) {
+    print(expireDateString);
+    if (expireDateString == null) return false;
 
-    if (displayName != null) {
-      return UserInfo(
-        userEmail: userEmail ?? 'Unbekannt',
-        displayName: displayName,
-        loginTime: loginTime != null ? DateTime.parse(loginTime) : null,
-      );
+    try {
+      DateTime expireDate = DateTime.parse(expireDateString);
+      // Add some threshold
+      return DateTime.now().isAfter(expireDate.subtract(const Duration(hours: 12)));
+    } catch (e) {
+      print('Fehler beim Parsen des Datums: $e');
+      return true; // Bei Fehler als expired behandeln
     }
-    return null;
   }
 
   // Private Methoden
   Future<void> _saveToken(String token, SettingsModel settingsModel) async {
     await settingsModel.setToken(token: token);
-    await settingsModel.setLastLogin(lastLogin: DateTime.now().toIso8601String());
+    await settingsModel.setExpireLogin(expireLogin: DateTime.now().add(const Duration(days: 7)).toIso8601String());
   }
 
   Future<void> _saveUserInfo(AuthResult authResult, SettingsModel settingsModel) async {
