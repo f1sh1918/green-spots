@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/auth/services/auth.dart';
+import 'package:spots/constants/api.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -281,6 +283,18 @@ class _SettingsState extends State<Settings> {
                     ),
             ),
           ),
+
+          // Register
+          SizedBox(
+            height: 48,
+            child: TextButton(
+              onPressed: _register,
+              child: const Text(
+                'Registrieren',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -380,5 +394,12 @@ class _SettingsState extends State<Settings> {
         ),
       ],
     );
+  }
+
+  void _register() async {
+    final Uri url = Uri.parse(
+      '$baseUrl/wp-login.php?action=register',
+    );
+    launchUrl(url, mode: LaunchMode.externalApplication);
   }
 }
