@@ -4,26 +4,26 @@ import 'package:provider/provider.dart';
 import 'package:spots/auth/services/auth.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/map/map_page.dart';
+import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/settings/settings.dart';
 import 'package:spots/spots/models/spot.dart';
+import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/spots/spots.dart';
 
 import 'auth/models/settings.dart';
 
 class Home extends StatefulWidget {
-  final List<Spot> spots;
+  final List<Spot>? spots;
   final bool locationPermissionGiven;
   final Position? userPosition;
   final LocationStatus? locationStatus;
   final Spot? activeSpot;
-  final Future<List<Spot>> Function()? refetch;
   final int? initialIndex;
 
   const Home(
       {super.key,
-      required this.spots,
+      this.spots,
       this.locationPermissionGiven = false,
-      this.refetch,
       this.initialIndex,
       this.activeSpot,
       this.locationStatus,
@@ -35,67 +35,49 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final AuthService _authService = AuthService();
+  final SpotService _service = SpotService();
   late int _selectedIndex = widget.initialIndex ?? 1;
-  late List<Spot> _currentSpots;
   Position? _userPosition;
-  bool _isLoading = false;
+
+  void switchToMapTab() {
+    setState(() {
+      _selectedIndex = 0;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _currentSpots = widget.spots;
     _userPosition = widget.userPosition;
     _autoLogin();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+      spotsProvider.setRefetchFunction(_service.fetchSpots);
+      if (widget.spots != null) {
+        spotsProvider.setSpots(widget.spots!);
+      }
+    });
   }
 
   Future<void> _handleRefresh() async {
-    if (widget.refetch != null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Daten werden aktualisiert...'), backgroundColor: Colors.orange),
-        );
-      }
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        final newSpots = await widget.refetch!();
-        setState(() {
-          _currentSpots = newSpots;
-          _isLoading = false;
-        });
-      } catch (error) {
-        setState(() {
-          _isLoading = false;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Fehler beim Laden: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
+    final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+    await spotsProvider.refresh(context);
   }
 
   List<Widget> _getPages() {
+    final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
     return <Widget>[
       MapPage(
-          spots: _currentSpots,
+          // ensures that the map will be updated in the spot length change
+          key: ValueKey('map_${spotsProvider.spots.length}'),
           activeSpot: widget.activeSpot,
           userPosition: _userPosition,
           locationPermissionGiven: widget.locationPermissionGiven,
-          locationStatus: widget.locationStatus,
-          refresh: _handleRefresh),
+          locationStatus: widget.locationStatus),
       Spots(
-          spots: _currentSpots,
           userPosition: _userPosition,
           locationPermissionGiven: widget.locationPermissionGiven,
-          locationStatus: widget.locationStatus,
-          refresh: _handleRefresh),
+          locationStatus: widget.locationStatus),
       const Settings(),
     ];
   }
@@ -112,33 +94,43 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(_getTitles()[_selectedIndex]),
-        actions: [
-          IconButton(onPressed: _handleRefresh, icon: Icon(Icons.refresh)),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Theme.of(context).colorScheme.onPrimary,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.location_city),
-            label: 'Spots',
+    return Consumer<SpotsProvider>(
+      builder: (context, spotsProvider, child) {
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            title: Text(_getTitles()[_selectedIndex]),
+            actions: [
+              if (_selectedIndex == 1) ...[
+                IconButton(
+                    onPressed: spotsProvider.isLoading ? null : _handleRefresh,
+                    icon: spotsProvider.isLoading
+                        ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(Icons.refresh)),
+              ],
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: Theme.of(context).colorScheme.onPrimary,
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.location_city),
+                label: 'Spots',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                label: 'Settings',
+              ),
+            ],
+            selectedItemColor: Colors.green[800],
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
           ),
-        ],
-        selectedItemColor: Colors.green[800],
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
-      body: Center(child: _getPages().elementAt(_selectedIndex)),
+          body: Center(child: _getPages().elementAt(_selectedIndex)),
+        );
+      },
     );
   }
 

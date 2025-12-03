@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:spots/routes.dart';
 import 'package:spots/settings/provider/settings_provider.dart';
-
-import 'app.dart';
+import 'package:spots/settings/provider/spots_provider.dart';
 
 void main() {
   runApp(SettingsProvider(child: MyApp()));
@@ -13,11 +13,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Green Spots',
-      routes: AppRoutes.routes, // Routes verwenden
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SpotsProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Green Spots',
+        routes: AppRoutes.routes, // Routes verwenden
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        ),
       ),
     );
   }
