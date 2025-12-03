@@ -36,11 +36,10 @@ add_action( 'rest_api_init', function () {
         // full‑size URL
         register_rest_field( 'spot', $field . '_url', [
             'get_callback' => function ( $obj ) use ( $field ) {
-                $val = get_post_meta( $obj['id'], $field, true );
-                if ( is_string( $val ) && filter_var( $val, FILTER_VALIDATE_URL ) ) {
-                    return $val;
-                }
-                return is_numeric( $val ) ? wp_get_attachment_url( (int) $val ) : null;
+                $id = get_post_meta( $obj['id'], $field, true );
+                if ( ! is_numeric( $id ) ) return null;
+                $src = wp_get_attachment_image_src( (int) $id, 'medium_large' );
+                return $src[0] ?? null;
             },
             'schema' => [ 'type' => 'string', 'format' => 'uri' ],
         ] );
