@@ -1,5 +1,5 @@
-// lib/main.dart
 import 'package:geolocator/geolocator.dart';
+import 'package:spots/constants/api.dart';
 import 'package:spots/home.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/spots/models/spot.dart';
@@ -82,7 +82,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
         appBar: AppBar(
           actions: [
             IconButton(
-              onPressed: () => _launchUrl(widget.currentSpot),
+              onPressed: () => _openEditPage(widget.currentSpot),
               icon: Icon(Icons.edit),
             ),
           ],
@@ -121,28 +121,38 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                       ],
                       Divider(height: 50),
                     ],
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: OutlinedButton(
-                          onPressed: _isLoadingPosition
-                              ? null
-                              : () => Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    // TODO fix refresh
-                                    builder: (_) => Home(
-                                        activeSpot: widget.currentSpot,
-                                        spots: widget.spots,
-                                        initialIndex: 0,
-                                        locationPermissionGiven: _currentLocationPermissionGiven,
-                                        userPosition: _currentUserPosition,
-                                        locationStatus: _currentLocationStatus),
-                                  ),
-                                  (route) => false),
-                          child: Text('Auf Karte anzeigen'),
-                        ),
-                      ),
-                    ),
+                    Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Row(
+                          children: [
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: _isLoadingPosition
+                                  ? null
+                                  : () => Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        // TODO fix refresh
+                                        builder: (_) => Home(
+                                            activeSpot: widget.currentSpot,
+                                            spots: widget.spots,
+                                            initialIndex: 0,
+                                            locationPermissionGiven: _currentLocationPermissionGiven,
+                                            userPosition: _currentUserPosition,
+                                            locationStatus: _currentLocationStatus),
+                                      ),
+                                      (route) => false),
+                              child: Text('Auf Karte anzeigen'),
+                            ),
+                            SizedBox(width: 12),
+                            OutlinedButton(
+                              onPressed: () => _launchMap(widget.currentSpot.lat, widget.currentSpot.long, context),
+                              child: Text('Navigieren'),
+                            ),
+                          ],
+                        )),
                   ],
                 ),
               ),
@@ -154,9 +164,22 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
   }
 }
 
-Future<void> _launchUrl(Spot spot) async {
+Future<void> _openEditPage(Spot spot) async {
   final Uri url = Uri.parse(
-    'https://backend.ballonfabrik.org/wp-admin/post.php?post=${spot.id}&action=edit',
+    '$baseUrl/wp-admin/post.php?post=${spot.id}&action=edit',
   );
   launchUrl(url, mode: LaunchMode.externalApplication);
+}
+
+Future<void> _launchMap(double? lat, double? long, BuildContext context) async {
+  if (lat == null || long == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Spot konnte nicht in externer Anwendung geöffnet werden.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+  final geoUriWithZoom = Uri.parse('geo:$lat,$long?z=14&q=$lat,$long');
+  await launchUrl(geoUriWithZoom);
 }
