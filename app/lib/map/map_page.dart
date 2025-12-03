@@ -4,32 +4,33 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:provider/provider.dart';
+import 'package:spots/auth/models/settings.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/location/location_button.dart';
+import 'package:spots/settings/provider/spots_provider.dart';
+import 'package:spots/spots/models/spot.dart';
+import 'package:spots/spots/widgets/spot_dialog.dart';
 import 'package:spots/spots/widgets/spots_detail.dart';
 import 'package:spots/utils/distance.dart';
 import 'package:spots/widgets/add_spot_dialog.dart';
-
-import '../spots/models/spot.dart';
-import '../spots/widgets/spot_dialog.dart';
+import 'package:spots/widgets/map_info_dialog.dart';
 
 double detailZoom = 14;
 
 class MapPage extends StatefulWidget {
-  final List<Spot> spots;
   final bool locationPermissionGiven;
   final Spot? activeSpot;
   final Position? userPosition;
   final LocationStatus? locationStatus;
-  final Future<void> Function() refresh;
-  const MapPage(
-      {super.key,
-      required this.spots,
-      required this.locationPermissionGiven,
-      this.activeSpot,
-      required this.refresh,
-      this.userPosition,
-      this.locationStatus});
+
+  const MapPage({
+    super.key,
+    required this.locationPermissionGiven,
+    this.activeSpot,
+    this.userPosition,
+    this.locationStatus,
+  });
 
   @override
   State<MapPage> createState() => _MapPagePageState();
@@ -45,9 +46,8 @@ class _MapPagePageState extends State<MapPage> {
     target: initialCoordinates,
     zoom: widget.activeSpot != null ? detailZoom : 7,
   );
-  bool _styleLoaded = false;
 
-  late MapLibreMapController _controller;
+  MapLibreMapController? _controller;
 
   @override
   void initState() {
@@ -55,6 +55,12 @@ class _MapPagePageState extends State<MapPage> {
     if (widget.activeSpot == null) {
       _animateToUserPosition(widget.userPosition);
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final firstStart = Provider.of<SettingsModel>(context, listen: false).firstMapStart;
+      if (firstStart) {
+        _showInfoDialog(context);
+      }
+    });
   }
 
   Future<void> _animateToUserPosition(Position? position) async {
@@ -63,7 +69,7 @@ class _MapPagePageState extends State<MapPage> {
       final cameraUpdate = CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(position.latitude, position.longitude),
-          zoom: detailZoom, // Etwas näher heranzoomen
+          zoom: detailZoom,
         ),
       );
       await controller.animateCamera(
@@ -87,10 +93,7 @@ class _MapPagePageState extends State<MapPage> {
         MapLibreMap(
           styleString: 'https://maps.tuerantuer.org/styles/integreat/style.json',
           initialCameraPosition: _initial,
-          // Hide non working attributes
           myLocationEnabled: widget.locationPermissionGiven,
-          // required to prevent mapbox iOS from requesting location
-          // permissions on startup, as discussed in #249
           myLocationRenderMode: MyLocationRenderMode.normal,
           attributionButtonMargins: const math.Point(-100, -100),
           onMapLongClick: _onMapClick,
@@ -99,7 +102,6 @@ class _MapPagePageState extends State<MapPage> {
             _controllerCompleter.complete(c);
           },
           onStyleLoadedCallback: () {
-            setState(() => _styleLoaded = true);
             _addGeoJsonMarkers();
           },
         ),
@@ -116,14 +118,15 @@ class _MapPagePageState extends State<MapPage> {
   }
 
   Future<void> _addGeoJsonMarkers() async {
-    Object geoJsonData = spotsToGeoJson(widget.spots);
+    final spots = Provider.of<SpotsProvider>(context, listen: false).spots;
+    Object geoJsonData = spotsToGeoJson(spots);
 
-    await _controller.addSource(
+    await _controller!.addSource(
       "markers-source",
       GeojsonSourceProperties(data: geoJsonData),
     );
 
-    await _controller.addLayer(
+    await _controller!.addLayer(
       "markers-source",
       "markers-layer",
       SymbolLayerProperties(
@@ -159,7 +162,7 @@ class _MapPagePageState extends State<MapPage> {
   }
 
   Future<void> _onMapClick(math.Point<double> point, clickCoordinates) async {
-    final controller = _controller;
+    final spots = Provider.of<SpotsProvider>(context, listen: false).spots;
     if (!mounted) return;
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
@@ -170,7 +173,7 @@ class _MapPagePageState extends State<MapPage> {
       height: touchTargetSize,
     );
 
-    final jsonFeatures = await controller.queryRenderedFeaturesInRect(
+    final jsonFeatures = await _controller!.queryRenderedFeaturesInRect(
         rect,
         [
           'markers-layer',
@@ -179,24 +182,38 @@ class _MapPagePageState extends State<MapPage> {
     final features = jsonFeatures.map((e) => e as Map<String, dynamic>).toList();
     if (features.isNotEmpty) {
       final feature = features[0]['properties'];
-      final selectedSpot = widget.spots.firstWhere(
-        (spot) => spot.id == feature['id'],
-      );
+      final selectedSpot = spots.firstWhere((spot) => spot.id == feature['id']);
 
-      if (widget.userPosition != null) {
-        final distance = calculateDistanceFromSpot(selectedSpot, widget.userPosition!);
-        _showSpotDialog(context, selectedSpot, widget.spots, distance);
+      if (widget.userPosition != null && mounted) {
+        final distance = calculateDistanceFromSpot(
+          selectedSpot,
+          widget.userPosition!,
+        );
+        _showSpotDialog(context, selectedSpot, distance);
       }
     } else {
-      _showAddSpotDialog(context, clickCoordinates as LatLng, widget.userPosition);
+      if (mounted) {
+        _showAddSpotDialog(
+          context,
+          clickCoordinates as LatLng,
+          widget.userPosition,
+        );
+      }
     }
   }
 
-  void _showAddSpotDialog(BuildContext context, LatLng coordinates, Position? userPosition) {
+  void _showAddSpotDialog(
+    BuildContext context,
+    LatLng coordinates,
+    Position? userPosition,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AddSpotDialog(coordinates: coordinates, userPosition: userPosition);
+        return AddSpotDialog(
+          coordinates: coordinates,
+          userPosition: userPosition,
+        );
       },
     );
   }
@@ -204,7 +221,6 @@ class _MapPagePageState extends State<MapPage> {
   void _showSpotDialog(
     BuildContext context,
     Spot selectedSpot,
-    List<Spot> spots,
     double distance,
   ) {
     showDialog(
@@ -215,26 +231,24 @@ class _MapPagePageState extends State<MapPage> {
           distance: distance,
           onTap: () {
             Navigator.of(context).pop();
-            _showSpotDetails(selectedSpot, spots);
+            _showSpotDetails(selectedSpot);
           },
         );
       },
     );
   }
 
-  void _showSpotDetails(Spot selectedSpot, List<Spot> spots) {
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => SpotDetailPage(
-            currentSpot: selectedSpot,
-            spots: spots,
-            userPosition: widget.userPosition,
-            locationPermissionGiven: widget.locationPermissionGiven,
-            locationStatus: widget.locationStatus,
-            refresh: widget.refresh,
-          ),
+  void _showSpotDetails(Spot selectedSpot) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SpotDetailPage(
+          currentSpot: selectedSpot,
+          userPosition: widget.userPosition,
+          locationPermissionGiven: widget.locationPermissionGiven,
+          locationStatus: widget.locationStatus,
         ),
-        (route) => route.isFirst);
+      ),
+    );
   }
 
   void _showFeatureDisabled(BuildContext context) {
@@ -250,6 +264,15 @@ class _MapPagePageState extends State<MapPage> {
           },
         ),
       ),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return MapInfoDialog();
+      },
     );
   }
 }

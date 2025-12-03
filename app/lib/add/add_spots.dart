@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
+import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/services/spot_service.dart';
 import 'models/add_spot.dart';
 
@@ -97,6 +98,8 @@ class _AddSpotsState extends State<AddSpots> {
             ),
           );
           Navigator.pop(context);
+          final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+          await spotsProvider.refresh(context);
         }
       } else {
         if (mounted) {
@@ -200,7 +203,7 @@ class _AddSpotsState extends State<AddSpots> {
                 const SizedBox(height: 16),
 
                 // Sicherheit Slider
-                Text('Sicherheit: ${_secure.toStringAsFixed(1)}'),
+                Text('Sicherheit: ${_secure.toStringAsFixed(1)} (1=sehr unsicher, 5=sehr sicher)'),
                 Slider(
                   value: _secure,
                   min: 1.0,
@@ -215,11 +218,11 @@ class _AddSpotsState extends State<AddSpots> {
                 const SizedBox(height: 16),
 
                 // Platz Slider
-                Text('Platz: $_space'),
+                Text('Platz: $_space (Anzahl kleiner Zelte)'),
                 Slider(
                   value: _space.toDouble(),
                   min: 1.0,
-                  max: 5.0,
+                  max: 6.0,
                   divisions: 4,
                   onChanged: (value) {
                     setState(() {

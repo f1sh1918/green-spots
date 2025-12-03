@@ -57,13 +57,13 @@ class SettingsModel extends ChangeNotifier {
     return obj;
   }
 
-  String firstStartKey = 'firstStart';
-  bool get firstStart => _getBool(firstStartKey) ?? true;
+  String firstMapStartKey = 'firstMapStart';
+  bool get firstMapStart => _getBool(firstMapStartKey) ?? true;
 
   Future<void> setFirstStart({required bool enabled}) async {
-    bool? currentlyFirstStartEnabled = firstStart;
-    await _preferences?.setBool(firstStartKey, enabled);
-    _notifyChange(currentlyFirstStartEnabled, enabled);
+    bool? currentlyFirstMapStartEnabled = firstMapStart;
+    await _preferences?.setBool(firstMapStartKey, enabled);
+    _notifyChange(currentlyFirstMapStartEnabled, enabled);
   }
 
   String tokenKey = 'token';
@@ -113,7 +113,7 @@ class SettingsModel extends ChangeNotifier {
 
   @override
   String toString() {
-    return 'SettingsModel{firstStart: $firstStart}';
+    return 'SettingsModel{firstStart: $firstMapStart}';
   }
 
   // only notify if value has changed

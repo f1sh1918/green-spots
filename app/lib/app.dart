@@ -15,13 +15,6 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   final SpotService _service = SpotService();
 
-  // ✅ Entfernen Sie die lokalen State-Variablen
-  // Position? _userPosition;
-  // LocationStatus? _locationStatus;
-  // late var _permissionGiven = false;
-
-  // ✅ Entfernen Sie _loadUserPosition() - wird jetzt im FutureBuilder gemacht
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<dynamic>>(
@@ -58,11 +51,10 @@ class _AppState extends State<App> {
         final locationStatus = positionData?['locationStatus'] as LocationStatus?;
 
         return Home(
-            spots: spots,
-            refetch: _service.fetchSpots,
             locationPermissionGiven: permissionGiven,
             userPosition: userPosition,
-            locationStatus: locationStatus);
+            locationStatus: locationStatus,
+            spots: spots);
       },
     );
   }
