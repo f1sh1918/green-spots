@@ -5,6 +5,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
+import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
 import 'models/add_spot.dart';
 
@@ -91,6 +92,19 @@ class _AddSpotsState extends State<AddSpots> {
 
       if (success) {
         if (mounted) {
+          Spot activeSpot = Spot(
+              title: spot.title,
+              secure: spot.acf.secure,
+              space: spot.acf.space.toDouble(),
+              swim: spot.acf.swim,
+              fire: spot.acf.fire,
+              lat: spot.acf.lat,
+              long: spot.acf.long,
+              note: spot.acf.note,
+              water: spot.acf.waterquality,
+              specials: spot.acf.specials,
+              id: 999);
+          Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(activeSpot);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Spot erfolgreich hinzugefügt!'),

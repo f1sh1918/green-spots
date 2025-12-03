@@ -7,7 +7,6 @@ import 'package:spots/map/map_page.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/settings/settings.dart';
 import 'package:spots/spots/models/spot.dart';
-import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/spots/spots.dart';
 
 import 'auth/models/settings.dart';
@@ -17,7 +16,6 @@ class Home extends StatefulWidget {
   final bool locationPermissionGiven;
   final Position? userPosition;
   final LocationStatus? locationStatus;
-  final Spot? activeSpot;
   final int? initialIndex;
 
   const Home(
@@ -25,7 +23,6 @@ class Home extends StatefulWidget {
       this.spots,
       this.locationPermissionGiven = false,
       this.initialIndex,
-      this.activeSpot,
       this.locationStatus,
       this.userPosition});
 
@@ -35,7 +32,6 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final AuthService _authService = AuthService();
-  final SpotService _service = SpotService();
   late int _selectedIndex = widget.initialIndex ?? 1;
   Position? _userPosition;
 
@@ -52,7 +48,6 @@ class _HomeState extends State<Home> {
     _autoLogin();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
-      spotsProvider.setRefetchFunction(_service.fetchSpots);
       if (widget.spots != null) {
         spotsProvider.setSpots(widget.spots!);
       }
@@ -70,7 +65,7 @@ class _HomeState extends State<Home> {
       MapPage(
           // ensures that the map will be updated in the spot length change
           key: ValueKey('map_${spotsProvider.spots.length}'),
-          activeSpot: widget.activeSpot,
+          activeSpot: spotsProvider.activeSpot,
           userPosition: _userPosition,
           locationPermissionGiven: widget.locationPermissionGiven,
           locationStatus: widget.locationStatus),

@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:spots/spots/models/spot.dart';
+import 'package:spots/spots/services/spot_service.dart';
 
 // Provides spots within the app and can trigger refetch
 class SpotsProvider extends ChangeNotifier {
+  final SpotService _service = SpotService();
   List<Spot> _spots = [];
   bool _isLoading = false;
-  Future<List<Spot>> Function()? _refetchFunction;
+  Spot? _activeSpot;
 
   List<Spot> get spots => _spots;
   bool get isLoading => _isLoading;
+  Spot? get activeSpot => _activeSpot;
 
-  void setRefetchFunction(Future<List<Spot>> Function()? refetch) {
-    _refetchFunction = refetch;
+  void setActiveSpot(Spot? activeSpot) {
+    _activeSpot = activeSpot;
+    notifyListeners();
   }
 
   void setSpots(List<Spot> spots) {
@@ -20,12 +24,11 @@ class SpotsProvider extends ChangeNotifier {
   }
 
   Future<void> refresh(BuildContext? context) async {
-    if (_refetchFunction == null) return;
     _isLoading = true;
     notifyListeners();
 
     try {
-      final newSpots = await _refetchFunction!();
+      final newSpots = await _service.fetchSpots();
       _spots = newSpots;
       _isLoading = false;
       notifyListeners();

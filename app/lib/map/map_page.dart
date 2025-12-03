@@ -38,24 +38,17 @@ class MapPage extends StatefulWidget {
 
 class _MapPagePageState extends State<MapPage> {
   final _controllerCompleter = Completer<MapLibreMapController>();
-  late LatLng initialCoordinates = LatLng(
-    widget.activeSpot?.lat ?? 48.3705,
-    widget.activeSpot?.long ?? 10.8978,
-  );
-  late final _initial = CameraPosition(
-    target: initialCoordinates,
-    zoom: widget.activeSpot != null ? detailZoom : 7,
-  );
-
   MapLibreMapController? _controller;
 
   @override
   void initState() {
     super.initState();
-    if (widget.activeSpot == null) {
-      _animateToUserPosition(widget.userPosition);
-    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final activeSpot = Provider.of<SpotsProvider>(context, listen: false).activeSpot;
+      if (activeSpot == null) {
+        _animateToUserPosition(widget.userPosition);
+      }
       final firstStart = Provider.of<SettingsModel>(context, listen: false).firstMapStart;
       if (firstStart) {
         _showInfoDialog(context);
@@ -88,15 +81,17 @@ class _MapPagePageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    final activeSpot = Provider.of<SpotsProvider>(context, listen: false).activeSpot;
     return Stack(
       children: [
         MapLibreMap(
           styleString: 'https://maps.tuerantuer.org/styles/integreat/style.json',
-          initialCameraPosition: _initial,
+          initialCameraPosition: _initializeCamera(activeSpot),
           myLocationEnabled: widget.locationPermissionGiven,
           myLocationRenderMode: MyLocationRenderMode.normal,
           attributionButtonMargins: const math.Point(-100, -100),
           onMapLongClick: _onMapClick,
+          onMapClick: _onMapClickShort,
           onMapCreated: (c) {
             _controller = c;
             _controllerCompleter.complete(c);
@@ -115,6 +110,21 @@ class _MapPagePageState extends State<MapPage> {
         ),
       ],
     );
+  }
+
+  CameraPosition _initializeCamera(Spot? activeSpot) {
+    late LatLng initialCoordinates = LatLng(
+      activeSpot?.lat ?? 48.3705,
+      activeSpot?.long ?? 10.8978,
+    );
+    return CameraPosition(
+      target: initialCoordinates,
+      zoom: activeSpot != null ? detailZoom : 7,
+    );
+  }
+
+  Future<void> _onMapClickShort(math.Point<double> point, clickCoordinates) async {
+    Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
   }
 
   Future<void> _addGeoJsonMarkers() async {
@@ -189,10 +199,12 @@ class _MapPagePageState extends State<MapPage> {
           selectedSpot,
           widget.userPosition!,
         );
+        Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(selectedSpot);
         _showSpotDialog(context, selectedSpot, distance);
       }
     } else {
       if (mounted) {
+        Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
         _showAddSpotDialog(
           context,
           clickCoordinates as LatLng,
