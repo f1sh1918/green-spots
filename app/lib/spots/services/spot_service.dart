@@ -39,9 +39,25 @@ class SpotService {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Spot erfolgreich hinzugefügt!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
         return true;
       } else {
-        debugPrint('Fehler beim Hinzufügen des Spots: ${response.statusCode}');
+        if (context.mounted) {
+          final errorMessage = jsonDecode(response.body)['message'] ?? 'Fehler beim Hinzufügen des Spots';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
         debugPrint('Response: ${response.body}');
         return false;
       }

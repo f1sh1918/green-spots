@@ -105,24 +105,9 @@ class _AddSpotsState extends State<AddSpots> {
               specials: spot.acf.specials,
               id: 999);
           Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(activeSpot);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Spot erfolgreich hinzugefügt!'),
-              backgroundColor: Colors.orange,
-            ),
-          );
           Navigator.pop(context);
           final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
           await spotsProvider.refresh(context);
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Fehler beim Hinzufügen des Spots.'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
       }
     }
