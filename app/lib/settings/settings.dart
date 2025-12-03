@@ -265,9 +265,6 @@ class _SettingsState extends State<Settings> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
               ),
               child: _isLoading
                   ? const SizedBox(
@@ -374,9 +371,6 @@ class _SettingsState extends State<Settings> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
             ),
             child: const Text(
               'Abmelden',

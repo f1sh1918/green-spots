@@ -318,9 +318,6 @@ class _AddSpotsState extends State<AddSpots> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
                     ),
                     onPressed: _isLoading ? null : _submitSpot,
                     child: _isLoading ? const CircularProgressIndicator() : const Text('Spot hinzufügen'),
