@@ -6,7 +6,6 @@ import 'package:spots/location/determine_position.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 
 import 'package:spots/spots/models/spot.dart';
-import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/spots/widgets/image_carousel.dart';
 import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +31,6 @@ class SpotDetailPage extends StatefulWidget {
 }
 
 class _SpotDetailPageState extends State<SpotDetailPage> {
-  final SpotService _service = SpotService();
   Position? _currentUserPosition;
   bool _currentLocationPermissionGiven = false;
   LocationStatus? _currentLocationStatus;
@@ -44,6 +42,9 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
     _currentUserPosition = widget.userPosition;
     _currentLocationPermissionGiven = widget.locationPermissionGiven;
     _currentLocationStatus = widget.locationStatus;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(widget.currentSpot);
+    });
   }
 
   @override
@@ -67,10 +68,10 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
           onPopInvokedWithResult: (didPop, _) async {
             if (didPop) return;
             if (context.mounted) {
+              Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
               Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (_) => Home(
-                        activeSpot: widget.currentSpot,
                         initialIndex: 1,
                         locationPermissionGiven: _currentLocationPermissionGiven,
                         userPosition: _currentUserPosition,
@@ -136,7 +137,6 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                                     : () => Navigator.of(context).pushAndRemoveUntil(
                                           MaterialPageRoute(
                                             builder: (_) => Home(
-                                              activeSpot: widget.currentSpot,
                                               initialIndex: 0,
                                               locationPermissionGiven: _currentLocationPermissionGiven,
                                               userPosition: _currentUserPosition,
