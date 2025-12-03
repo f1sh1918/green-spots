@@ -43,29 +43,19 @@ class _SettingsState extends State<Settings> {
     final userName = settingsProvider.user;
     final userEmail = settingsProvider.email;
     final loginExpires = settingsProvider.expireLogin;
-    print(token);
 
     setState(() {
       _isLoading = true;
     });
 
     if (token != null) {
-      final isValid = await _authService.validateToken(settingsProvider, token);
-
-      if (isValid) {
-        // Token ist gültig - Benutzer ist eingeloggt
-        setState(() {
-          _isLoggedIn = true;
-          _userDisplayName = userName ?? 'Unbekannt';
-          _userEmail = userEmail ?? 'Keine Mailadresse';
-          _isLoading = false;
-          _loginExpires = loginExpires;
-        });
-      } else {
-        if (mounted) {
-          _logout(context, false);
-        }
-      }
+      setState(() {
+        _isLoggedIn = true;
+        _userDisplayName = userName ?? 'Unbekannt';
+        _userEmail = userEmail ?? 'Keine Mailadresse';
+        _isLoading = false;
+        _loginExpires = loginExpires;
+      });
     } else {
       if (mounted) {
         _logout(context, false);
@@ -92,6 +82,7 @@ class _SettingsState extends State<Settings> {
           _userDisplayName = result.userDisplayName;
           _usernameController.clear();
           _passwordController.clear();
+          _loginExpires = _authService.loginExpirationDate().toIso8601String();
         });
 
         if (mounted) {
@@ -207,7 +198,6 @@ class _SettingsState extends State<Settings> {
           ),
           const SizedBox(height: 16),
 
-          // Passwort Feld
           TextFormField(
             controller: _passwordController,
             decoration: InputDecoration(
@@ -353,7 +343,7 @@ class _SettingsState extends State<Settings> {
                             ),
                           ),
                           Text(
-                            _loginExpires ?? 'N/A',
+                            _loginExpires != null ? 'Expires: $_loginExpires' : 'Expires: N/A',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,

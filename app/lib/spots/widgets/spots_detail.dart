@@ -15,10 +15,12 @@ class SpotDetailPage extends StatefulWidget {
   final Position? userPosition;
   final bool locationPermissionGiven;
   final LocationStatus? locationStatus;
+  final Future<void> Function() refresh;
 
   const SpotDetailPage({
     required this.currentSpot,
     required this.spots,
+    required this.refresh,
     this.userPosition,
     this.locationPermissionGiven = false,
     this.locationStatus,
@@ -64,6 +66,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
         if (context.mounted) {
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
+                // TODO fix refresh
                 builder: (_) => Home(
                     activeSpot: widget.currentSpot,
                     spots: widget.spots,
@@ -126,6 +129,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                               ? null
                               : () => Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
+                                    // TODO fix refresh
                                     builder: (_) => Home(
                                         activeSpot: widget.currentSpot,
                                         spots: widget.spots,

@@ -67,7 +67,7 @@ class _AppState extends State<App> {
     );
   }
 
-  // ✅ Neue Methode die Position-Daten als Future zurückgibt
+  // TODO fix that
   Future<Map<String, dynamic>?> _loadUserPosition(BuildContext context) async {
     try {
       RequestedPosition? requestedPosition = await determinePosition(
@@ -89,7 +89,7 @@ class _AppState extends State<App> {
         'locationStatus': null,
       };
     } catch (e) {
-      print('Fehler beim Laden der Position: $e');
+      debugPrint('Fehler beim Laden der Position: $e');
       return {
         'position': null,
         'permissionGiven': false,

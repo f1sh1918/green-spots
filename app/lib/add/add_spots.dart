@@ -184,24 +184,7 @@ class _AddSpotsState extends State<AddSpots> {
                         },
                       ),
                     ),
-                    IconButton(
-                        color: Colors.green,
-                        onPressed: () => setState(() {
-                              if (widget.userPosition != null && widget.userPosition?.latitude != null) {
-                                _latController.text = widget.userPosition!.latitude.toString();
-                              }
-                              if (widget.userPosition != null && widget.userPosition?.longitude != null) {
-                                _longController.text = widget.userPosition!.longitude.toString();
-                              }
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Hole aktuelle Position...'),
-                                  backgroundColor: Colors.orange,
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            }),
-                        icon: Icon(Icons.gps_fixed))
+                    IconButton(color: Colors.green, onPressed: () => _updateUserPosition(), icon: Icon(Icons.gps_fixed))
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -349,5 +332,29 @@ class _AddSpotsState extends State<AddSpots> {
         ),
       ),
     );
+  }
+
+  _updateUserPosition() {
+    if (widget.userPosition?.latitude != null && widget.userPosition?.longitude != null) {
+      setState(() {
+        _latController.text = widget.userPosition!.latitude.toString();
+        _longController.text = widget.userPosition!.longitude.toString();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Position aktualisiert!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Aktuelle Position nicht verfügbar'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }

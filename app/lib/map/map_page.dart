@@ -188,15 +188,15 @@ class _MapPagePageState extends State<MapPage> {
         _showSpotDialog(context, selectedSpot, widget.spots, distance);
       }
     } else {
-      _showAddSpotDialog(context, clickCoordinates as LatLng);
+      _showAddSpotDialog(context, clickCoordinates as LatLng, widget.userPosition);
     }
   }
 
-  void _showAddSpotDialog(BuildContext context, LatLng coordinates) {
+  void _showAddSpotDialog(BuildContext context, LatLng coordinates, Position? userPosition) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AddSpotDialog(coordinates: coordinates);
+        return AddSpotDialog(coordinates: coordinates, userPosition: userPosition);
       },
     );
   }
@@ -231,6 +231,7 @@ class _MapPagePageState extends State<MapPage> {
             userPosition: widget.userPosition,
             locationPermissionGiven: widget.locationPermissionGiven,
             locationStatus: widget.locationStatus,
+            refresh: widget.refresh,
           ),
         ),
         (route) => route.isFirst);

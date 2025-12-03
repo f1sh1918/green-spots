@@ -26,7 +26,6 @@ class SpotService {
 
   Future<bool> addSpot(AddSpot spot, String? token, BuildContext context) async {
     _checkTokenExists(token, context);
-    print(spot.toJson());
     try {
       final url = Uri.parse('$baseUrl$spotsEndpoint');
       final response = await http.post(
@@ -42,12 +41,12 @@ class SpotService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return true;
       } else {
-        print('Fehler beim Hinzufügen des Spots: ${response.statusCode}');
-        print('Response: ${response.body}');
+        debugPrint('Fehler beim Hinzufügen des Spots: ${response.statusCode}');
+        debugPrint('Response: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('Fehler beim Hinzufügen des Spots: $e');
+      debugPrint('Fehler beim Hinzufügen des Spots: $e');
       return false;
     }
   }
@@ -68,11 +67,11 @@ class SpotService {
         final Map<String, dynamic> data = jsonDecode(response.body);
         return AddSpot.fromJson(data);
       } else {
-        print('Fehler beim Abrufen des Spots: ${response.statusCode}');
+        debugPrint('Fehler beim Abrufen des Spots: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      print('Fehler beim Abrufen des Spots: $e');
+      debugPrint('Fehler beim Abrufen des Spots: $e');
       return null;
     }
   }
@@ -94,12 +93,12 @@ class SpotService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return true;
       } else {
-        print('Fehler beim Aktualisieren des Spots: ${response.statusCode}');
-        print('Response: ${response.body}');
+        debugPrint('Fehler beim Aktualisieren des Spots: ${response.statusCode}');
+        debugPrint('Response: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('Fehler beim Aktualisieren des Spots: $e');
+      debugPrint('Fehler beim Aktualisieren des Spots: $e');
       return false;
     }
   }
@@ -120,11 +119,11 @@ class SpotService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return true;
       } else {
-        print('Fehler beim Löschen des Spots: ${response.statusCode}');
+        debugPrint('Fehler beim Löschen des Spots: ${response.statusCode}');
         return false;
       }
     } catch (e) {
-      print('Fehler beim Löschen des Spots: $e');
+      debugPrint('Fehler beim Löschen des Spots: $e');
       return false;
     }
   }
