@@ -95,7 +95,6 @@ Future<LocationStatus> checkAndRequestLocationPermission(
   bool requestIfNotGranted = true,
 }) async {
   final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  print(serviceEnabled);
   if (!serviceEnabled) {
     if (requestIfNotGranted && context.mounted) {
       final bool? result = await showDialog<bool>(

@@ -78,6 +78,7 @@ class _SpotsState extends State<Spots> {
                         userPosition: widget.userPosition,
                         locationPermissionGiven: widget.locationPermissionGiven,
                         locationStatus: widget.locationStatus,
+                        refresh: widget.refresh,
                       )),
             ),
           );

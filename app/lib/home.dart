@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+import 'package:spots/auth/services/auth.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/map/map_page.dart';
 import 'package:spots/settings/settings.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/spots.dart';
+
+import 'auth/models/settings.dart';
 
 class Home extends StatefulWidget {
   final List<Spot> spots;
@@ -30,6 +34,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final AuthService _authService = AuthService();
   late int _selectedIndex = widget.initialIndex ?? 1;
   late List<Spot> _currentSpots;
   Position? _userPosition;
@@ -40,6 +45,7 @@ class _HomeState extends State<Home> {
     super.initState();
     _currentSpots = widget.spots;
     _userPosition = widget.userPosition;
+    _autoLogin();
   }
 
   Future<void> _handleRefresh() async {
@@ -134,5 +140,12 @@ class _HomeState extends State<Home> {
       ),
       body: Center(child: _getPages().elementAt(_selectedIndex)),
     );
+  }
+
+  _autoLogin() {
+    final settings = Provider.of<SettingsModel>(context, listen: false);
+    if (settings.refreshToken != null && _authService.isTokenExpired(settings.expireLogin) && mounted) {
+      _authService.loginWithRefreshToken(context: context, token: settings.refreshToken!);
+    }
   }
 }
