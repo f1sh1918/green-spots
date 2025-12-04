@@ -140,8 +140,8 @@ class _MapPagePageState extends State<MapPage> {
       "markers-source",
       "markers-layer",
       SymbolLayerProperties(
-        iconImage: "marker_40",
-        iconSize: 1.0,
+        iconImage: "campsite_15",
+        iconSize: 2.0,
         visibility: 'visible',
         iconAnchor: "bottom",
         iconAllowOverlap: true,

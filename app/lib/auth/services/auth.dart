@@ -125,7 +125,7 @@ class AuthService {
     try {
       DateTime expireDate = DateTime.parse(expireDateString);
       // Add some threshold
-      return DateTime.now().isAfter(expireDate.subtract(const Duration(hours: 20)));
+      return DateTime.now().isAfter(expireDate.subtract(const Duration(days: 89, hours: 12)));
     } catch (e) {
       debugPrint('Fehler beim Parsen des Datums: $e');
       return true; // Bei Fehler als expired behandeln
@@ -133,7 +133,7 @@ class AuthService {
   }
 
   DateTime loginExpirationDate() {
-    return DateTime.now().add(const Duration(days: 1));
+    return DateTime.now().add(const Duration(days: 90));
   }
 
   // Private Methoden
