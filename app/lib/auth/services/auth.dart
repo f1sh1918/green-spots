@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/auth.dart';
@@ -79,6 +79,12 @@ class AuthService {
           final settingsModel = Provider.of<SettingsModel>(context, listen: false);
           await _saveToken(authResult.token, settingsModel);
           await _saveUserInfo(authResult, settingsModel);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sie werden angemeldet...'),
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
 
         return authResult;
@@ -125,7 +131,7 @@ class AuthService {
     try {
       DateTime expireDate = DateTime.parse(expireDateString);
       // Add some threshold
-      return DateTime.now().isAfter(expireDate.subtract(const Duration(days: 89, hours: 12)));
+      return DateTime.now().isAfter(expireDate.subtract(const Duration(hours: 12)));
     } catch (e) {
       debugPrint('Fehler beim Parsen des Datums: $e');
       return true; // Bei Fehler als expired behandeln
