@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
+import 'package:spots/utils/messenger_utils.dart';
 
 // Provides spots within the app and can trigger refetch
 class SpotsProvider extends ChangeNotifier {
@@ -34,26 +35,14 @@ class SpotsProvider extends ChangeNotifier {
       notifyListeners();
 
       if (context != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Daten erfolgreich aktualisiert'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        showSnackBar(context, 'Daten erfolgreich aktualisiert', Colors.green, Duration(seconds: 1));
       }
     } catch (error) {
       _isLoading = false;
       notifyListeners();
 
       if (context != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Fehler beim Laden: $error'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        showSnackBar(context, 'Fehler beim Laden: $error', Colors.red, Duration(seconds: 3));
       }
 
       rethrow;

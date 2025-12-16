@@ -1,13 +1,61 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:spots/add/models/add_spot.dart';
 import 'package:spots/constants/api.dart';
 import 'package:spots/spots/models/spot.dart';
+import 'package:spots/utils/messenger_utils.dart';
 
 class SpotService {
+  Future<List<int>> uploadImagesAndGetIds(List<File> images, String token, BuildContext context) async {
+    List<int> imageIds = [];
+
+    for (File image in images) {
+      try {
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('$baseUrl$mediaEndpoint'),
+        );
+
+        request.headers['Authorization'] = 'Bearer $token';
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            image.path,
+            filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+        );
+
+        var response = await request.send();
+
+        if (response.statusCode == 201) {
+          String responseBody = await response.stream.bytesToString();
+          Map<String, dynamic> jsonResponse = json.decode(responseBody);
+
+          // Media-ID aus der Response extrahieren
+          int mediaId = jsonResponse['id'] ?? 0;
+          if (mediaId > 0) {
+            imageIds.add(mediaId);
+          }
+        } else {
+          debugPrint('Fehler beim Hochladen des Bildes: ${response.statusCode}');
+          String errorBody = await response.stream.bytesToString();
+          debugPrint('Error body: $errorBody');
+        }
+      } catch (e) {
+        showSnackBar(context, 'Fehler beim Hochladen des Bildes', Colors.red);
+      }
+
+      // Kurze Pause zwischen den Uploads
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+
+    return imageIds;
+  }
+
   Future<List<Spot>> fetchSpots({int perPage = 20, int page = 1}) async {
     final uri = Uri.parse('$baseUrl$spotsEndpoint').replace(queryParameters: {
       'per_page': '$perPage',
@@ -24,8 +72,26 @@ class SpotService {
     }
   }
 
-  Future<bool> addSpot(AddSpot spot, String? token, BuildContext context) async {
-    _checkTokenExists(token, context);
+  Future<bool> addSpot(AddSpot spot, String? token, BuildContext context, {List<File>? images}) async {
+    bool tokenExists = _checkTokenExists(token, context);
+
+    // Bilder hochladen, falls vorhanden
+    if (images != null && images.isNotEmpty && tokenExists) {
+      showSnackBar(context, 'Bilder werden hochgeladen...', Colors.orange);
+      List<int> imageIds = await uploadImagesAndGetIds(images, token!, context);
+
+      if (imageIds.isNotEmpty) {
+        // Media-IDs zu ACF hinzufügen (nicht URLs)
+        spot.acf.image = imageIds[0].toString();
+        if (imageIds.length > 1) spot.acf.image2 = imageIds[1].toString();
+        if (imageIds.length > 2) spot.acf.image3 = imageIds[2].toString();
+      }
+
+      if (imageIds.length != images.length) {
+        showSnackBar(context, 'Nicht alle Bilder konnten hochgeladen werden', Colors.red);
+      }
+    }
+
     try {
       final url = Uri.parse('$baseUrl$spotsEndpoint');
       final response = await http.post(
@@ -40,23 +106,13 @@ class SpotService {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Spot erfolgreich hinzugefügt!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          showSnackBar(context, 'Spot erfolgreich hinzugefügt!', Colors.green);
         }
         return true;
       } else {
         if (context.mounted) {
           final errorMessage = jsonDecode(response.body)['message'] ?? 'Fehler beim Hinzufügen des Spots';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red,
-            ),
-          );
+          showSnackBar(context, errorMessage, Colors.red);
         }
         debugPrint('Response: ${response.body}');
         return false;
@@ -147,13 +203,7 @@ class SpotService {
   bool _checkTokenExists(String? token, BuildContext context) {
     if (token == null) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Nicht authorisiert. Bitte melden sie sich an!'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        showSnackBar(context, 'Nicht authorisiert. Bitte melden sie sich an!', Colors.orange, Duration(seconds: 3));
         return false;
       }
     }

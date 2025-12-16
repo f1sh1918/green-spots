@@ -36,6 +36,9 @@ class AddSpotACF {
   final String? note;
   final List<String>? specials;
   final String waterquality;
+  String? image;
+  String? image2;
+  String? image3;
 
   AddSpotACF({
     required this.lat,
@@ -46,6 +49,9 @@ class AddSpotACF {
     required this.fire,
     this.note,
     this.specials,
+    this.image,
+    this.image2,
+    this.image3,
     required this.waterquality,
   });
 
@@ -60,6 +66,9 @@ class AddSpotACF {
       'note': note,
       'specials': specials,
       'waterquality': waterquality,
+      'image': image,
+      'image2': image2,
+      'image3': image3
     };
   }
 
@@ -74,6 +83,9 @@ class AddSpotACF {
       note: json['note'] ?? '',
       specials: List<String>.from(json['specials']),
       waterquality: json['waterquality'] ?? 'kein Wasser',
+      image: json['image'],
+      image2: json['image2'],
+      image3: json['image3'],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/auth.dart';
 import 'package:spots/constants/api.dart';
+import 'package:spots/utils/messenger_utils.dart';
 
 import '../models/settings.dart';
 
@@ -79,12 +80,7 @@ class AuthService {
           final settingsModel = Provider.of<SettingsModel>(context, listen: false);
           await _saveToken(authResult.token, settingsModel);
           await _saveUserInfo(authResult, settingsModel);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sie werden angemeldet...'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          showSnackBar(context, 'Sie werden angemeldet...', Colors.orange);
         }
 
         return authResult;

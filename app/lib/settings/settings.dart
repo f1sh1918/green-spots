@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/auth/services/auth.dart';
 import 'package:spots/constants/api.dart';
+import 'package:spots/utils/messenger_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatefulWidget {
@@ -88,13 +89,8 @@ class _SettingsState extends State<Settings> {
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erfolgreich angemeldet als ${result.userDisplayName}!'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
-          );
+          showSnackBar(
+              context, 'Erfolgreich angemeldet als ${result.userDisplayName}!', Colors.green, Duration(seconds: 3));
         }
       } else {
         // Login fehlgeschlagen
@@ -124,12 +120,7 @@ class _SettingsState extends State<Settings> {
     });
 
     if (mounted && showSnackbar) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erfolgreich abgemeldet'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      showSnackBar(context, 'Erfolgreich abgemeldet', Colors.green);
     }
   }
 
