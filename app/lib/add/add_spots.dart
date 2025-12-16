@@ -3,10 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
+import 'dart:io';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
+import 'package:spots/utils/messenger_utils.dart';
 import 'models/add_spot.dart';
 
 class AddSpots extends StatefulWidget {
@@ -21,6 +25,8 @@ class AddSpots extends StatefulWidget {
 class _AddSpotsState extends State<AddSpots> {
   final _formKey = GlobalKey<FormState>();
   final _spotsService = SpotService();
+  final ImagePicker _picker = ImagePicker();
+  final GlobalKey _imagesSectionKey = GlobalKey();
 
   // Form Controllers
   final _titleController = TextEditingController();
@@ -30,9 +36,11 @@ class _AddSpotsState extends State<AddSpots> {
   final _specialController = TextEditingController();
 
   final List<String> _waterQualityOptions = ['kein Wasser', 'stehendes Wasser', 'fließendes Wasser', 'Trinkwasser'];
-
   final List<String> _availableSpecials = ['Unterstand', 'Tisch', 'Bank'];
   final List<String> _selectedSpecials = [];
+
+  // Image handling
+  List<File> _selectedImages = [];
 
   // Form Values
   double _secure = 1.0;
@@ -62,6 +70,185 @@ class _AddSpotsState extends State<AddSpots> {
     }
   }
 
+  Future<File?> _resizeImage(File imageFile) async {
+    try {
+      // Bild laden
+      final Uint8List imageBytes = await imageFile.readAsBytes();
+      final img.Image? originalImage = img.decodeImage(imageBytes);
+
+      if (originalImage == null) return null;
+
+      // Größe berechnen (max 1024 Breite, Seitenverhältnis beibehalten)
+      int newWidth = originalImage.width;
+      int newHeight = originalImage.height;
+
+      if (originalImage.width > 1024) {
+        newWidth = 1024;
+        newHeight = (originalImage.height * 1024 / originalImage.width).round();
+      }
+
+      // Bild verkleinern
+      final img.Image resizedImage = img.copyResize(
+        originalImage,
+        width: newWidth,
+        height: newHeight,
+      );
+
+      // Als JPEG speichern
+      final List<int> resizedBytes = img.encodeJpg(resizedImage, quality: 85);
+
+      // Temporäre Datei erstellen
+      final String fileName = 'resized_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final File resizedFile = File('${imageFile.parent.path}/$fileName');
+      await resizedFile.writeAsBytes(resizedBytes);
+
+      return resizedFile;
+    } catch (e) {
+      print('Fehler beim Verkleinern des Bildes: $e');
+      return null;
+    }
+  }
+
+  Future<void> _pickImages() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Kamera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galerie'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _getImage(ImageSource source) async {
+    if (_selectedImages.length >= 3) {
+      showSnackBar(context, 'Maximal 3 Bilder erlaubt', Colors.orange);
+      return;
+    }
+
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        File imageFile = File(pickedFile.path);
+
+        // Bild verkleinern
+        File? resizedImage = await _resizeImage(imageFile);
+        if (resizedImage != null) {
+          setState(() {
+            _selectedImages.add(resizedImage);
+          });
+        } else {
+          // Fallback: Originalbild verwenden
+          setState(() {
+            _selectedImages.add(imageFile);
+          });
+        }
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_imagesSectionKey.currentContext != null) {
+            Scrollable.ensureVisible(
+              _imagesSectionKey.currentContext!,
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      showSnackBar(context, 'Fehler beim Auswählen des Bildes: $e', Colors.red);
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+  Widget _buildImageThumbnails() {
+    if (_selectedImages.isEmpty) {
+      return Container();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ausgewählte Bilder',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _selectedImages.length,
+            itemBuilder: (context, index) {
+              return Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        _selectedImages[index],
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => _removeImage(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.black,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   Future<void> _submitSpot() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -84,7 +271,8 @@ class _AddSpotsState extends State<AddSpots> {
 
       final token = Provider.of<SettingsModel>(context, listen: false).token;
 
-      final success = await _spotsService.addSpot(spot, token, context);
+      // Hier würden Sie die Bilder zusammen mit dem Spot hochladen
+      final success = await _spotsService.addSpot(spot, token, context, images: _selectedImages);
 
       setState(() {
         _isLoading = false;
@@ -312,6 +500,27 @@ class _AddSpotsState extends State<AddSpots> {
                   ],
                 ),
                 const SizedBox(height: 16),
+                // Bilder-Sektion
+                Row(
+                  children: [
+                    Expanded(
+                      key: _imagesSectionKey,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        onPressed: _selectedImages.length >= 3 ? null : _pickImages,
+                        icon: const Icon(Icons.add_a_photo),
+                        label: Text(_selectedImages.length >= 3
+                            ? 'Maximum erreicht (3/3)'
+                            : 'Bilder hinzufügen (${_selectedImages.length}/3)'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildImageThumbnails(),
+                const SizedBox(height: 16),
 
                 SizedBox(
                   width: double.infinity,
@@ -339,21 +548,9 @@ class _AddSpotsState extends State<AddSpots> {
         _latController.text = widget.userPosition!.latitude.toString();
         _longController.text = widget.userPosition!.longitude.toString();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Position aktualisiert!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      showSnackBar(context, 'Position aktualisiert!', Colors.green, Duration(seconds: 2));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Aktuelle Position nicht verfügbar'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
+      showSnackBar(context, 'Aktuelle Position nicht verfügbar', Colors.red, Duration(seconds: 3));
     }
   }
 }

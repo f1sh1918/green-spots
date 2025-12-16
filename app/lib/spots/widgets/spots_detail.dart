@@ -10,6 +10,7 @@ import 'package:spots/spots/widgets/image_carousel.dart';
 import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
 import 'package:spots/utils/distance.dart';
+import 'package:spots/utils/messenger_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SpotDetailPage extends StatefulWidget {
@@ -54,11 +55,14 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
         List<Widget> imageWidgets = (widget.currentSpot.images ?? [])
             .where((url) => url is String && url.trim().isNotEmpty)
             .map<Widget>(
-              (url) => Image.network(
-                url,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
+              (url) => GestureDetector(
+                onTap: () => _showFullScreenImage(context, url),
+                child: Image.network(
+                  url,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
               ),
             )
             .toList();
@@ -181,16 +185,45 @@ Future<void> _openEditPage(Spot spot) async {
 
 Future<void> _launchMap(double? lat, double? long, BuildContext context) async {
   if (lat == null || long == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Spot konnte nicht in externer Anwendung geöffnet werden.',
-        ),
-        backgroundColor: Colors.red,
-      ),
-    );
+    showSnackBar(context, 'Spot konnte nicht in externer Anwendung geöffnet werden.', Colors.red);
   } else {
     final geoUriWithZoom = Uri.parse('geo:$lat,$long?z=14&q=$lat,$long');
     await launchUrl(geoUriWithZoom);
   }
+}
+
+void _showFullScreenImage(BuildContext context, String imageUrl) {
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: '',
+    barrierColor: Colors.black,
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
