@@ -36,7 +36,7 @@ class _AddSpotsState extends State<AddSpots> {
   final _specialController = TextEditingController();
 
   final List<String> _waterQualityOptions = ['kein Wasser', 'stehendes Wasser', 'fließendes Wasser', 'Trinkwasser'];
-  final List<String> _availableSpecials = ['Unterstand', 'Tisch', 'Bank'];
+  final List<String> _availableSpecials = ['Unterstand', 'Tisch', 'Bank', 'Hängematte'];
   final List<String> _selectedSpecials = [];
 
   // Mapping für Sicherheitsstufen
