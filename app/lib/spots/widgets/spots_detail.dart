@@ -55,14 +55,11 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
         List<Widget> imageWidgets = (widget.currentSpot.images ?? [])
             .where((url) => url is String && url.trim().isNotEmpty)
             .map<Widget>(
-              (url) => GestureDetector(
-                onTap: () => _showFullScreenImage(context, url),
-                child: Image.network(
-                  url,
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                ),
+              (url) => Image.network(
+                url,
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
               ),
             )
             .toList();
@@ -99,7 +96,11 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (imageWidgets.isNotEmpty) ImageCarousel(images: imageWidgets),
+                  if (imageWidgets.isNotEmpty)
+                    ImageCarousel(
+                      images: imageWidgets,
+                      onImageTap: (index) => _showFullScreenCarousel(context, imageWidgets, index),
+                    ),
                   Padding(
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -113,18 +114,16 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                           showLabel: true,
                         ),
                         Divider(height: 50),
-                        if (widget.currentSpot.note != null) ...[
+                        Text(
+                          widget.currentSpot.note!.isNotEmpty ? widget.currentSpot.note! : 'Keine Notiz vorhanden',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        Divider(height: 50),
+                        if (widget.userPosition != null) ...[
                           Text(
-                            widget.currentSpot.note!,
+                            '${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km entfernt',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
-                          Divider(height: 50),
-                          if (widget.userPosition != null) ...[
-                            Text(
-                              '${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km entfernt',
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                          ],
                           Divider(height: 50),
                         ],
                         Padding(
@@ -192,7 +191,29 @@ Future<void> _launchMap(double? lat, double? long, BuildContext context) async {
   }
 }
 
-void _showFullScreenImage(BuildContext context, String imageUrl) {
+void _showFullScreenCarousel(BuildContext context, List<Widget> images, int initialIndex) {
+  // Extract image URLs from the widgets
+  List<String> imageUrls = [];
+  for (Widget imageWidget in images) {
+    if (imageWidget is Image && imageWidget.image is NetworkImage) {
+      imageUrls.add((imageWidget.image as NetworkImage).url);
+    }
+  }
+
+  // Create fullscreen versions of images
+  List<Widget> fullscreenImages = imageUrls
+      .map(
+        (url) => InteractiveViewer(
+          child: Image.network(
+            url,
+            fit: BoxFit.contain,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+        ),
+      )
+      .toList();
+
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
@@ -203,19 +224,14 @@ void _showFullScreenImage(BuildContext context, String imageUrl) {
         backgroundColor: Colors.black,
         body: Stack(
           children: [
-            Center(
-              child: InteractiveViewer(
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              ),
+            ImageCarousel(
+              images: fullscreenImages,
+              isFullscreen: true,
+              initialIndex: initialIndex,
             ),
             Positioned(
               top: 40,
-              right: 20,
+              right: 10,
               child: IconButton(
                 icon: Icon(Icons.close, color: Colors.white, size: 30),
                 onPressed: () => Navigator.of(context).pop(),
