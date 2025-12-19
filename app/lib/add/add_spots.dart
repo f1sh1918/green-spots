@@ -501,7 +501,7 @@ class _AddSpotsState extends State<AddSpots> {
                         value: _space.toDouble(),
                         min: 1,
                         max: 6,
-                        divisions: 4,
+                        divisions: 5,
                         label: _space.toString(),
                         onChanged: (value) {
                           setState(() {

@@ -175,27 +175,34 @@ class SpotService {
     }
   }
 
-  Future<bool> deleteSpot(int id, String token, BuildContext context) async {
-    try {
-      final url = Uri.parse('$baseUrl$spotsEndpoint/$id');
+  Future<bool> deleteSpot(int id, BuildContext context, String? token) async {
+    bool tokenExists = _checkTokenExists(token, context);
+    if (tokenExists && context.mounted) {
+      try {
+        final url = Uri.parse('$baseUrl$spotsEndpoint/$id');
 
-      final response = await http.delete(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+        final response = await http.delete(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return true;
-      } else {
-        debugPrint('Fehler beim Löschen des Spots: ${response.statusCode}');
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          showSnackBar(context, 'Spot erfolgreich gelöscht.', Colors.green);
+          return true;
+        } else {
+          showSnackBar(context, 'Fehler beim Löschen des Spots!', Colors.red);
+          return false;
+        }
+      } catch (e) {
+        showSnackBar(context, 'Fehler beim Löschen des Spots!', Colors.red);
         return false;
       }
-    } catch (e) {
-      debugPrint('Fehler beim Löschen des Spots: $e');
+    } else {
+      showSnackBar(context, 'Sie sind nicht berechtigt einen Spot zu löschen!', Colors.red);
       return false;
     }
   }
