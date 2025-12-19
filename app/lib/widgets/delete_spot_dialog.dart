@@ -5,7 +5,6 @@ import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
 
-
 class DeleteSpotDialog extends StatefulWidget {
   final Spot spot;
   final SpotService spotService;
@@ -53,9 +52,7 @@ class _DeleteSpotDialogState extends State<DeleteSpotDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isDeleting
-              ? null
-              : () => Navigator.of(context, rootNavigator: true).pop(),
+          onPressed: _isDeleting ? null : () => Navigator.of(context, rootNavigator: true).pop(),
           child: const Text('Abbrechen'),
         ),
         TextButton(

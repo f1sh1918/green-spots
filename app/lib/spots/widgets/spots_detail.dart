@@ -10,6 +10,7 @@ import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/widgets/image_carousel.dart';
 import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
+import 'package:spots/utils/date_format.dart';
 import 'package:spots/utils/distance.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/widgets/delete_spot_dialog.dart';
@@ -108,13 +109,14 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (imageWidgets.isNotEmpty)
+                  if (imageWidgets.isNotEmpty) ...[
                     ImageCarousel(
                       images: imageWidgets,
                       onImageTap: (index) => _showFullScreenCarousel(context, imageWidgets, index),
                     ),
+                  ],
                   Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -136,6 +138,10 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                             '${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km entfernt',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
+                        ],
+                        if (widget.currentSpot.lastVisited != null) ...[
+                          Text('Zuletzt besucht: ${convertDateString(widget.currentSpot.lastVisited!)}',
+                              style: Theme.of(context).textTheme.bodyLarge),
                           Divider(height: 50),
                         ],
                         Padding(

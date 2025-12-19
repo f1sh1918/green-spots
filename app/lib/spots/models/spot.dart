@@ -14,6 +14,7 @@ class Spot {
   final String? thumbnail;
   final List<dynamic>? specials;
   final List<dynamic>? images;
+  final String? lastVisited;
 
   Spot(
       {required this.id,
@@ -28,7 +29,8 @@ class Spot {
       this.long,
       this.note,
       this.specials,
-      this.thumbnail});
+      this.thumbnail,
+      this.lastVisited});
 
   // --------------------------------------------------------------
   // Factory constructor that parses a Map<String, dynamic>
@@ -61,7 +63,8 @@ class Spot {
         long: parseDouble(acf?['long']),
         specials: acf?['specials'],
         water: acf?['waterquality'],
-        thumbnail: json['image_thumb']);
+        thumbnail: json['image_thumb'],
+        lastVisited: acf?['lastvisited']);
   }
 
   // --------------------------------------------------------------

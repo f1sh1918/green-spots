@@ -33,6 +33,7 @@ class AddSpotACF {
   final int space;
   final bool swim;
   final bool fire;
+  String lastvisited;
   final String? note;
   final List<String>? specials;
   final String waterquality;
@@ -47,6 +48,7 @@ class AddSpotACF {
     required this.space,
     required this.swim,
     required this.fire,
+    required this.lastvisited,
     this.note,
     this.specials,
     this.image,
@@ -68,24 +70,25 @@ class AddSpotACF {
       'waterquality': waterquality,
       'image': image,
       'image2': image2,
-      'image3': image3
+      'image3': image3,
+      'lastvisited': lastvisited
     };
   }
 
   factory AddSpotACF.fromJson(Map<String, dynamic> json) {
     return AddSpotACF(
-      lat: (json['lat'] ?? 0.0).toDouble(),
-      long: (json['long'] ?? 0.0).toDouble(),
-      secure: (json['secure'] ?? 0.0).toDouble(),
-      space: json['space'] ?? 0,
-      swim: json['swim'] ?? false,
-      fire: json['fire'] ?? false,
-      note: json['note'] ?? '',
-      specials: List<String>.from(json['specials']),
-      waterquality: json['waterquality'] ?? 'kein Wasser',
-      image: json['image'],
-      image2: json['image2'],
-      image3: json['image3'],
-    );
+        lat: (json['lat'] ?? 0.0).toDouble(),
+        long: (json['long'] ?? 0.0).toDouble(),
+        secure: (json['secure'] ?? 0.0).toDouble(),
+        space: json['space'] ?? 0,
+        swim: json['swim'] ?? false,
+        fire: json['fire'] ?? false,
+        note: json['note'] ?? '',
+        specials: List<String>.from(json['specials']),
+        waterquality: json['waterquality'] ?? 'kein Wasser',
+        image: json['image'],
+        image2: json['image2'],
+        image3: json['image3'],
+        lastvisited: json['lastvisited']);
   }
 }
