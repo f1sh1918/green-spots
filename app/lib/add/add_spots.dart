@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,6 +35,7 @@ class _AddSpotsState extends State<AddSpots> {
   final _latController = TextEditingController();
   final _longController = TextEditingController();
   final _specialController = TextEditingController();
+  final _lastVisitedController = TextEditingController();
 
   final List<String> _waterQualityOptions = ['kein Wasser', 'stehendes Wasser', 'fließendes Wasser', 'Trinkwasser'];
   final List<String> _availableSpecials = ['Unterstand', 'Tisch', 'Bank', 'Hängematte'];
@@ -61,15 +63,39 @@ class _AddSpotsState extends State<AddSpots> {
     _latController.dispose();
     _longController.dispose();
     _specialController.dispose();
+    _lastVisitedController.dispose();
     super.dispose();
   }
 
+  DateTime _selectedDate = DateTime.now();
   @override
   void initState() {
     super.initState();
+    _lastVisitedController.text = _formatDate(_selectedDate);
     if (widget.coordinates != null) {
       _latController.text = widget.coordinates!.latitude.toString();
       _longController.text = widget.coordinates!.longitude.toString();
+    }
+  }
+
+  String _formatDate(DateTime date) => DateFormat('dd.MM.yyyy').format(date);
+  Future<void> _pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      locale: const Locale('de'),
+      helpText: 'Datum auswählen',
+      cancelText: 'Abbrechen',
+      confirmText: 'OK',
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _lastVisitedController.text = _formatDate(picked);
+      });
     }
   }
 
@@ -313,6 +339,7 @@ class _AddSpotsState extends State<AddSpots> {
             fire: _fire,
             note: _noteController.text,
             waterquality: _waterquality,
+            lastvisited: DateFormat('yyyyMMdd').format(_selectedDate),
             specials: _selectedSpecials.isEmpty ? null : _selectedSpecials),
       );
 
@@ -399,7 +426,22 @@ class _AddSpotsState extends State<AddSpots> {
                     ),
                     maxLines: 3,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _lastVisitedController,
+                    readOnly: true, // prevents keyboard & manual edits
+                    enableInteractiveSelection: false, // disables long‑press selection
+                    decoration: InputDecoration(
+                      labelText: 'Zuletzt besucht',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.calendar_today),
+                        tooltip: 'Datum auswählen',
+                        onPressed: _pickDate,
+                      ),
+                    ),
+                    onTap: _pickDate,
+                  ),
                   Divider(height: 50),
                   // Koordinaten
                   Column(
