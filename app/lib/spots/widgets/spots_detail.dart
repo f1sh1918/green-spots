@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:spots/auth/models/settings.dart';
 import 'package:spots/constants/api.dart';
 import 'package:spots/home.dart';
 import 'package:spots/location/determine_position.dart';
@@ -11,7 +12,10 @@ import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
 import 'package:spots/utils/distance.dart';
 import 'package:spots/utils/messenger_utils.dart';
+import 'package:spots/widgets/delete_spot_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../services/spot_service.dart';
 
 class SpotDetailPage extends StatefulWidget {
   final Spot currentSpot;
@@ -36,6 +40,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
   bool _currentLocationPermissionGiven = false;
   LocationStatus? _currentLocationStatus;
   final bool _isLoadingPosition = false;
+  final _spotsService = SpotService();
 
   @override
   void initState() {
@@ -50,6 +55,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final token = Provider.of<SettingsModel>(context, listen: false).token;
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
         List<Widget> imageWidgets = (widget.currentSpot.images ?? [])
@@ -88,6 +94,12 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                   onPressed: () => _openEditPage(widget.currentSpot),
                   icon: Icon(Icons.edit),
                 ),
+                if (token != null) ...[
+                  IconButton(
+                    onPressed: () => _deleteSpot(widget.currentSpot, _spotsService, context),
+                    icon: Icon(Icons.delete),
+                  ),
+                ]
               ],
               title: Text(widget.currentSpot.title),
               backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -173,6 +185,15 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
       },
     );
   }
+}
+
+Future<void> _deleteSpot(Spot spot, SpotService spotService, BuildContext context) async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return DeleteSpotDialog(spot: spot, spotService: spotService);
+    },
+  );
 }
 
 Future<void> _openEditPage(Spot spot) async {
