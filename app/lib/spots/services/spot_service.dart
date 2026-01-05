@@ -9,7 +9,11 @@ import 'package:spots/spots/models/spot.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 class SpotService {
-  Future<List<int>> uploadImagesAndGetIds(List<File> images, String token, BuildContext context) async {
+  Future<List<int>> uploadImagesAndGetIds(
+    List<File> images,
+    String token,
+    BuildContext context,
+  ) async {
     List<int> imageIds = [];
 
     for (File image in images) {
@@ -41,7 +45,9 @@ class SpotService {
             imageIds.add(mediaId);
           }
         } else {
-          debugPrint('Fehler beim Hochladen des Bildes: ${response.statusCode}');
+          debugPrint(
+            'Fehler beim Hochladen des Bildes: ${response.statusCode}',
+          );
           String errorBody = await response.stream.bytesToString();
           debugPrint('Error body: $errorBody');
         }
@@ -57,10 +63,9 @@ class SpotService {
   }
 
   Future<List<Spot>> fetchSpots({int perPage = 20, int page = 1}) async {
-    final uri = Uri.parse('$baseUrl$spotsEndpoint').replace(queryParameters: {
-      'per_page': '$perPage',
-      'page': '$page',
-    });
+    final uri = Uri.parse(
+      '$baseUrl$spotsEndpoint',
+    ).replace(queryParameters: {'per_page': '$perPage', 'page': '$page'});
 
     final response = await http.get(uri);
 
@@ -68,11 +73,18 @@ class SpotService {
       return Spot.listFromJson(response.body);
     } else {
       // You can create a custom exception type if you like.
-      throw Exception('Failed to load spots – HTTP ${response.statusCode}: ${response.reasonPhrase}');
+      throw Exception(
+        'Failed to load spots – HTTP ${response.statusCode}: ${response.reasonPhrase}',
+      );
     }
   }
 
-  Future<bool> addSpot(AddSpot spot, String? token, BuildContext context, {List<File>? images}) async {
+  Future<bool> addSpot(
+    AddSpot spot,
+    String? token,
+    BuildContext context, {
+    List<File>? images,
+  }) async {
     bool tokenExists = _checkTokenExists(token, context);
 
     // Bilder hochladen, falls vorhanden
@@ -88,7 +100,11 @@ class SpotService {
       }
 
       if (imageIds.length != images.length) {
-        showSnackBar(context, 'Nicht alle Bilder konnten hochgeladen werden', Colors.red);
+        showSnackBar(
+          context,
+          'Nicht alle Bilder konnten hochgeladen werden',
+          Colors.red,
+        );
       }
     }
 
@@ -148,10 +164,22 @@ class SpotService {
     }
   }
 
-  Future<bool> updateSpot(int id, AddSpot spot, String token, BuildContext context) async {
-    try {
-      final url = Uri.parse('$baseUrl$spotsEndpoint/$id');
+  Future<bool> updateSpot(
+    Spot existingSpot,
+    AddSpot spot,
+    String? token,
+    BuildContext context,
+  ) async {
+    bool tokenExists = _checkTokenExists(token, context);
 
+    if (tokenExists && existingSpot.imageIds!.isNotEmpty) {
+      List<int> imageIds = existingSpot.imageIds!;
+      spot.acf.image = imageIds[0].toString();
+      if (imageIds.length > 1) spot.acf.image2 = imageIds[1].toString();
+      if (imageIds.length > 2) spot.acf.image3 = imageIds[2].toString();
+    }
+    try {
+      final url = Uri.parse('$baseUrl$spotsEndpoint/${existingSpot.id}');
       final response = await http.put(
         url,
         headers: {
@@ -161,11 +189,12 @@ class SpotService {
         },
         body: jsonEncode(spot.toJson()),
       );
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return true;
       } else {
-        debugPrint('Fehler beim Aktualisieren des Spots: ${response.statusCode}');
+        debugPrint(
+          'Fehler beim Aktualisieren des Spots: ${response.statusCode}',
+        );
         debugPrint('Response: ${response.body}');
         return false;
       }
@@ -202,7 +231,11 @@ class SpotService {
         return false;
       }
     } else {
-      showSnackBar(context, 'Sie sind nicht berechtigt einen Spot zu löschen!', Colors.red);
+      showSnackBar(
+        context,
+        'Sie sind nicht berechtigt einen Spot zu löschen!',
+        Colors.red,
+      );
       return false;
     }
   }
@@ -210,7 +243,12 @@ class SpotService {
   bool _checkTokenExists(String? token, BuildContext context) {
     if (token == null) {
       if (context.mounted) {
-        showSnackBar(context, 'Nicht authorisiert. Bitte melden sie sich an!', Colors.orange, Duration(seconds: 3));
+        showSnackBar(
+          context,
+          'Nicht authorisiert. Bitte melden sie sich an!',
+          Colors.orange,
+          Duration(seconds: 3),
+        );
         return false;
       }
     }

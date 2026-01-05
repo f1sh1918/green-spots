@@ -12,3 +12,11 @@ String convertDateString(String dateString) {
 
   return '$day.$month.$year';
 }
+
+DateTime parseDateString(String dateString) {
+  final year = dateString.substring(0, 4);
+  final month = dateString.substring(4, 6);
+  final day = dateString.substring(6, 8);
+
+  return DateTime.parse('$year-$month-$day');
+}

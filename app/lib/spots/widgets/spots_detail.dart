@@ -1,7 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:spots/add/add_spots.dart';
 import 'package:spots/auth/models/settings.dart';
-import 'package:spots/constants/api.dart';
 import 'package:spots/home.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
@@ -50,7 +50,10 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
     _currentLocationPermissionGiven = widget.locationPermissionGiven;
     _currentLocationStatus = widget.locationStatus;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(widget.currentSpot);
+      Provider.of<SpotsProvider>(
+        context,
+        listen: false,
+      ).setActiveSpot(widget.currentSpot);
     });
   }
 
@@ -76,31 +79,45 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
           onPopInvokedWithResult: (didPop, _) async {
             if (didPop) return;
             if (context.mounted) {
-              Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
+              Provider.of<SpotsProvider>(
+                context,
+                listen: false,
+              ).setActiveSpot(null);
               Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (_) => Home(
-                        initialIndex: 1,
-                        locationPermissionGiven: _currentLocationPermissionGiven,
-                        userPosition: _currentUserPosition,
-                        locationStatus: _currentLocationStatus),
+                MaterialPageRoute(
+                  builder: (_) => Home(
+                    initialIndex: 1,
+                    locationPermissionGiven: _currentLocationPermissionGiven,
+                    userPosition: _currentUserPosition,
+                    locationStatus: _currentLocationStatus,
                   ),
-                  (route) => false);
+                ),
+                (route) => false,
+              );
             }
           },
           child: Scaffold(
             appBar: AppBar(
               actions: [
                 IconButton(
-                  onPressed: () => _openEditPage(widget.currentSpot),
+                  onPressed: () => _openEditPage(
+                    widget.currentSpot,
+                    widget.userPosition,
+                    context,
+                  ),
                   icon: Icon(Icons.edit),
                 ),
                 if (token != null) ...[
                   IconButton(
-                    onPressed: () => _deleteSpot(widget.currentSpot, _spotsService, context, widget.userPosition),
+                    onPressed: () => _deleteSpot(
+                      widget.currentSpot,
+                      _spotsService,
+                      context,
+                      widget.userPosition,
+                    ),
                     icon: Icon(Icons.delete),
                   ),
-                ]
+                ],
               ],
               title: Text(widget.currentSpot.title),
               backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -140,8 +157,10 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                           ),
                         ],
                         if (widget.currentSpot.lastVisited != null) ...[
-                          Text('Zuletzt besucht: ${convertDateString(widget.currentSpot.lastVisited!)}',
-                              style: Theme.of(context).textTheme.bodyLarge),
+                          Text(
+                            'Zuletzt besucht: ${convertDateString(widget.currentSpot.lastVisited!)}',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
                           Divider(height: 50),
                         ],
                         Padding(
@@ -193,32 +212,55 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
   }
 }
 
-Future<void> _deleteSpot(Spot spot, SpotService spotService, BuildContext context, Position? userPosition) async {
+Future<void> _deleteSpot(
+  Spot spot,
+  SpotService spotService,
+  BuildContext context,
+  Position? userPosition,
+) async {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return DeleteSpotDialog(spot: spot, spotService: spotService, userPosition: userPosition);
+      return DeleteSpotDialog(
+        spot: spot,
+        spotService: spotService,
+        userPosition: userPosition,
+      );
     },
   );
 }
 
-Future<void> _openEditPage(Spot spot) async {
-  final Uri url = Uri.parse(
-    '$baseUrl/wp-admin/post.php?post=${spot.id}&action=edit',
+Future<void> _openEditPage(
+  Spot spot,
+  Position? userPosition,
+  BuildContext context,
+) async {
+  Navigator.of(context).pop();
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => AddSpots(userPosition: userPosition, existingSpot: spot),
+    ),
   );
-  launchUrl(url, mode: LaunchMode.externalApplication);
 }
 
 Future<void> _launchMap(double? lat, double? long, BuildContext context) async {
   if (lat == null || long == null) {
-    showSnackBar(context, 'Spot konnte nicht in externer Anwendung geöffnet werden.', Colors.red);
+    showSnackBar(
+      context,
+      'Spot konnte nicht in externer Anwendung geöffnet werden.',
+      Colors.red,
+    );
   } else {
     final geoUriWithZoom = Uri.parse('geo:$lat,$long?z=14&q=$lat,$long');
     await launchUrl(geoUriWithZoom);
   }
 }
 
-void _showFullScreenCarousel(BuildContext context, List<Widget> images, int initialIndex) {
+void _showFullScreenCarousel(
+  BuildContext context,
+  List<Widget> images,
+  int initialIndex,
+) {
   // Extract image URLs from the widgets
   List<String> imageUrls = [];
   for (Widget imageWidget in images) {

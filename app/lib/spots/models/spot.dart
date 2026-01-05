@@ -14,6 +14,7 @@ class Spot {
   final String? thumbnail;
   final List<dynamic>? specials;
   final List<dynamic>? images;
+  final List<int>? imageIds;
   final String? lastVisited;
 
   Spot(
@@ -25,6 +26,7 @@ class Spot {
       required this.swim,
       required this.fire,
       this.images,
+      this.imageIds,
       this.lat,
       this.long,
       this.note,
@@ -49,12 +51,19 @@ class Spot {
     }
 
     final images = [json['image_url'], json['image2_url'], json['image3_url']];
+    final imageIds = [acf?['image'], acf?['image2'], acf?['image3']]
+        .where((id) => id != null && id.toString().trim().isNotEmpty)
+        .map((id) => int.tryParse(id.toString()))
+        .where((id) => id != null)
+        .cast<int>()
+        .toList();
 
     return Spot(
         id: json['id'],
         title: title,
         note: acf?['note'] as String?,
         images: images,
+        imageIds: imageIds,
         swim: acf?['swim'] ?? false,
         fire: acf?['fire'] ?? false,
         space: parseDouble(acf?['space'])!,

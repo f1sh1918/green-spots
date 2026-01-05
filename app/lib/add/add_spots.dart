@@ -11,13 +11,15 @@ import 'package:spots/auth/models/settings.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
+import 'package:spots/utils/date_format.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'models/add_spot.dart';
 
 class AddSpots extends StatefulWidget {
   final Position? userPosition;
   final LatLng? coordinates;
-  const AddSpots({super.key, this.userPosition, this.coordinates});
+  final Spot? existingSpot;
+  const AddSpots({super.key, this.userPosition, this.coordinates, this.existingSpot});
 
   @override
   State<AddSpots> createState() => _AddSpotsState();
@@ -71,11 +73,26 @@ class _AddSpotsState extends State<AddSpots> {
   @override
   void initState() {
     super.initState();
-    _lastVisitedController.text = _formatDate(_selectedDate);
     if (widget.coordinates != null) {
       _latController.text = widget.coordinates!.latitude.toString();
       _longController.text = widget.coordinates!.longitude.toString();
     }
+
+    _titleController.text = widget.existingSpot?.title ?? '';
+    _noteController.text = widget.existingSpot?.note ?? '';
+    _latController.text = widget.existingSpot?.lat.toString() ?? '';
+    _longController.text = widget.existingSpot?.long.toString() ?? '';
+    _secure = widget.existingSpot?.secure ?? 1.0;
+    _space = widget.existingSpot?.space.toInt() ?? 1;
+    _fire = widget.existingSpot?.fire ?? false;
+    _swim = widget.existingSpot?.swim ?? false;
+    _waterquality = widget.existingSpot?.water ?? 'kein Wasser';
+    _selectedSpecials.addAll((widget.existingSpot?.specials ?? []).cast<String>());
+
+    if (widget.existingSpot?.lastVisited != null) {
+      _selectedDate = parseDateString(widget.existingSpot!.lastVisited!);
+    }
+    _lastVisitedController.text = _formatDate(_selectedDate);
   }
 
   String _formatDate(DateTime date) => DateFormat('dd.MM.yyyy').format(date);
@@ -322,6 +339,50 @@ class _AddSpotsState extends State<AddSpots> {
     );
   }
 
+  Widget _buildExistingThumbnails(List<dynamic>? images) {
+    if (images == null || images.isEmpty) {
+      return Container();
+    }
+    // Filter null values
+    List<String> imageUrls = images.where((item) => item != null).toList().cast<String>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Aktuelle Bilder',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: imageUrls.length,
+            itemBuilder: (context, index) {
+              return Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        imageUrls[index],
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   Future<void> _submitSpot() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -346,7 +407,9 @@ class _AddSpotsState extends State<AddSpots> {
       final token = Provider.of<SettingsModel>(context, listen: false).token;
 
       // Hier würden Sie die Bilder zusammen mit dem Spot hochladen
-      final success = await _spotsService.addSpot(spot, token, context, images: _selectedImages);
+      final success = widget.existingSpot != null
+          ? await _spotsService.updateSpot(widget.existingSpot!, spot, token, context)
+          : await _spotsService.addSpot(spot, token, context, images: _selectedImages);
 
       setState(() {
         _isLoading = false;
@@ -638,23 +701,30 @@ class _AddSpotsState extends State<AddSpots> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(
-                        key: _imagesSectionKey,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 48),
+                      if (widget.existingSpot == null) ...[
+                        Expanded(
+                          key: _imagesSectionKey,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 48),
+                            ),
+                            onPressed: _selectedImages.length >= 3 ? null : _pickImages,
+                            icon: const Icon(Icons.add_a_photo),
+                            label: Text(_selectedImages.length >= 3
+                                ? 'Maximum erreicht (3/3)'
+                                : 'Bilder hinzufügen (${_selectedImages.length}/3)'),
                           ),
-                          onPressed: _selectedImages.length >= 3 ? null : _pickImages,
-                          icon: const Icon(Icons.add_a_photo),
-                          label: Text(_selectedImages.length >= 3
-                              ? 'Maximum erreicht (3/3)'
-                              : 'Bilder hinzufügen (${_selectedImages.length}/3)'),
                         ),
-                      ),
+                      ],
+                      if (widget.existingSpot != null) ...[
+                        Text("Im Bearbeitungsmodus können aktuell keine Bilder\nverändert werden."),
+                      ]
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _buildImageThumbnails(),
+                  widget.existingSpot != null
+                      ? _buildExistingThumbnails(widget.existingSpot?.images)
+                      : _buildImageThumbnails(),
                   const SizedBox(height: 16),
 
                   // Submit Button
