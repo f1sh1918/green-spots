@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
+import 'package:spots/utils/distance.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 // Provides spots within the app and can trigger refetch
@@ -24,13 +26,13 @@ class SpotsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refresh(BuildContext? context) async {
+  Future<void> refresh(BuildContext? context, Position? userPosition) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       final newSpots = await _service.fetchSpots();
-      _spots = newSpots;
+      _spots = sortSpotsByDistance(newSpots, userPosition);
       _isLoading = false;
       notifyListeners();
 

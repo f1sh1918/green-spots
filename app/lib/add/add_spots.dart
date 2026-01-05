@@ -369,7 +369,7 @@ class _AddSpotsState extends State<AddSpots> {
           Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(activeSpot);
           Navigator.pop(context);
           final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
-          await spotsProvider.refresh(context);
+          await spotsProvider.refresh(context, widget.userPosition);
         }
       }
     }
