@@ -285,9 +285,9 @@ class _AddSpotsState extends State<AddSpots> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Ausgewählte Bilder',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        Text(
+          widget.existingSpot != null ? 'Zusätzliche Bilder' : 'Ausgewählte Bilder',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         SizedBox(
@@ -349,7 +349,7 @@ class _AddSpotsState extends State<AddSpots> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Aktuelle Bilder',
+          'Bisherige Bilder',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -408,7 +408,7 @@ class _AddSpotsState extends State<AddSpots> {
 
       // Hier würden Sie die Bilder zusammen mit dem Spot hochladen
       final success = widget.existingSpot != null
-          ? await _spotsService.updateSpot(widget.existingSpot!, spot, token, context)
+          ? await _spotsService.updateSpot(widget.existingSpot!, spot, token, context, images: _selectedImages)
           : await _spotsService.addSpot(spot, token, context, images: _selectedImages);
 
       setState(() {
@@ -440,6 +440,8 @@ class _AddSpotsState extends State<AddSpots> {
 
   @override
   Widget build(BuildContext context) {
+    final existingSpotImagesCount = widget.existingSpot?.imageIds?.length ?? 0;
+    final totalPicturesCount = existingSpotImagesCount + _selectedImages.length;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -701,30 +703,24 @@ class _AddSpotsState extends State<AddSpots> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      if (widget.existingSpot == null) ...[
-                        Expanded(
-                          key: _imagesSectionKey,
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 48),
-                            ),
-                            onPressed: _selectedImages.length >= 3 ? null : _pickImages,
-                            icon: const Icon(Icons.add_a_photo),
-                            label: Text(_selectedImages.length >= 3
-                                ? 'Maximum erreicht (3/3)'
-                                : 'Bilder hinzufügen (${_selectedImages.length}/3)'),
+                      Expanded(
+                        key: _imagesSectionKey,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
                           ),
+                          onPressed: totalPicturesCount >= 3 ? null : _pickImages,
+                          icon: const Icon(Icons.add_a_photo),
+                          label: Text(totalPicturesCount >= 3
+                              ? 'Maximum erreicht (3/3)'
+                              : 'Bilder hinzufügen ($totalPicturesCount/3)'),
                         ),
-                      ],
-                      if (widget.existingSpot != null) ...[
-                        Text("Im Bearbeitungsmodus können aktuell keine Bilder\nverändert werden."),
-                      ]
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  widget.existingSpot != null
-                      ? _buildExistingThumbnails(widget.existingSpot?.images)
-                      : _buildImageThumbnails(),
+                  if (widget.existingSpot != null) ...[_buildExistingThumbnails(widget.existingSpot?.images)],
+                  if (_selectedImages.isNotEmpty) ...[_buildImageThumbnails()],
                   const SizedBox(height: 16),
 
                   // Submit Button

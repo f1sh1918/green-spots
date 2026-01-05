@@ -168,16 +168,33 @@ class SpotService {
     Spot existingSpot,
     AddSpot spot,
     String? token,
-    BuildContext context,
-  ) async {
+    BuildContext context, {
+    List<File>? images,
+  }) async {
     bool tokenExists = _checkTokenExists(token, context);
 
     if (tokenExists && existingSpot.imageIds!.isNotEmpty) {
-      List<int> imageIds = existingSpot.imageIds!;
-      spot.acf.image = imageIds[0].toString();
-      if (imageIds.length > 1) spot.acf.image2 = imageIds[1].toString();
-      if (imageIds.length > 2) spot.acf.image3 = imageIds[2].toString();
+      List<int> existingImageIds = existingSpot.imageIds!;
+      List<int> uploadedImageIds = [];
+      if (images != null && images.isNotEmpty) {
+        showSnackBar(context, 'Bilder werden hochgeladen...', Colors.orange);
+        uploadedImageIds = await uploadImagesAndGetIds(images, token!, context);
+      }
+      List<int> allImageIds = [...existingImageIds, ...uploadedImageIds];
+
+      spot.acf.image = allImageIds[0].toString();
+      if (allImageIds.length > 1) spot.acf.image2 = allImageIds[1].toString();
+      if (allImageIds.length > 2) spot.acf.image3 = allImageIds[2].toString();
+
+      if (uploadedImageIds.length != images?.length) {
+        showSnackBar(
+          context,
+          'Nicht alle Bilder konnten hochgeladen werden',
+          Colors.red,
+        );
+      }
     }
+
     try {
       final url = Uri.parse('$baseUrl$spotsEndpoint/${existingSpot.id}');
       final response = await http.put(
