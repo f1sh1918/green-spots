@@ -39,23 +39,37 @@ class ImageCarouselState extends State<ImageCarousel> {
     }
   }
 
+  Widget _wrapWithZoomAndGestures(Widget image, int index) {
+    Widget wrappedImage = image;
+
+    // Zoom-Funktionalität hinzufügen
+    wrappedImage = InteractiveViewer(
+      minScale: 1.0,
+      maxScale: 4.0,
+      child: image,
+    );
+
+    // Gesture-Handling für Tap (nur wenn nicht im Vollbildmodus)
+    if (!widget.isFullscreen && widget.onImageTap != null) {
+      wrappedImage = GestureDetector(
+        onTap: () => widget.onImageTap!(index),
+        child: wrappedImage,
+      );
+    }
+
+    return wrappedImage;
+  }
+
   @override
   Widget build(BuildContext context) {
     final int imageAmount = widget.images.length;
 
-    // Wrap images with GestureDetector for tap handling if not in fullscreen mode
+    // Bilder mit Zoom und Gesture-Handling umhüllen
     List<Widget> carouselItems = widget.images.asMap().entries.map<Widget>((entry) {
       int index = entry.key;
       Widget image = entry.value;
 
-      if (!widget.isFullscreen && widget.onImageTap != null) {
-        return GestureDetector(
-          onTap: () => widget.onImageTap!(index),
-          child: image,
-        );
-      }
-
-      return image;
+      return _wrapWithZoomAndGestures(image, index);
     }).toList();
 
     if (widget.isFullscreen) {
@@ -105,7 +119,6 @@ class ImageCarouselState extends State<ImageCarousel> {
       );
     }
 
-    // For normal mode, use Column layout
     return Column(
       children: [
         SizedBox(
