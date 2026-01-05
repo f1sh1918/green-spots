@@ -10,3 +10,16 @@ double calculateDistanceFromSpot(Spot spot, Position userPosition) {
   );
   return distance / 1000;
 }
+
+List<Spot> sortSpotsByDistance(List<Spot> spots, Position? userPosition) {
+  if (userPosition == null) {
+    return spots;
+  }
+  spots.sort((a, b) {
+    double? distanceA = calculateDistanceFromSpot(a, userPosition);
+    double? distanceB = calculateDistanceFromSpot(b, userPosition);
+
+    return distanceA.compareTo(distanceB);
+  });
+  return spots;
+}

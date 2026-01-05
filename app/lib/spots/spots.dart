@@ -8,6 +8,7 @@ import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/widgets/spots_detail.dart';
 import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:flutter/material.dart';
+import 'package:spots/utils/distance.dart';
 
 class Spots extends StatefulWidget {
   final Position? userPosition;
@@ -43,6 +44,7 @@ class _SpotsState extends State<Spots> {
                 )
               : null,
           body: ListView.separated(
+            padding: const EdgeInsets.only(bottom: 80),
             itemCount: spotsProvider.spots.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
@@ -66,6 +68,10 @@ class _SpotsState extends State<Spots> {
                   sizeFactor: 1.0,
                   showLabel: false,
                 ),
+                trailing: widget.userPosition != null
+                    ? Text('${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)}km',
+                        style: Theme.of(context).textTheme.bodyMedium)
+                    : null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (_) => SpotDetailPage(

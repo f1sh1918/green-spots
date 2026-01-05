@@ -4,6 +4,7 @@ import 'package:spots/home.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
+import 'package:spots/utils/distance.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -54,7 +55,7 @@ class _AppState extends State<App> {
             locationPermissionGiven: permissionGiven,
             userPosition: userPosition,
             locationStatus: locationStatus,
-            spots: spots);
+            spots: sortSpotsByDistance(spots, userPosition));
       },
     );
   }

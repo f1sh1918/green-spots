@@ -56,7 +56,7 @@ class _HomeState extends State<Home> {
 
   Future<void> _handleRefresh() async {
     final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
-    await spotsProvider.refresh(context);
+    await spotsProvider.refresh(context, _userPosition);
   }
 
   List<Widget> _getPages() {

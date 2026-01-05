@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
@@ -8,12 +9,9 @@ import 'package:spots/spots/services/spot_service.dart';
 class DeleteSpotDialog extends StatefulWidget {
   final Spot spot;
   final SpotService spotService;
+  final Position? userPosition;
 
-  const DeleteSpotDialog({
-    Key? key,
-    required this.spot,
-    required this.spotService,
-  }) : super(key: key);
+  const DeleteSpotDialog({super.key, required this.spot, required this.spotService, this.userPosition});
 
   static Future<void> show(
     BuildContext context,
@@ -83,7 +81,7 @@ class _DeleteSpotDialogState extends State<DeleteSpotDialog> {
     if (success) {
       final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
       Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-      await spotsProvider.refresh(context);
+      await spotsProvider.refresh(context, widget.userPosition);
     }
   }
 }

@@ -97,7 +97,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                 ),
                 if (token != null) ...[
                   IconButton(
-                    onPressed: () => _deleteSpot(widget.currentSpot, _spotsService, context),
+                    onPressed: () => _deleteSpot(widget.currentSpot, _spotsService, context, widget.userPosition),
                     icon: Icon(Icons.delete),
                   ),
                 ]
@@ -193,11 +193,11 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
   }
 }
 
-Future<void> _deleteSpot(Spot spot, SpotService spotService, BuildContext context) async {
+Future<void> _deleteSpot(Spot spot, SpotService spotService, BuildContext context, Position? userPosition) async {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return DeleteSpotDialog(spot: spot, spotService: spotService);
+      return DeleteSpotDialog(spot: spot, spotService: spotService, userPosition: userPosition);
     },
   );
 }
