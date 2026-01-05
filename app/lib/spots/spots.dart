@@ -68,8 +68,10 @@ class _SpotsState extends State<Spots> {
                   sizeFactor: 1.0,
                   showLabel: false,
                 ),
-                trailing: Text('${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)}km',
-                    style: Theme.of(context).textTheme.bodyMedium),
+                trailing: widget.userPosition != null
+                    ? Text('${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)}km',
+                        style: Theme.of(context).textTheme.bodyMedium)
+                    : null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (_) => SpotDetailPage(
