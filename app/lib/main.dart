@@ -25,6 +25,7 @@ class _MyAppState extends State<MyApp> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  String? _processedInitialLink; // Cache für verarbeiteten Initial Link
 
   @override
   void initState() {
@@ -38,6 +39,9 @@ class _MyAppState extends State<MyApp> {
     // Initial Link verarbeiten (wenn App geschlossen war)
     final initialLink = await _appLinks.getInitialLink();
     if (initialLink != null) {
+      debugPrint('Initial Link: $initialLink');
+      _processedInitialLink = initialLink.toString(); // Link cachen
+
       // Kurz warten bis die App vollständig initialisiert ist
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _handleIncomingLink(initialLink);
@@ -46,7 +50,14 @@ class _MyAppState extends State<MyApp> {
 
     // Laufende Links verarbeiten (wenn App bereits läuft)
     _linkSubscription = _appLinks.uriLinkStream.listen(
-      (Uri uri) => _handleIncomingLink(uri),
+      (Uri uri) {
+        // Prüfen ob es der gleiche Link ist wie der Initial Link
+        if (_processedInitialLink == uri.toString()) {
+          debugPrint('Ignoriere doppelten Initial Link: $uri');
+          return;
+        }
+        _handleIncomingLink(uri);
+      },
     );
   }
 
