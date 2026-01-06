@@ -19,7 +19,13 @@ class AddSpots extends StatefulWidget {
   final Position? userPosition;
   final LatLng? coordinates;
   final Spot? existingSpot;
-  const AddSpots({super.key, this.userPosition, this.coordinates, this.existingSpot});
+
+  const AddSpots({
+    super.key,
+    this.userPosition,
+    this.coordinates,
+    this.existingSpot,
+  });
 
   @override
   State<AddSpots> createState() => _AddSpotsState();
@@ -39,12 +45,28 @@ class _AddSpotsState extends State<AddSpots> {
   final _specialController = TextEditingController();
   final _lastVisitedController = TextEditingController();
 
-  final List<String> _waterQualityOptions = ['kein Wasser', 'stehendes Wasser', 'fließendes Wasser', 'Trinkwasser'];
-  final List<String> _availableSpecials = ['Unterstand', 'Tisch', 'Bank', 'Hängematte'];
+  final List<String> _waterQualityOptions = [
+    'kein Wasser',
+    'stehendes Wasser',
+    'fließendes Wasser',
+    'Trinkwasser',
+  ];
+  final List<String> _availableSpecials = [
+    'Unterstand',
+    'Tisch',
+    'Bank',
+    'Hängematte',
+  ];
   final List<String> _selectedSpecials = [];
 
   // Mapping für Sicherheitsstufen
-  final Map<int, String> _securityLabels = {1: 'sehr unsicher', 2: 'unsicher', 3: 'ok', 4: 'sicher', 5: 'sehr sicher'};
+  final Map<int, String> _securityLabels = {
+    1: 'sehr unsicher',
+    2: 'unsicher',
+    3: 'ok',
+    4: 'sicher',
+    5: 'sehr sicher',
+  };
 
   // Image handling
   List<File> _selectedImages = [];
@@ -70,6 +92,7 @@ class _AddSpotsState extends State<AddSpots> {
   }
 
   DateTime _selectedDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -77,17 +100,21 @@ class _AddSpotsState extends State<AddSpots> {
       _latController.text = widget.coordinates!.latitude.toString();
       _longController.text = widget.coordinates!.longitude.toString();
     }
+    if (widget.existingSpot != null) {
+      _latController.text = widget.existingSpot?.lat.toString() ?? '';
+      _longController.text = widget.existingSpot?.long.toString() ?? '';
+    }
 
     _titleController.text = widget.existingSpot?.title ?? '';
     _noteController.text = widget.existingSpot?.note ?? '';
-    _latController.text = widget.existingSpot?.lat.toString() ?? '';
-    _longController.text = widget.existingSpot?.long.toString() ?? '';
     _secure = widget.existingSpot?.secure ?? 1.0;
     _space = widget.existingSpot?.space.toInt() ?? 1;
     _fire = widget.existingSpot?.fire ?? false;
     _swim = widget.existingSpot?.swim ?? false;
     _waterquality = widget.existingSpot?.water ?? 'kein Wasser';
-    _selectedSpecials.addAll((widget.existingSpot?.specials ?? []).cast<String>());
+    _selectedSpecials.addAll(
+      (widget.existingSpot?.specials ?? []).cast<String>(),
+    );
 
     if (widget.existingSpot?.lastVisited != null) {
       _selectedDate = parseDateString(widget.existingSpot!.lastVisited!);
@@ -96,6 +123,7 @@ class _AddSpotsState extends State<AddSpots> {
   }
 
   String _formatDate(DateTime date) => DateFormat('dd.MM.yyyy').format(date);
+
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -392,24 +420,36 @@ class _AddSpotsState extends State<AddSpots> {
       final spot = AddSpot(
         title: _titleController.text,
         acf: AddSpotACF(
-            lat: double.tryParse(_latController.text) ?? 0.0,
-            long: double.tryParse(_longController.text) ?? 0.0,
-            secure: _secure,
-            space: _space,
-            swim: _swim,
-            fire: _fire,
-            note: _noteController.text,
-            waterquality: _waterquality,
-            lastvisited: DateFormat('yyyyMMdd').format(_selectedDate),
-            specials: _selectedSpecials.isEmpty ? null : _selectedSpecials),
+          lat: double.tryParse(_latController.text) ?? 0.0,
+          long: double.tryParse(_longController.text) ?? 0.0,
+          secure: _secure,
+          space: _space,
+          swim: _swim,
+          fire: _fire,
+          note: _noteController.text,
+          waterquality: _waterquality,
+          lastvisited: DateFormat('yyyyMMdd').format(_selectedDate),
+          specials: _selectedSpecials.isEmpty ? null : _selectedSpecials,
+        ),
       );
 
       final token = Provider.of<SettingsModel>(context, listen: false).token;
 
       // Hier würden Sie die Bilder zusammen mit dem Spot hochladen
       final success = widget.existingSpot != null
-          ? await _spotsService.updateSpot(widget.existingSpot!, spot, token, context, images: _selectedImages)
-          : await _spotsService.addSpot(spot, token, context, images: _selectedImages);
+          ? await _spotsService.updateSpot(
+              widget.existingSpot!,
+              spot,
+              token,
+              context,
+              images: _selectedImages,
+            )
+          : await _spotsService.addSpot(
+              spot,
+              token,
+              context,
+              images: _selectedImages,
+            );
 
       setState(() {
         _isLoading = false;
@@ -418,20 +458,27 @@ class _AddSpotsState extends State<AddSpots> {
       if (success) {
         if (mounted) {
           Spot activeSpot = Spot(
-              title: spot.title,
-              secure: spot.acf.secure,
-              space: spot.acf.space.toDouble(),
-              swim: spot.acf.swim,
-              fire: spot.acf.fire,
-              lat: spot.acf.lat,
-              long: spot.acf.long,
-              note: spot.acf.note,
-              water: spot.acf.waterquality,
-              specials: spot.acf.specials,
-              id: 999);
-          Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(activeSpot);
+            title: spot.title,
+            secure: spot.acf.secure,
+            space: spot.acf.space.toDouble(),
+            swim: spot.acf.swim,
+            fire: spot.acf.fire,
+            lat: spot.acf.lat,
+            long: spot.acf.long,
+            note: spot.acf.note,
+            water: spot.acf.waterquality,
+            specials: spot.acf.specials,
+            id: 999,
+          );
+          Provider.of<SpotsProvider>(
+            context,
+            listen: false,
+          ).setActiveSpot(activeSpot);
           Navigator.pop(context);
-          final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+          final spotsProvider = Provider.of<SpotsProvider>(
+            context,
+            listen: false,
+          );
           await spotsProvider.refresh(context, widget.userPosition);
         }
       }
@@ -465,7 +512,10 @@ class _AddSpotsState extends State<AddSpots> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Allgemein', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Allgemein',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _titleController,
@@ -494,8 +544,10 @@ class _AddSpotsState extends State<AddSpots> {
                   const SizedBox(height: 24),
                   TextFormField(
                     controller: _lastVisitedController,
-                    readOnly: true, // prevents keyboard & manual edits
-                    enableInteractiveSelection: false, // disables long‑press selection
+                    readOnly: true,
+                    // prevents keyboard & manual edits
+                    enableInteractiveSelection: false,
+                    // disables long‑press selection
                     decoration: InputDecoration(
                       labelText: 'Zuletzt besucht',
                       border: const OutlineInputBorder(),
@@ -512,7 +564,13 @@ class _AddSpotsState extends State<AddSpots> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Standort', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Standort',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -523,9 +581,14 @@ class _AddSpotsState extends State<AddSpots> {
                                 labelText: 'Breitengrad *',
                                 border: OutlineInputBorder(),
                               ),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: true,
+                              ),
                               inputFormatters: [
-                                FilteringTextInputFormatter.allow(RegExp(r'^-?\d{1,3}\.?\d{0,6}$')),
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
+                                ),
                               ],
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -543,9 +606,14 @@ class _AddSpotsState extends State<AddSpots> {
                                 labelText: 'Längengrad *',
                                 border: OutlineInputBorder(),
                               ),
-                              keyboardType: TextInputType.numberWithOptions(decimal: true, signed: true),
+                              keyboardType: TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: true,
+                              ),
                               inputFormatters: [
-                                FilteringTextInputFormatter.allow(RegExp(r'^-?\d{1,3}\.?\d{0,6}$')),
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
+                                ),
                               ],
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -570,17 +638,22 @@ class _AddSpotsState extends State<AddSpots> {
                   ),
                   const SizedBox(height: 16),
                   Divider(height: 50),
-                  const Text('Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Details',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 16),
                   // Sicherheit Slider
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                          padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
-                          child: Text(
-                              'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${_securityLabels[_secure.toInt()]})',
-                              style: TextStyle(fontSize: 16))),
+                        padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
+                        child: Text(
+                          'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${_securityLabels[_secure.toInt()]})',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
                       Slider(
                         value: _secure,
                         min: 1.0,
@@ -602,8 +675,12 @@ class _AddSpotsState extends State<AddSpots> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                          padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
-                          child: Text('Platz: $_space (Anzahl kleiner Zelte)', style: TextStyle(fontSize: 16))),
+                        padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
+                        child: Text(
+                          'Platz: $_space (Anzahl kleiner Zelte)',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
                       Slider(
                         value: _space.toDouble(),
                         min: 1,
@@ -669,7 +746,10 @@ class _AddSpotsState extends State<AddSpots> {
                       Divider(height: 50),
                       const Text(
                         'Besonderheiten',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Column(
@@ -699,7 +779,10 @@ class _AddSpotsState extends State<AddSpots> {
 
                   // Bilder-Sektion
                   Divider(height: 50),
-                  const Text('Bilder', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Bilder',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -711,15 +794,19 @@ class _AddSpotsState extends State<AddSpots> {
                           ),
                           onPressed: totalPicturesCount >= 3 ? null : _pickImages,
                           icon: const Icon(Icons.add_a_photo),
-                          label: Text(totalPicturesCount >= 3
-                              ? 'Maximum erreicht (3/3)'
-                              : 'Bilder hinzufügen ($totalPicturesCount/3)'),
+                          label: Text(
+                            totalPicturesCount >= 3
+                                ? 'Maximum erreicht (3/3)'
+                                : 'Bilder hinzufügen ($totalPicturesCount/3)',
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  if (widget.existingSpot != null) ...[_buildExistingThumbnails(widget.existingSpot?.images)],
+                  if (widget.existingSpot != null) ...[
+                    _buildExistingThumbnails(widget.existingSpot?.images),
+                  ],
                   if (_selectedImages.isNotEmpty) ...[_buildImageThumbnails()],
                   const SizedBox(height: 16),
 
@@ -753,9 +840,19 @@ class _AddSpotsState extends State<AddSpots> {
         _latController.text = widget.userPosition!.latitude.toString();
         _longController.text = widget.userPosition!.longitude.toString();
       });
-      showSnackBar(context, 'Position aktualisiert!', Colors.green, Duration(seconds: 2));
+      showSnackBar(
+        context,
+        'Position aktualisiert!',
+        Colors.green,
+        Duration(seconds: 2),
+      );
     } else {
-      showSnackBar(context, 'Aktuelle Position nicht verfügbar', Colors.red, Duration(seconds: 3));
+      showSnackBar(
+        context,
+        'Aktuelle Position nicht verfügbar',
+        Colors.red,
+        Duration(seconds: 3),
+      );
     }
   }
 }
