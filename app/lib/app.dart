@@ -5,6 +5,7 @@ import 'package:spots/location/determine_position.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/utils/distance.dart';
+import 'package:spots/utils/location_helper.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -22,7 +23,7 @@ class _AppState extends State<App> {
       // ✅ Lade sowohl Spots als auch Position parallel
       future: Future.wait([
         _service.fetchSpots(),
-        _loadUserPosition(context),
+        loadUserPosition(context),
       ]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -58,36 +59,5 @@ class _AppState extends State<App> {
             spots: sortSpotsByDistance(spots, userPosition));
       },
     );
-  }
-
-  // TODO fix that
-  Future<Map<String, dynamic>?> _loadUserPosition(BuildContext context) async {
-    try {
-      RequestedPosition? requestedPosition = await determinePosition(
-        context,
-        requestIfNotGranted: true,
-      );
-
-      if (requestedPosition != null) {
-        return {
-          'position': requestedPosition.position,
-          'permissionGiven': true,
-          'locationStatus': requestedPosition.locationStatus,
-        };
-      }
-
-      return {
-        'position': null,
-        'permissionGiven': false,
-        'locationStatus': null,
-      };
-    } catch (e) {
-      debugPrint('Fehler beim Laden der Position: $e');
-      return {
-        'position': null,
-        'permissionGiven': false,
-        'locationStatus': null,
-      };
-    }
   }
 }

@@ -9,6 +9,7 @@ import 'package:spots/routes.dart';
 import 'package:spots/settings/provider/settings_provider.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/utils/geo_link_helper.dart';
+import 'package:spots/utils/location_helper.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 import 'auth/models/settings.dart';
@@ -56,7 +57,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  void _handleIncomingLink(Uri uri, {required bool isInitial}) {
+  Future<void> _handleIncomingLink(Uri uri, {required bool isInitial}) async {
     final now = DateTime.now();
 
     // Doppelte Verarbeitung innerhalb von 3 Sekunde verhindern
@@ -70,17 +71,20 @@ class _MyAppState extends State<MyApp> {
     final context = navigatorKey.currentContext;
     if (uri.scheme == 'geo' && context != null) {
       final token = Provider.of<SettingsModel>(context, listen: false).token;
-
       Map<String, dynamic> deepLinkObject = GeoLinkHelper.parseGeoQueryWithPath(uri.path, uri.query);
       if (token == null) {
         showSnackBar(context, 'Nicht authentifiziert. Bitte melde dich an.', Colors.red);
         return;
       }
       if (deepLinkObject['lat'] != null && deepLinkObject['lng'] != null) {
+        Map<String, dynamic>? userPosition = await loadUserPosition(context);
+
         navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (_) => AddSpots(
-                coordinates: LatLng(deepLinkObject['lat'], deepLinkObject['lng']), title: deepLinkObject['title']),
+                coordinates: LatLng(deepLinkObject['lat'], deepLinkObject['lng']),
+                title: deepLinkObject['title'],
+                userPosition: userPosition?['position']),
           ),
         );
       } else {
