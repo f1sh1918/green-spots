@@ -19,13 +19,9 @@ class AddSpots extends StatefulWidget {
   final Position? userPosition;
   final LatLng? coordinates;
   final Spot? existingSpot;
+  final String? title;
 
-  const AddSpots({
-    super.key,
-    this.userPosition,
-    this.coordinates,
-    this.existingSpot,
-  });
+  const AddSpots({super.key, this.userPosition, this.coordinates, this.existingSpot, this.title});
 
   @override
   State<AddSpots> createState() => _AddSpotsState();
@@ -77,7 +73,6 @@ class _AddSpotsState extends State<AddSpots> {
   bool _swim = false;
   bool _fire = false;
   String _waterquality = 'kein Wasser';
-
   bool _isLoading = false;
 
   @override
@@ -105,7 +100,7 @@ class _AddSpotsState extends State<AddSpots> {
       _longController.text = widget.existingSpot?.long.toString() ?? '';
     }
 
-    _titleController.text = widget.existingSpot?.title ?? '';
+    _titleController.text = widget.existingSpot?.title ?? widget.title ?? '';
     _noteController.text = widget.existingSpot?.note ?? '';
     _secure = widget.existingSpot?.secure ?? 1.0;
     _space = widget.existingSpot?.space.toInt() ?? 1;

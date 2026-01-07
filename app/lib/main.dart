@@ -8,7 +8,10 @@ import 'package:spots/add/add_spots.dart';
 import 'package:spots/routes.dart';
 import 'package:spots/settings/provider/settings_provider.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
+import 'package:spots/utils/geo_link_helper.dart';
 import 'package:spots/utils/messenger_utils.dart';
+
+import 'auth/models/settings.dart';
 
 void main() {
   runApp(SettingsProvider(child: MyApp()));
@@ -63,27 +66,23 @@ class _MyAppState extends State<MyApp> {
     }
 
     _lastLinkProcessed = now;
-    debugPrint('Deep Link verarbeitet (Initial: $isInitial): $uri');
-
     debugPrint('Deep Link erhalten: $uri');
-    if (uri.scheme == 'geo') {
-      final context = navigatorKey.currentContext;
+    final context = navigatorKey.currentContext;
+    if (uri.scheme == 'geo' && context != null) {
+      final token = Provider.of<SettingsModel>(context, listen: false).token;
 
-      // Geo-Koordinaten extrahieren
-      final coords = uri.path; // "48.6558371,10.6813134"
-      final parts = coords.split(',');
-
-      if (parts.length >= 2) {
-        final double? lat = double.tryParse(parts[0]);
-        final double? lng = double.tryParse(parts[1]);
-
-        if (lat != null && lng != null) {
-          navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (_) => AddSpots(coordinates: LatLng(lat, lng)),
-            ),
-          );
-        }
+      Map<String, dynamic> deepLinkObject = GeoLinkHelper.parseGeoQueryWithPath(uri.path, uri.query);
+      if (token == null) {
+        showSnackBar(context, 'Nicht authentifiziert. Bitte melde dich an.', Colors.red);
+        return;
+      }
+      if (deepLinkObject['lat'] != null && deepLinkObject['lng'] != null) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => AddSpots(
+                coordinates: LatLng(deepLinkObject['lat'], deepLinkObject['lng']), title: deepLinkObject['title']),
+          ),
+        );
       } else {
         if (context != null) {
           showSnackBar(context, 'Ungültiger Link: $uri', Colors.red);
