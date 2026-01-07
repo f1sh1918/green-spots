@@ -25,7 +25,7 @@ class _MyAppState extends State<MyApp> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-  String? _processedInitialLink; // Cache für verarbeiteten Initial Link
+  DateTime? _lastLinkProcessed;
 
   @override
   void initState() {
@@ -40,28 +40,31 @@ class _MyAppState extends State<MyApp> {
     final initialLink = await _appLinks.getInitialLink();
     if (initialLink != null) {
       debugPrint('Initial Link: $initialLink');
-      _processedInitialLink = initialLink.toString(); // Link cachen
 
       // Kurz warten bis die App vollständig initialisiert ist
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _handleIncomingLink(initialLink);
+        _handleIncomingLink(initialLink, isInitial: true);
       });
     }
 
     // Laufende Links verarbeiten (wenn App bereits läuft)
     _linkSubscription = _appLinks.uriLinkStream.listen(
-      (Uri uri) {
-        // Prüfen ob es der gleiche Link ist wie der Initial Link
-        if (_processedInitialLink == uri.toString()) {
-          debugPrint('Ignoriere doppelten Initial Link: $uri');
-          return;
-        }
-        _handleIncomingLink(uri);
-      },
+      (Uri uri) => _handleIncomingLink(uri, isInitial: false),
     );
   }
 
-  void _handleIncomingLink(Uri uri) {
+  void _handleIncomingLink(Uri uri, {required bool isInitial}) {
+    final now = DateTime.now();
+
+    // Doppelte Verarbeitung innerhalb von 3 Sekunde verhindern
+    if (_lastLinkProcessed != null && now.difference(_lastLinkProcessed!).inMilliseconds < 3000) {
+      debugPrint('Ignoriere doppelten Link: $uri');
+      return;
+    }
+
+    _lastLinkProcessed = now;
+    debugPrint('Deep Link verarbeitet (Initial: $isInitial): $uri');
+
     debugPrint('Deep Link erhalten: $uri');
     if (uri.scheme == 'geo') {
       final context = navigatorKey.currentContext;
