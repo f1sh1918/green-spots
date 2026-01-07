@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/auth/services/auth.dart';
 import 'package:spots/constants/api.dart';
+import 'package:spots/updates/update_info_dialog.dart';
+import 'package:spots/updates/update_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
+import 'package:spots/utils/version_comparator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatefulWidget {
@@ -18,6 +22,7 @@ class _SettingsState extends State<Settings> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+  final UpdateService _updateService = UpdateService();
 
   bool _isLoading = false;
   bool _isLoggedIn = false;
@@ -26,11 +31,14 @@ class _SettingsState extends State<Settings> {
   String? _errorMessage;
   bool _obscurePassword = true;
   String? _loginExpires;
+  String _version = 'N/A';
+  bool _isCheckingUpdates = false;
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
+    _getVersion();
   }
 
   @override
@@ -76,7 +84,10 @@ class _SettingsState extends State<Settings> {
 
     try {
       final result = await _authService.login(
-          username: _usernameController.text.trim(), password: _passwordController.text, context: context);
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+        context: context,
+      );
 
       if (result.success) {
         // Erfolgreich eingeloggt
@@ -90,7 +101,11 @@ class _SettingsState extends State<Settings> {
 
         if (mounted) {
           showSnackBar(
-              context, 'Erfolgreich angemeldet als ${result.userDisplayName}!', Colors.green, Duration(seconds: 3));
+            context,
+            'Erfolgreich angemeldet als ${result.userDisplayName}!',
+            Colors.green,
+            Duration(seconds: 3),
+          );
         }
       } else {
         // Login fehlgeschlagen
@@ -131,9 +146,28 @@ class _SettingsState extends State<Settings> {
         padding: const EdgeInsets.all(16.0),
         child: _isLoading
             ? _showSpinner()
-            : _isLoggedIn
-                ? _buildLoggedInView()
-                : _buildLoginForm(),
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _isLoggedIn ? _buildLoggedInView() : _buildLoginForm(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        'Version: $_version',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      OutlinedButton(
+                        onPressed: () => !_isCheckingUpdates ? _checkUpdate(context) : null,
+                        child: Text('Check for Updates'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -159,10 +193,7 @@ class _SettingsState extends State<Settings> {
           const SizedBox(height: 8),
           const Text(
             'Melden Sie sich an, um Spots zu erstellen und zu verwalten.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 32),
 
@@ -197,7 +228,9 @@ class _SettingsState extends State<Settings> {
               labelText: 'Passwort',
               prefixIcon: const Icon(Icons.lock, color: Colors.green),
               suffixIcon: IconButton(
-                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                ),
                 onPressed: () {
                   setState(() {
                     _obscurePassword = !_obscurePassword;
@@ -270,7 +303,10 @@ class _SettingsState extends State<Settings> {
                     )
                   : const Text(
                       'Anmelden',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
           ),
@@ -388,9 +424,36 @@ class _SettingsState extends State<Settings> {
   }
 
   void _register() async {
-    final Uri url = Uri.parse(
-      '$baseUrl/wp-login.php?action=register',
-    );
+    final Uri url = Uri.parse('$baseUrl/wp-login.php?action=register');
     launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _getVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = packageInfo.version;
+    });
+  }
+
+  Future<void> _checkUpdate(BuildContext context) async {
+    setState(() {
+      _isCheckingUpdates = true;
+    });
+    final updates = await _updateService.fetchUpdates();
+    setState(() {
+      _isCheckingUpdates = false;
+    });
+    if (VersionComparator.isHigher(currentVersion: _version, latestVersion: updates[0].title)) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return UpdateInfoDialog(
+            updateInfo: updates[0],
+          );
+        },
+      );
+    } else {
+      showSnackBar(context, 'Deine Version ist aktuell.', Colors.green);
+    }
   }
 }
