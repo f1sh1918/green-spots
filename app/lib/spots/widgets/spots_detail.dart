@@ -152,7 +152,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                         Divider(height: 50),
                         if (widget.userPosition != null) ...[
                           Text(
-                            '${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km entfernt',
+                            'Entfernung: ${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         ],
@@ -161,8 +161,12 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                             'Zuletzt besucht: ${convertDateString(widget.currentSpot.lastVisited!)}',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
-                          Divider(height: 50),
                         ],
+                        Text(
+                          'Erstellt von: ${widget.currentSpot.author}',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        Divider(height: 50),
                         Padding(
                           padding: EdgeInsets.all(8),
                           child: Row(
