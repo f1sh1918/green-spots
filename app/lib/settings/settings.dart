@@ -8,6 +8,7 @@ import 'package:spots/updates/update_info_dialog.dart';
 import 'package:spots/updates/update_service.dart';
 import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
+import 'package:spots/utils/string_utils.dart';
 import 'package:spots/utils/version_comparator.dart';
 import 'package:spots/widgets/outlined_button_spinner.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -105,11 +106,12 @@ class _SettingsState extends State<Settings> {
         setState(() {
           _isLoggedIn = true;
           _userDisplayName = result.userDisplayName;
+          _userEmail = result.userEmail;
           _userRole = result.userRole ?? 'N/A';
+          _userId = result.userId;
           _usernameController.clear();
           _passwordController.clear();
           _loginExpires = _authService.loginExpirationDate().toIso8601String();
-          _userId = result.userId;
         });
 
         if (mounted) {
@@ -396,6 +398,13 @@ class _SettingsState extends State<Settings> {
                           ),
                           Text(
                             _loginExpires != null ? 'Expires: $_loginExpires' : 'Expires: N/A',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            'Rolle: ${_userRole.capitalize()}',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
