@@ -55,6 +55,19 @@ add_action( 'rest_api_init', function () {
             'schema' => [ 'type' => 'string', 'format' => 'uri' ],
         ] );
     }
+
+    register_rest_field( 'spot', 'author_name', [
+        'get_callback' => function ( $obj ) {
+            $author_id = $obj['author'];
+            if ( ! $author_id ) return null;
+
+            $author = get_userdata( $author_id );
+            return $author ? $author->display_name : null;
+        },
+        'schema' => [ 'type' => 'string' ],
+    ] );
+
+
 } );
 
 // Adds theme support for post formats.

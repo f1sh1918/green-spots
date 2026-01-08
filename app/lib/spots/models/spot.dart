@@ -8,6 +8,7 @@ class Spot {
   final double secure;
   final String title;
   final String water;
+  final String author;
   final String? note;
   final double? lat;
   final double? long;
@@ -17,22 +18,24 @@ class Spot {
   final List<int>? imageIds;
   final String? lastVisited;
 
-  Spot(
-      {required this.id,
-      required this.title,
-      required this.space,
-      required this.secure,
-      required this.water,
-      required this.swim,
-      required this.fire,
-      this.images,
-      this.imageIds,
-      this.lat,
-      this.long,
-      this.note,
-      this.specials,
-      this.thumbnail,
-      this.lastVisited});
+  Spot({
+    required this.id,
+    required this.title,
+    required this.space,
+    required this.secure,
+    required this.water,
+    required this.swim,
+    required this.fire,
+    required this.author,
+    this.images,
+    this.imageIds,
+    this.lat,
+    this.long,
+    this.note,
+    this.specials,
+    this.thumbnail,
+    this.lastVisited,
+  });
 
   // --------------------------------------------------------------
   // Factory constructor that parses a Map<String, dynamic>
@@ -59,21 +62,23 @@ class Spot {
         .toList();
 
     return Spot(
-        id: json['id'],
-        title: title,
-        note: acf?['note'] as String?,
-        images: images,
-        imageIds: imageIds,
-        swim: acf?['swim'] ?? false,
-        fire: acf?['fire'] ?? false,
-        space: parseDouble(acf?['space'])!,
-        secure: parseDouble(acf?['secure'])!,
-        lat: parseDouble(acf?['lat']),
-        long: parseDouble(acf?['long']),
-        specials: acf?['specials'],
-        water: acf?['waterquality'],
-        thumbnail: json['image_thumb'],
-        lastVisited: acf?['lastvisited']);
+      id: json['id'],
+      title: title,
+      note: acf?['note'] as String?,
+      images: images,
+      imageIds: imageIds,
+      swim: acf?['swim'] ?? false,
+      author: json['author_name'],
+      fire: acf?['fire'] ?? false,
+      space: parseDouble(acf?['space'])!,
+      secure: parseDouble(acf?['secure'])!,
+      lat: parseDouble(acf?['lat']),
+      long: parseDouble(acf?['long']),
+      specials: acf?['specials'],
+      water: acf?['waterquality'],
+      thumbnail: json['image_thumb'],
+      lastVisited: acf?['lastvisited'],
+    );
   }
 
   // --------------------------------------------------------------

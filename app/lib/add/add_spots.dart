@@ -459,10 +459,13 @@ class _AddSpotsState extends State<AddSpots> {
             swim: spot.acf.swim,
             fire: spot.acf.fire,
             lat: spot.acf.lat,
+            // will be set automatically in the backend
+            author: '',
             long: spot.acf.long,
             note: spot.acf.note,
             water: spot.acf.waterquality,
             specials: spot.acf.specials,
+            // dummyId
             id: 999,
           );
           Provider.of<SpotsProvider>(

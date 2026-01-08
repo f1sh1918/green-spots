@@ -62,7 +62,7 @@ class SpotService {
     return imageIds;
   }
 
-  Future<List<Spot>> fetchSpots({int perPage = 20, int page = 1}) async {
+  Future<List<Spot>> fetchSpots({int perPage = 100, int page = 1}) async {
     final uri = Uri.parse(
       '$baseUrl$spotsEndpoint',
     ).replace(queryParameters: {'per_page': '$perPage', 'page': '$page'});
