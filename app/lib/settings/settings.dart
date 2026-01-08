@@ -497,7 +497,9 @@ class _SettingsState extends State<Settings> {
         setState(() {
           _userRole = userRole.role;
         });
-        showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
+        if (allowedRoles.contains(userRole.role)) {
+          showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
+        }
       }
     }
   }
