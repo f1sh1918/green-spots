@@ -8,6 +8,7 @@ import 'package:spots/updates/update_info_dialog.dart';
 import 'package:spots/updates/update_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/utils/version_comparator.dart';
+import 'package:spots/widgets/outlined_button_spinner.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatefulWidget {
@@ -160,9 +161,10 @@ class _SettingsState extends State<Settings> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      OutlinedButton(
-                        onPressed: () => !_isCheckingUpdates ? _checkUpdate(context) : null,
-                        child: Text('Check for Updates'),
+                      OutlinedButtonSpinner(
+                        isLoading: _isCheckingUpdates,
+                        onPressed: () => _checkUpdate(context),
+                        buttonText: 'Check for Updates',
                       ),
                     ],
                   ),
@@ -436,6 +438,7 @@ class _SettingsState extends State<Settings> {
   }
 
   Future<void> _checkUpdate(BuildContext context) async {
+    print("isExecuted");
     setState(() {
       _isCheckingUpdates = true;
     });
@@ -443,13 +446,14 @@ class _SettingsState extends State<Settings> {
     setState(() {
       _isCheckingUpdates = false;
     });
-    if (VersionComparator.isHigher(currentVersion: _version, latestVersion: updates[0].title)) {
+    if (VersionComparator.isHigher(
+      currentVersion: _version,
+      latestVersion: updates[0].title,
+    )) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
-          return UpdateInfoDialog(
-            updateInfo: updates[0],
-          );
+          return UpdateInfoDialog(updateInfo: updates[0]);
         },
       );
     } else {
