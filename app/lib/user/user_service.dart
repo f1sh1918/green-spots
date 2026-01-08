@@ -5,9 +5,15 @@ import 'package:spots/user/user_model.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 class UserService {
-  Future<User> getUserRole({required String userId, required BuildContext context}) async {
+  Future<User> getUserRole({required String userId, required BuildContext context, String? token}) async {
     final uri = Uri.parse('$baseUrl$userEndpoint/$userId');
-    final response = await http.get(uri);
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       return User.singleFromJson(response.body);
     } else {

@@ -490,8 +490,9 @@ class _SettingsState extends State<Settings> {
   }
 
   Future<void> _checkUserRole(BuildContext context) async {
+    final token = Provider.of<SettingsModel>(context, listen: false).token;
     if (_userId != null && !allowedRoles.contains(_userRole)) {
-      final userRole = await _userService.getUserRole(userId: _userId!, context: context);
+      final userRole = await _userService.getUserRole(userId: _userId!, context: context, token: token);
       if (context.mounted) {
         Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: userRole.role);
         setState(() {
