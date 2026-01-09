@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/auth/services/auth.dart';
 import 'package:spots/constants/api.dart';
+import 'package:spots/constants/constants.dart';
 import 'package:spots/updates/update_info_dialog.dart';
 import 'package:spots/updates/update_service.dart';
 import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/utils/string_utils.dart';
 import 'package:spots/utils/version_comparator.dart';
+import 'package:spots/widgets/AlertBox.dart';
 import 'package:spots/widgets/outlined_button_spinner.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,15 +40,13 @@ class _SettingsState extends State<Settings> {
   String _version = 'N/A';
   bool _isCheckingUpdates = false;
   String _userRole = 'N/A';
-  String? _userId;
-  final allowedRoles = ['editor', 'author'];
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
     _getVersion();
-    _checkUserRole(context);
+    // _checkUserRole(context);
   }
 
   @override
@@ -63,7 +63,6 @@ class _SettingsState extends State<Settings> {
     final userEmail = settingsProvider.email;
     final loginExpires = settingsProvider.expireLogin;
     final userRole = settingsProvider.userRole;
-    final userId = settingsProvider.userId;
 
     setState(() {
       _isLoading = true;
@@ -77,7 +76,6 @@ class _SettingsState extends State<Settings> {
         _isLoading = false;
         _loginExpires = loginExpires;
         _userRole = userRole ?? 'N/A';
-        _userId = userId;
       });
     } else {
       if (mounted) {
@@ -108,7 +106,6 @@ class _SettingsState extends State<Settings> {
           _userDisplayName = result.userDisplayName;
           _userEmail = result.userEmail;
           _userRole = result.userRole ?? 'N/A';
-          _userId = result.userId;
           _usernameController.clear();
           _passwordController.clear();
           _loginExpires = _authService.loginExpirationDate().toIso8601String();
@@ -421,8 +418,8 @@ class _SettingsState extends State<Settings> {
                       ),
                     ] else ...[
                       const Icon(
-                        Icons.cancel,
-                        color: Colors.red,
+                        Icons.info,
+                        color: Colors.orange,
                         size: 24,
                       ),
                     ]
@@ -435,6 +432,12 @@ class _SettingsState extends State<Settings> {
 
         const SizedBox(height: 24),
 
+        if (!allowedRoles.contains(_userRole)) ...[
+          AlertBox(
+              message:
+                  'Dein Account ist noch nicht freigeschaltet. Erst nach der Freischaltung kannst du Spots anlegen und editieren.')
+        ],
+        const SizedBox(height: 24),
         // Logout Button
         SizedBox(
           height: 48,
@@ -489,19 +492,19 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  Future<void> _checkUserRole(BuildContext context) async {
-    final token = Provider.of<SettingsModel>(context, listen: false).token;
-    if (_userId != null && !allowedRoles.contains(_userRole)) {
-      final userRole = await _userService.getUserRole(userId: _userId!, context: context, token: token);
-      if (context.mounted) {
-        Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: userRole.role);
-        setState(() {
-          _userRole = userRole.role;
-        });
-        if (allowedRoles.contains(userRole.role)) {
-          showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
-        }
-      }
-    }
-  }
+  // Future<void> _checkUserRole(BuildContext context) async {
+  //   final token = Provider.of<SettingsModel>(context, listen: false).token;
+  //   if (_userId != null && !allowedRoles.contains(_userRole)) {
+  //     final userRole = await _userService.getUserRole(userId: _userId!, context: context, token: token);
+  //     if (context.mounted) {
+  //       Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: userRole.role);
+  //       setState(() {
+  //         _userRole = userRole.role;
+  //       });
+  //       if (allowedRoles.contains(userRole.role)) {
+  //         showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
+  //       }
+  //     }
+  //   }
+  // }
 }

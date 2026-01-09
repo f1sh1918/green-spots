@@ -2,6 +2,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/add/add_spots.dart';
 import 'package:spots/auth/models/settings.dart';
+import 'package:spots/constants/constants.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 
@@ -24,12 +25,12 @@ class Spots extends StatefulWidget {
 class _SpotsState extends State<Spots> {
   @override
   Widget build(BuildContext context) {
-    final token = Provider.of<SettingsModel>(context, listen: false).token;
-
+    final userRole = Provider.of<SettingsModel>(context, listen: false).userRole;
+    final canUserAddSpots = allowedRoles.contains(userRole);
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
         return Scaffold(
-          floatingActionButton: token != null
+          floatingActionButton: canUserAddSpots
               ? FloatingActionButton(
                   onPressed: () {
                     Navigator.of(context).push(
