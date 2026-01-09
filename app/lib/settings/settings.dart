@@ -335,6 +335,16 @@ class _SettingsState extends State<Settings> {
               ),
             ),
           ),
+          SizedBox(
+            height: 48,
+            child: TextButton(
+              onPressed: _lostPassword,
+              child: const Text(
+                'Passwort vergessen',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -459,6 +469,11 @@ class _SettingsState extends State<Settings> {
 
   void _register() async {
     final Uri url = Uri.parse('$baseUrl/wp-login.php?action=register');
+    launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
+  void _lostPassword() async {
+    final Uri url = Uri.parse('$baseUrl/wp-login.php?action=lostpassword');
     launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
