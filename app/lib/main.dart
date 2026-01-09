@@ -5,9 +5,11 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 import 'package:spots/add/add_spots.dart';
+import 'package:spots/constants/constants.dart';
 import 'package:spots/routes.dart';
 import 'package:spots/settings/provider/settings_provider.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
+import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/geo_link_helper.dart';
 import 'package:spots/utils/location_helper.dart';
 import 'package:spots/utils/messenger_utils.dart';
@@ -25,16 +27,58 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   DateTime? _lastLinkProcessed;
+  final UserService _userService = UserService();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     initDeepLinks();
+    checkUserRole();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      checkUserRole();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => SpotsProvider())],
+      child: MaterialApp(
+        title: 'Green Spots',
+        // Für Deep Link Navigation
+        navigatorKey: navigatorKey,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          // Material widgets (date picker, dialogs,…)
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('de')],
+        routes: AppRoutes.routes,
+        // Routes verwenden
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        ),
+      ),
+    );
   }
 
   Future<void> initDeepLinks() async {
@@ -70,10 +114,11 @@ class _MyAppState extends State<MyApp> {
     debugPrint('Deep Link erhalten: $uri');
     final context = navigatorKey.currentContext;
     if (uri.scheme == 'geo' && context != null) {
-      final token = Provider.of<SettingsModel>(context, listen: false).token;
+      final userRole = Provider.of<SettingsModel>(context, listen: false).userRole;
+      final canUserAddSpots = allowedRoles.contains(userRole);
       Map<String, dynamic> deepLinkObject = GeoLinkHelper.parseGeoQueryWithPath(uri.path, uri.query);
-      if (token == null) {
-        showSnackBar(context, 'Nicht authentifiziert. Bitte melde dich an.', Colors.red);
+      if (!canUserAddSpots) {
+        showSnackBar(context, 'Für das Erstellen von Spots musst du eingeloggt sein.', Colors.red);
         return;
       }
       if (deepLinkObject['lat'] != null && deepLinkObject['lng'] != null) {
@@ -88,40 +133,25 @@ class _MyAppState extends State<MyApp> {
           ),
         );
       } else {
-        if (context != null) {
-          showSnackBar(context, 'Ungültiger Link: $uri', Colors.red);
-        }
+        showSnackBar(context, 'Ungültiger Link: $uri', Colors.red);
       }
     }
   }
 
-  @override
-  void dispose() {
-    _linkSubscription?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => SpotsProvider())],
-      child: MaterialApp(
-        title: 'Green Spots',
-        navigatorKey: navigatorKey,
-        // Für Deep Link Navigation
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          // Material widgets (date picker, dialogs,…)
-          GlobalWidgetsLocalizations.delegate,
-          // Generic widget localisation
-        ],
-        supportedLocales: const [Locale('en'), Locale('de')],
-        routes: AppRoutes.routes,
-        // Routes verwenden
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        ),
-      ),
-    );
+  Future<void> checkUserRole() async {
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      final settings = Provider.of<SettingsModel>(context, listen: false);
+      final userId = settings.userId;
+      if (userId != null && !allowedRoles.contains(userId)) {
+        final userRole = await _userService.getUserRole(userId: userId, context: context, token: settings.token);
+        if (context.mounted) {
+          Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: userRole.role);
+          if (allowedRoles.contains(userRole.role)) {
+            showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
+          }
+        }
+      }
+    }
   }
 }

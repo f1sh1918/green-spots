@@ -222,7 +222,7 @@ class _AddSpotsState extends State<AddSpots> {
 
       return resizedFile;
     } catch (e) {
-      print('Fehler beim Verkleinern des Bildes: $e');
+      debugPrint('Fehler beim Verkleinern des Bildes: $e');
       return null;
     }
   }

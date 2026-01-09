@@ -4,6 +4,8 @@ class AuthResult {
   final String userNiceName;
   final String userDisplayName;
   final String userEmail;
+  final String userId;
+  final String? userRole;
   final String? errorMessage;
   final int? statusCode;
 
@@ -13,6 +15,8 @@ class AuthResult {
     required this.userNiceName,
     required this.userDisplayName,
     required this.userEmail,
+    required this.userId,
+    this.userRole,
     this.errorMessage,
     this.statusCode,
   });
@@ -22,6 +26,7 @@ class AuthResult {
     return AuthResult(
       success: true,
       token: data['token'] ?? '',
+      userId: data['id'].toString(),
       userEmail: data['email'] ?? '',
       userNiceName: data['nicename'] ?? '',
       userDisplayName: data['displayName'] ?? '',
@@ -33,6 +38,8 @@ class AuthResult {
       success: false,
       token: '',
       userEmail: '',
+      userRole: '',
+      userId: '',
       userNiceName: '',
       userDisplayName: '',
       errorMessage: message,

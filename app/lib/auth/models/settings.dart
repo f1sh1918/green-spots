@@ -22,10 +22,12 @@ class SettingsModel extends ChangeNotifier {
 
   Future<void> clearUserData() async {
     await _preferences?.remove('token');
-    await _preferences?.remove('refresgToken');
+    await _preferences?.remove('refreshToken');
     await _preferences?.remove('user');
     await _preferences?.remove('email');
     await _preferences?.remove('lastLogin');
+    await _preferences?.remove('userRole');
+    await _preferences?.remove('userId');
     notifyListeners();
   }
 
@@ -91,6 +93,24 @@ class SettingsModel extends ChangeNotifier {
     String? currentUser = user;
     await _preferences?.setString(userKey, user);
     _notifyChange(currentUser, user);
+  }
+
+  String userIdKey = 'userId';
+  String? get userId => _getString(userIdKey);
+
+  Future<void> setUserId({required String userId}) async {
+    String? currentUserId = userId;
+    await _preferences?.setString(userIdKey, userId);
+    _notifyChange(currentUserId, userId);
+  }
+
+  String userRoleKey = 'userRole';
+  String? get userRole => _getString(userRoleKey);
+
+  Future<void> setUserRole({required String userRole}) async {
+    String? currentUserRole = userRole;
+    await _preferences?.setString(userRoleKey, userRole);
+    _notifyChange(currentUserRole, userRole);
   }
 
   String emailKey = 'email';

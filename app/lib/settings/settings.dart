@@ -4,10 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/auth/services/auth.dart';
 import 'package:spots/constants/api.dart';
+import 'package:spots/constants/constants.dart';
 import 'package:spots/updates/update_info_dialog.dart';
 import 'package:spots/updates/update_service.dart';
+import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
+import 'package:spots/utils/string_utils.dart';
 import 'package:spots/utils/version_comparator.dart';
+import 'package:spots/widgets/AlertBox.dart';
 import 'package:spots/widgets/outlined_button_spinner.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -24,6 +28,7 @@ class _SettingsState extends State<Settings> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   final UpdateService _updateService = UpdateService();
+  final UserService _userService = UserService();
 
   bool _isLoading = false;
   bool _isLoggedIn = false;
@@ -34,12 +39,14 @@ class _SettingsState extends State<Settings> {
   String? _loginExpires;
   String _version = 'N/A';
   bool _isCheckingUpdates = false;
+  String _userRole = 'N/A';
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
     _getVersion();
+    // _checkUserRole(context);
   }
 
   @override
@@ -55,6 +62,7 @@ class _SettingsState extends State<Settings> {
     final userName = settingsProvider.user;
     final userEmail = settingsProvider.email;
     final loginExpires = settingsProvider.expireLogin;
+    final userRole = settingsProvider.userRole;
 
     setState(() {
       _isLoading = true;
@@ -67,6 +75,7 @@ class _SettingsState extends State<Settings> {
         _userEmail = userEmail ?? 'Keine Mailadresse';
         _isLoading = false;
         _loginExpires = loginExpires;
+        _userRole = userRole ?? 'N/A';
       });
     } else {
       if (mounted) {
@@ -85,16 +94,18 @@ class _SettingsState extends State<Settings> {
 
     try {
       final result = await _authService.login(
-        username: _usernameController.text.trim(),
-        password: _passwordController.text,
-        context: context,
-      );
+          username: _usernameController.text.trim(),
+          password: _passwordController.text,
+          context: context,
+          userService: _userService);
 
       if (result.success) {
         // Erfolgreich eingeloggt
         setState(() {
           _isLoggedIn = true;
           _userDisplayName = result.userDisplayName;
+          _userEmail = result.userEmail;
+          _userRole = result.userRole ?? 'N/A';
           _usernameController.clear();
           _passwordController.clear();
           _loginExpires = _authService.loginExpirationDate().toIso8601String();
@@ -389,14 +400,29 @@ class _SettingsState extends State<Settings> {
                               color: Colors.grey,
                             ),
                           ),
+                          Text(
+                            'Rolle: ${_userRole.capitalize()}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 24,
-                    ),
+                    if (allowedRoles.contains(_userRole)) ...[
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 24,
+                      ),
+                    ] else ...[
+                      const Icon(
+                        Icons.info,
+                        color: Colors.orange,
+                        size: 24,
+                      ),
+                    ]
                   ],
                 ),
               ],
@@ -406,6 +432,12 @@ class _SettingsState extends State<Settings> {
 
         const SizedBox(height: 24),
 
+        if (!allowedRoles.contains(_userRole)) ...[
+          AlertBox(
+              message:
+                  'Dein Account ist noch nicht freigeschaltet. Erst nach der Freischaltung kannst du Spots anlegen und editieren.'),
+          const SizedBox(height: 24),
+        ],
         // Logout Button
         SizedBox(
           height: 48,
@@ -438,7 +470,6 @@ class _SettingsState extends State<Settings> {
   }
 
   Future<void> _checkUpdate(BuildContext context) async {
-    print("isExecuted");
     setState(() {
       _isCheckingUpdates = true;
     });

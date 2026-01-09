@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:spots/auth/models/auth.dart';
 import 'package:spots/constants/api.dart';
+import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 import '../models/settings.dart';
@@ -16,36 +17,50 @@ class AuthService {
     required String username,
     required String password,
     required BuildContext context,
+    required UserService userService,
   }) async {
     try {
       final url = Uri.parse('$baseUrl$tokenEndpoint');
 
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'username': username,
-          'password': password,
-        }),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'username': username, 'password': password}),
       );
 
       if (response.statusCode == 200) {
         _refreshTokenCookie = _extractRefreshTokenNew(response.headers);
         if (_refreshTokenCookie != null && context.mounted) {
-          _saveRefreshToken(_refreshTokenCookie!, Provider.of<SettingsModel>(context, listen: false));
+          _saveRefreshToken(
+            _refreshTokenCookie!,
+            Provider.of<SettingsModel>(context, listen: false),
+          );
         }
         final Map<String, dynamic> data = json.decode(response.body);
-        final authResult = AuthResult.fromJson(data);
-
+        AuthResult authResult = AuthResult.fromJson(data);
+        final userRole =
+            await userService.getUserRole(userId: authResult.userId, context: context, token: authResult.token);
         if (context.mounted) {
-          final settingsModel = Provider.of<SettingsModel>(context, listen: false);
+          final settingsModel = Provider.of<SettingsModel>(
+            context,
+            listen: false,
+          );
           await _saveToken(authResult.token, settingsModel);
           await _saveUserInfo(authResult, settingsModel);
+          await settingsModel.setUserRole(userRole: userRole.role);
         }
-
-        return authResult;
+        // TODO find a way to make it shorter
+        return AuthResult(
+          success: authResult.success,
+          token: authResult.token,
+          userNiceName: authResult.userNiceName,
+          userDisplayName: authResult.userDisplayName,
+          userEmail: authResult.userEmail,
+          userId: authResult.userId,
+          userRole: userRole.role,
+          errorMessage: authResult.errorMessage,
+          statusCode: authResult.statusCode,
+        );
       } else {
         final Map<String, dynamic> errorData = json.decode(response.body);
         return AuthResult.error(
@@ -58,26 +73,38 @@ class AuthService {
     }
   }
 
-  Future<AuthResult> loginWithRefreshToken({required BuildContext context, required String token}) async {
+  Future<AuthResult> loginWithRefreshToken({
+    required BuildContext context,
+    required String token,
+  }) async {
     try {
       final url = Uri.parse('$baseUrl$tokenEndpoint');
 
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json', 'Cookie': 'refresh_token=$token'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': 'refresh_token=$token',
+        },
       );
 
       if (response.statusCode == 200) {
         _refreshTokenCookie = _extractRefreshTokenNew(response.headers);
         if (_refreshTokenCookie != null && context.mounted) {
-          final settingsModel = Provider.of<SettingsModel>(context, listen: false);
+          final settingsModel = Provider.of<SettingsModel>(
+            context,
+            listen: false,
+          );
           _saveRefreshToken(_refreshTokenCookie!, settingsModel);
         }
         final Map<String, dynamic> data = json.decode(response.body);
         final authResult = AuthResult.fromJson(data);
 
         if (context.mounted) {
-          final settingsModel = Provider.of<SettingsModel>(context, listen: false);
+          final settingsModel = Provider.of<SettingsModel>(
+            context,
+            listen: false,
+          );
           await _saveToken(authResult.token, settingsModel);
           await _saveUserInfo(authResult, settingsModel);
           showSnackBar(context, 'Sie werden angemeldet...', Colors.orange);
@@ -127,7 +154,9 @@ class AuthService {
     try {
       DateTime expireDate = DateTime.parse(expireDateString);
       // Add some threshold
-      return DateTime.now().isAfter(expireDate.subtract(const Duration(hours: 12)));
+      return DateTime.now().isAfter(
+        expireDate.subtract(const Duration(hours: 12)),
+      );
     } catch (e) {
       debugPrint('Fehler beim Parsen des Datums: $e');
       return true; // Bei Fehler als expired behandeln
@@ -141,17 +170,26 @@ class AuthService {
   // Private Methoden
   Future<void> _saveToken(String token, SettingsModel settingsModel) async {
     await settingsModel.setToken(token: token);
-    await settingsModel.setExpireLogin(expireLogin: loginExpirationDate().toIso8601String());
+    await settingsModel.setExpireLogin(
+      expireLogin: loginExpirationDate().toIso8601String(),
+    );
   }
 
   // Private Methoden
-  Future<void> _saveRefreshToken(String token, SettingsModel settingsModel) async {
+  Future<void> _saveRefreshToken(
+    String token,
+    SettingsModel settingsModel,
+  ) async {
     await settingsModel.setRefreshToken(refreshToken: token);
   }
 
-  Future<void> _saveUserInfo(AuthResult authResult, SettingsModel settingsModel) async {
+  Future<void> _saveUserInfo(
+    AuthResult authResult,
+    SettingsModel settingsModel,
+  ) async {
     await settingsModel.setUser(user: authResult.userDisplayName);
     await settingsModel.setEmail(email: authResult.userEmail);
+    await settingsModel.setUserId(userId: authResult.userId);
   }
 
   String? _extractRefreshTokenNew(Map<String, String> headers) {

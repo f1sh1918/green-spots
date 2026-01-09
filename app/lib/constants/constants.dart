@@ -1,0 +1,1 @@
+const allowedRoles = ['editor', 'author'];

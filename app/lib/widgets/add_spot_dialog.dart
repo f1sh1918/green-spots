@@ -3,6 +3,7 @@ import 'package:geolocator_platform_interface/src/models/position.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/add/add_spots.dart';
+import 'package:spots/constants/constants.dart';
 
 import '../auth/models/settings.dart';
 
@@ -23,7 +24,8 @@ class AddSpotDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final token = Provider.of<SettingsModel>(context, listen: false).token;
+    final userRole = Provider.of<SettingsModel>(context, listen: false).userRole;
+    final canUserAddSpots = allowedRoles.contains(userRole);
     final theme = Theme.of(context);
     return AlertDialog(
       titlePadding: EdgeInsets.all(20),
@@ -31,9 +33,9 @@ class AddSpotDialog extends StatelessWidget {
       actionsPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       title: Text('Neuen Spot hinzufügen', style: theme.textTheme.headlineSmall),
       content: Text(
-        token != null
+        canUserAddSpots
             ? 'Wollen Sie einen neuen Spot an dieser Stelle hinzufügen?'
-            : 'Sie müssen eingeloggt sein, um Spots hinzuzufügen. Gehe Sie zu Einstellungen.',
+            : 'Sie müssen eingeloggt und freigeschaltet sein, um Spots hinzuzufügen.\nÜberprüfe deinen Status in Settings.',
         style: theme.textTheme.bodyMedium,
       ),
       actions: [
@@ -41,7 +43,7 @@ class AddSpotDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           child: Text('Schließen'),
         ),
-        if (token != null) ...[
+        if (canUserAddSpots) ...[
           TextButton(
             onPressed: () => {
               Navigator.of(context).pop(),

@@ -39,8 +39,13 @@ class UpdateInfoDialog extends StatelessWidget {
           child: Text('Schließen'),
         ),
         TextButton(
-          onPressed: () =>
-              {launchUrl(Uri.parse(updateInfo.downloadUrl)), Navigator.of(context, rootNavigator: true).pop()},
+          onPressed: () => {
+            launchUrl(
+              Uri.parse(updateInfo.downloadUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+            Navigator.of(context, rootNavigator: true).pop()
+          },
           child: Text('Download'),
         ),
       ],

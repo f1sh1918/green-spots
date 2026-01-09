@@ -67,6 +67,20 @@ add_action( 'rest_api_init', function () {
         'schema' => [ 'type' => 'string' ],
     ] );
 
+    register_rest_field( 'user', 'roles', [
+        'get_callback' => function ( $obj ) {
+            $user = get_userdata( $obj['id'] );
+            if ( ! $user ) return null;
+
+            return $user->roles;
+        },
+        'schema' => [
+            'type' => 'array',
+            'items' => [ 'type' => 'string' ]
+        ],
+    ] );
+
+
 
 } );
 
