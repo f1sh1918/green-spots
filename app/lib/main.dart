@@ -143,11 +143,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (context != null) {
       final settings = Provider.of<SettingsModel>(context, listen: false);
       final userId = settings.userId;
-      if (userId != null && !allowedRoles.contains(userId)) {
-        final userRole = await _userService.getUserRole(userId: userId, context: context, token: settings.token);
+      if (userId != null && !allowedRoles.contains(settings.userRole)) {
+        final newRole = await _userService.getUserRole(userId: userId, context: context, token: settings.token);
         if (context.mounted) {
-          Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: userRole.role);
-          if (allowedRoles.contains(userRole.role)) {
+          Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: newRole.role);
+          if (allowedRoles.contains(newRole.role)) {
             showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
           }
         }
