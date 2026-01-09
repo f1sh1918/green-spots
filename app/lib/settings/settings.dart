@@ -435,9 +435,9 @@ class _SettingsState extends State<Settings> {
         if (!allowedRoles.contains(_userRole)) ...[
           AlertBox(
               message:
-                  'Dein Account ist noch nicht freigeschaltet. Erst nach der Freischaltung kannst du Spots anlegen und editieren.')
+                  'Dein Account ist noch nicht freigeschaltet. Erst nach der Freischaltung kannst du Spots anlegen und editieren.'),
+          const SizedBox(height: 24),
         ],
-        const SizedBox(height: 24),
         // Logout Button
         SizedBox(
           height: 48,
@@ -491,20 +491,4 @@ class _SettingsState extends State<Settings> {
       showSnackBar(context, 'Deine Version ist aktuell.', Colors.green);
     }
   }
-
-  // Future<void> _checkUserRole(BuildContext context) async {
-  //   final token = Provider.of<SettingsModel>(context, listen: false).token;
-  //   if (_userId != null && !allowedRoles.contains(_userRole)) {
-  //     final userRole = await _userService.getUserRole(userId: _userId!, context: context, token: token);
-  //     if (context.mounted) {
-  //       Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: userRole.role);
-  //       setState(() {
-  //         _userRole = userRole.role;
-  //       });
-  //       if (allowedRoles.contains(userRole.role)) {
-  //         showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
-  //       }
-  //     }
-  //   }
-  // }
 }
