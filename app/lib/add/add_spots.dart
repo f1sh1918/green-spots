@@ -441,32 +441,6 @@ class _AddSpotsState extends State<AddSpots> {
       );
 
       final token = Provider.of<SettingsModel>(context, listen: false).token;
-      final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
-
-      // If offline, queue the spot instead of submitting
-      if (spotsProvider.isOffline) {
-        final queueId = DateTime.now().millisecondsSinceEpoch.toString();
-        final spotData = spot.toJson();
-        spotData['_queueId'] = queueId;
-        await spotsProvider.enqueueSpot(spotData);
-
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (mounted) {
-          showSnackBar(
-            context,
-            _selectedImages.isNotEmpty
-                ? 'Spot gespeichert (ohne Bilder – du bist offline).'
-                : 'Spot gespeichert – wird übertragen sobald du online bist.',
-            Colors.orange,
-            const Duration(seconds: 4),
-          );
-          Navigator.pop(context);
-        }
-        return;
-      }
 
       // Hier würden Sie die Bilder zusammen mit dem Spot hochladen
       final success = widget.existingSpot != null
@@ -511,8 +485,11 @@ class _AddSpotsState extends State<AddSpots> {
             listen: false,
           ).setActiveSpot(activeSpot);
           Navigator.pop(context);
-          final sp = Provider.of<SpotsProvider>(context, listen: false);
-          await sp.refresh(context, widget.userPosition);
+          final spotsProvider = Provider.of<SpotsProvider>(
+            context,
+            listen: false,
+          );
+          await spotsProvider.refresh(context, widget.userPosition);
         }
       }
     }

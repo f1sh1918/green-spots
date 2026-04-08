@@ -28,15 +28,6 @@ class Spots extends StatefulWidget {
 }
 
 class _SpotsState extends State<Spots> {
-  Widget _buildImagePlaceholder() {
-    return Container(
-      width: 56,
-      height: 56,
-      color: Colors.green.shade100,
-      child: Icon(Icons.park, size: 28, color: Colors.green.shade600),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final userRole = Provider.of<SettingsModel>(
@@ -63,46 +54,10 @@ class _SpotsState extends State<Spots> {
               : null,
           body: ListView.separated(
             padding: const EdgeInsets.only(bottom: 80),
-            itemCount:
-                spotsProvider.queuedSpotsCount + spotsProvider.spots.length,
+            itemCount: spotsProvider.spots.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
-              // Queued (offline) spots shown first
-              if (index < spotsProvider.queuedSpotsCount) {
-                final queued = spotsProvider.queuedSpots[index];
-                final title = queued['title'] as String? ?? 'Unbekannter Spot';
-                return ListTile(
-                  leading: Container(
-                    width: 56,
-                    height: 56,
-                    color: Colors.orange.shade50,
-                    child: Icon(
-                      Icons.upload,
-                      size: 28,
-                      color: Colors.orange.shade700,
-                    ),
-                  ),
-                  title: Text(
-                    title,
-                    style: const TextStyle(fontStyle: FontStyle.italic),
-                  ),
-                  subtitle: Text(
-                    'Ausstehend – wird synchronisiert sobald online',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.orange.shade700,
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.wifi_off,
-                    size: 18,
-                    color: Colors.orange.shade700,
-                  ),
-                );
-              }
-
-              final spot =
-                  spotsProvider.spots[index - spotsProvider.queuedSpotsCount];
+              final spot = spotsProvider.spots[index];
               return ListTile(
                 leading: spot.thumbnail != null
                     ? Image.network(
@@ -110,9 +65,11 @@ class _SpotsState extends State<Spots> {
                         width: 56,
                         height: 56,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
                       )
-                    : _buildImagePlaceholder(),
+                    : const SizedBox(
+                        width: 56,
+                        child: Icon(Icons.place, size: 32),
+                      ),
                 title: Text(spot.title),
                 subtitle: SpotsSubtitle(
                   spot: spot,

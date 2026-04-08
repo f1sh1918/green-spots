@@ -10,12 +10,7 @@
       "WebFetch(domain:pub.dev)",
       "Bash(gh api:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:maplibre.org)",
-      "Bash(flutter analyze:*)",
-      "Read(//usr/local/bin/**)",
-      "Read(//Users/afischer/development/flutter/bin/**)",
-      "Read(//Users/afischer/**)",
-      "Bash(/Users/afischer/fvm/versions/stable/bin/flutter analyze:*)"
+      "WebFetch(domain:maplibre.org)"
     ]
   }
 }
