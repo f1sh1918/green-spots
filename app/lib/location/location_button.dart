@@ -6,7 +6,11 @@ class LocationIcon extends StatelessWidget {
   final LocationStatus? locationStatus;
   final bool followUserLocation;
 
-  const LocationIcon({super.key, required this.locationStatus, required this.followUserLocation});
+  const LocationIcon({
+    super.key,
+    required this.locationStatus,
+    required this.followUserLocation,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +21,8 @@ class LocationIcon extends StatelessWidget {
     }
 
     final bool hasLocationPermission =
-        locationStatus == LocationStatus.always || locationStatus == LocationStatus.whileInUse;
+        locationStatus == LocationStatus.always ||
+        locationStatus == LocationStatus.whileInUse;
     if (hasLocationPermission) {
       return Icon(
         followUserLocation ? Icons.my_location : Icons.location_searching,
@@ -33,7 +38,11 @@ class LocationButton extends StatefulWidget {
   final Future<void> Function() bringCameraToUser;
   final bool followUserLocation;
 
-  const LocationButton({super.key, required this.followUserLocation, required this.bringCameraToUser});
+  const LocationButton({
+    super.key,
+    required this.followUserLocation,
+    required this.bringCameraToUser,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -65,7 +74,10 @@ class _LocationButtonState extends State<LocationButton> {
   }
 
   Future<void> initializeLocationStatus() async {
-    LocationStatus status = await checkAndRequestLocationPermission(context, requestIfNotGranted: false);
+    LocationStatus status = await checkAndRequestLocationPermission(
+      context,
+      requestIfNotGranted: false,
+    );
     if (mounted) {
       setState(() {
         _locationStatus = status;
@@ -89,7 +101,10 @@ class _LocationButtonState extends State<LocationButton> {
         onPressed: _locationStatus != null ? widget.bringCameraToUser : null,
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child: LocationIcon(locationStatus: _locationStatus, followUserLocation: widget.followUserLocation),
+          child: LocationIcon(
+            locationStatus: _locationStatus,
+            followUserLocation: widget.followUserLocation,
+          ),
         ),
       ),
     );

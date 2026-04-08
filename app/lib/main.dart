@@ -105,7 +105,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final now = DateTime.now();
 
     // Doppelte Verarbeitung innerhalb von 3 Sekunde verhindern
-    if (_lastLinkProcessed != null && now.difference(_lastLinkProcessed!).inMilliseconds < 3000) {
+    if (_lastLinkProcessed != null &&
+        now.difference(_lastLinkProcessed!).inMilliseconds < 3000) {
       debugPrint('Ignoriere doppelten Link: $uri');
       return;
     }
@@ -114,11 +115,21 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     debugPrint('Deep Link erhalten: $uri');
     final context = navigatorKey.currentContext;
     if (uri.scheme == 'geo' && context != null) {
-      final userRole = Provider.of<SettingsModel>(context, listen: false).userRole;
+      final userRole = Provider.of<SettingsModel>(
+        context,
+        listen: false,
+      ).userRole;
       final canUserAddSpots = allowedRoles.contains(userRole);
-      Map<String, dynamic> deepLinkObject = GeoLinkHelper.parseGeoQueryWithPath(uri.path, uri.query);
+      Map<String, dynamic> deepLinkObject = GeoLinkHelper.parseGeoQueryWithPath(
+        uri.path,
+        uri.query,
+      );
       if (!canUserAddSpots) {
-        showSnackBar(context, 'Für das Erstellen von Spots musst du eingeloggt sein.', Colors.red);
+        showSnackBar(
+          context,
+          'Für das Erstellen von Spots musst du eingeloggt sein.',
+          Colors.red,
+        );
         return;
       }
       if (deepLinkObject['lat'] != null && deepLinkObject['lng'] != null) {
@@ -127,9 +138,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (_) => AddSpots(
-                coordinates: LatLng(deepLinkObject['lat'], deepLinkObject['lng']),
-                title: deepLinkObject['title'],
-                userPosition: userPosition?['position']),
+              coordinates: LatLng(deepLinkObject['lat'], deepLinkObject['lng']),
+              title: deepLinkObject['title'],
+              userPosition: userPosition?['position'],
+            ),
           ),
         );
       } else {
@@ -144,11 +156,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final settings = Provider.of<SettingsModel>(context, listen: false);
       final userId = settings.userId;
       if (userId != null && !allowedRoles.contains(settings.userRole)) {
-        final newRole = await _userService.getUserRole(userId: userId, context: context, token: settings.token);
+        final newRole = await _userService.getUserRole(
+          userId: userId,
+          context: context,
+          token: settings.token,
+        );
         if (context.mounted) {
-          Provider.of<SettingsModel>(context, listen: false).setUserRole(userRole: newRole.role);
+          Provider.of<SettingsModel>(
+            context,
+            listen: false,
+          ).setUserRole(userRole: newRole.role);
           if (allowedRoles.contains(newRole.role)) {
-            showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
+            showSnackBar(
+              context,
+              'Dein Account wurde aktiviert!',
+              Colors.green,
+            );
           }
         }
       }

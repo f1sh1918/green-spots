@@ -3,7 +3,8 @@ String convertDateString(String dateString) {
     throw ArgumentError('Datum muss 8 Zeichen haben (YYYYMMDD)');
   }
 
-  String isoString = '${dateString.substring(0, 4)}-${dateString.substring(4, 6)}-${dateString.substring(6, 8)}';
+  String isoString =
+      '${dateString.substring(0, 4)}-${dateString.substring(4, 6)}-${dateString.substring(6, 8)}';
   DateTime date = DateTime.parse(isoString);
 
   String day = date.day.toString().padLeft(2, '0');

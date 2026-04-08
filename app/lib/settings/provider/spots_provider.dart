@@ -37,14 +37,24 @@ class SpotsProvider extends ChangeNotifier {
       notifyListeners();
 
       if (context != null && context.mounted) {
-        showSnackBar(context, 'Daten erfolgreich aktualisiert', Colors.green, Duration(seconds: 1));
+        showSnackBar(
+          context,
+          'Daten erfolgreich aktualisiert',
+          Colors.green,
+          Duration(seconds: 1),
+        );
       }
     } catch (error) {
       _isLoading = false;
       notifyListeners();
 
       if (context != null && context.mounted) {
-        showSnackBar(context, 'Fehler beim Laden: $error', Colors.red, Duration(seconds: 3));
+        showSnackBar(
+          context,
+          'Fehler beim Laden: $error',
+          Colors.red,
+          Duration(seconds: 3),
+        );
       }
 
       rethrow;

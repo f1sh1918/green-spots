@@ -16,7 +16,12 @@ class Spots extends StatefulWidget {
   final bool locationPermissionGiven;
   final LocationStatus? locationStatus;
 
-  const Spots({super.key, this.locationPermissionGiven = false, this.userPosition, this.locationStatus});
+  const Spots({
+    super.key,
+    this.locationPermissionGiven = false,
+    this.userPosition,
+    this.locationStatus,
+  });
 
   @override
   State<Spots> createState() => _SpotsState();
@@ -25,7 +30,10 @@ class Spots extends StatefulWidget {
 class _SpotsState extends State<Spots> {
   @override
   Widget build(BuildContext context) {
-    final userRole = Provider.of<SettingsModel>(context, listen: false).userRole;
+    final userRole = Provider.of<SettingsModel>(
+      context,
+      listen: false,
+    ).userRole;
     final canUserAddSpots = allowedRoles.contains(userRole);
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
@@ -35,9 +43,9 @@ class _SpotsState extends State<Spots> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                          builder: (_) => AddSpots(
-                                userPosition: widget.userPosition,
-                              )),
+                        builder: (_) =>
+                            AddSpots(userPosition: widget.userPosition),
+                      ),
                     );
                   },
                   tooltip: 'Spot hinzufügen',
@@ -70,17 +78,20 @@ class _SpotsState extends State<Spots> {
                   showLabel: false,
                 ),
                 trailing: widget.userPosition != null
-                    ? Text('${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)}km',
-                        style: Theme.of(context).textTheme.bodyMedium)
+                    ? Text(
+                        '${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)}km',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
                     : null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (_) => SpotDetailPage(
-                            currentSpot: spot,
-                            userPosition: widget.userPosition,
-                            locationPermissionGiven: widget.locationPermissionGiven,
-                            locationStatus: widget.locationStatus,
-                          )),
+                    builder: (_) => SpotDetailPage(
+                      currentSpot: spot,
+                      userPosition: widget.userPosition,
+                      locationPermissionGiven: widget.locationPermissionGiven,
+                      locationStatus: widget.locationStatus,
+                    ),
+                  ),
                 ),
               );
             },

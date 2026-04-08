@@ -4,7 +4,12 @@ class OutlinedButtonSpinner extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
   final String buttonText;
-  const OutlinedButtonSpinner({super.key, required this.isLoading, required this.onPressed, required this.buttonText});
+  const OutlinedButtonSpinner({
+    super.key,
+    required this.isLoading,
+    required this.onPressed,
+    required this.buttonText,
+  });
 
   @override
   Widget build(BuildContext context) {

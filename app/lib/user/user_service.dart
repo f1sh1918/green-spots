@@ -5,7 +5,11 @@ import 'package:spots/user/user_model.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 class UserService {
-  Future<User> getUserRole({required String userId, required BuildContext context, String? token}) async {
+  Future<User> getUserRole({
+    required String userId,
+    required BuildContext context,
+    String? token,
+  }) async {
     final uri = Uri.parse('$baseUrl$userEndpoint/$userId');
     final response = await http.get(
       uri,
@@ -17,7 +21,11 @@ class UserService {
     if (response.statusCode == 200) {
       return User.singleFromJson(response.body);
     } else {
-      showSnackBar(context, 'Dein Account ist noch nicht freigeschaltet.', Colors.red);
+      showSnackBar(
+        context,
+        'Dein Account ist noch nicht freigeschaltet.',
+        Colors.red,
+      );
       return User(role: 'subscriber');
     }
   }

@@ -17,10 +17,6 @@ Future<Map<String, dynamic>?> loadUserPosition(BuildContext context) async {
     }
   } catch (e) {
     debugPrint('Fehler beim Laden der Position: $e');
-    return {
-      'position': null,
-      'permissionGiven': false,
-      'locationStatus': null,
-    };
+    return {'position': null, 'permissionGiven': false, 'locationStatus': null};
   }
 }

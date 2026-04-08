@@ -7,10 +7,18 @@ class LocationServiceDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Aktiviere Standort'),
-      content: Text('Wir benötigen ihre Standortinformation, damit sie die App gut nutzen können'),
+      content: Text(
+        'Wir benötigen ihre Standortinformation, damit sie die App gut nutzen können',
+      ),
       actions: [
-        TextButton(child: Text('Abbrechen'), onPressed: () => Navigator.of(context).pop(false)),
-        TextButton(child: Text('Settings öffnen'), onPressed: () => Navigator.of(context).pop(true)),
+        TextButton(
+          child: Text('Abbrechen'),
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        TextButton(
+          child: Text('Settings öffnen'),
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
       ],
     );
   }
@@ -19,7 +27,8 @@ class LocationServiceDialog extends StatelessWidget {
 class RationaleDialog extends StatelessWidget {
   final String _rationale;
 
-  const RationaleDialog({super.key, required String rationale}) : _rationale = rationale;
+  const RationaleDialog({super.key, required String rationale})
+    : _rationale = rationale;
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +40,21 @@ class RationaleDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(_rationale, style: theme.textTheme.bodyLarge),
-          Text('Soll noch einmal nach der Berechtigung gefragt werden?', style: theme.textTheme.bodyLarge),
+          Text(
+            'Soll noch einmal nach der Berechtigung gefragt werden?',
+            style: theme.textTheme.bodyLarge,
+          ),
         ],
       ),
       actions: [
-        TextButton(child: Text('Erlauben'), onPressed: () => Navigator.of(context).pop(true)),
-        TextButton(child: Text('Abbrechen'), onPressed: () => Navigator.of(context).pop(false)),
+        TextButton(
+          child: Text('Erlauben'),
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+        TextButton(
+          child: Text('Abbrechen'),
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
       ],
     );
   }

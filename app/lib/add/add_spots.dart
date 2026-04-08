@@ -21,7 +21,13 @@ class AddSpots extends StatefulWidget {
   final Spot? existingSpot;
   final String? title;
 
-  const AddSpots({super.key, this.userPosition, this.coordinates, this.existingSpot, this.title});
+  const AddSpots({
+    super.key,
+    this.userPosition,
+    this.coordinates,
+    this.existingSpot,
+    this.title,
+  });
 
   @override
   State<AddSpots> createState() => _AddSpotsState();
@@ -216,7 +222,8 @@ class _AddSpotsState extends State<AddSpots> {
       final List<int> resizedBytes = img.encodeJpg(resizedImage, quality: 85);
 
       // Temporäre Datei erstellen
-      final String fileName = 'resized_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String fileName =
+          'resized_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final File resizedFile = File('${imageFile.parent.path}/$fileName');
       await resizedFile.writeAsBytes(resizedBytes);
 
@@ -309,7 +316,9 @@ class _AddSpotsState extends State<AddSpots> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.existingSpot != null ? 'Zusätzliche Bilder' : 'Ausgewählte Bilder',
+          widget.existingSpot != null
+              ? 'Zusätzliche Bilder'
+              : 'Ausgewählte Bilder',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -367,7 +376,10 @@ class _AddSpotsState extends State<AddSpots> {
       return Container();
     }
     // Filter null values
-    List<String> imageUrls = images.where((item) => item != null).toList().cast<String>();
+    List<String> imageUrls = images
+        .where((item) => item != null)
+        .toList()
+        .cast<String>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -579,10 +591,11 @@ class _AddSpotsState extends State<AddSpots> {
                                 labelText: 'Breitengrad *',
                                 border: OutlineInputBorder(),
                               ),
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
-                                signed: true,
-                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                    signed: true,
+                                  ),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                   RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
@@ -790,7 +803,9 @@ class _AddSpotsState extends State<AddSpots> {
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(double.infinity, 48),
                           ),
-                          onPressed: totalPicturesCount >= 3 ? null : _pickImages,
+                          onPressed: totalPicturesCount >= 3
+                              ? null
+                              : _pickImages,
                           icon: const Icon(Icons.add_a_photo),
                           label: Text(
                             totalPicturesCount >= 3
@@ -833,7 +848,8 @@ class _AddSpotsState extends State<AddSpots> {
   }
 
   _updateUserPosition() {
-    if (widget.userPosition?.latitude != null && widget.userPosition?.longitude != null) {
+    if (widget.userPosition?.latitude != null &&
+        widget.userPosition?.longitude != null) {
       setState(() {
         _latController.text = widget.userPosition!.latitude.toString();
         _longController.text = widget.userPosition!.longitude.toString();

@@ -72,7 +72,11 @@ class SpotsSubtitle extends StatelessWidget {
     if (showLabel) {
       return Padding(
         padding: EdgeInsets.only(top: 8.0, bottom: 8),
-        child: Column(spacing: 8, crossAxisAlignment: CrossAxisAlignment.stretch, children: items),
+        child: Column(
+          spacing: 8,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: items,
+        ),
       );
     } else {
       return Wrap(

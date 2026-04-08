@@ -22,17 +22,24 @@ class UpdateInfoDialog extends StatelessWidget {
       titlePadding: EdgeInsets.all(20),
       contentPadding: EdgeInsets.symmetric(horizontal: 20),
       actionsPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      title: Text('Neue Version verfügbar', style: theme.textTheme.headlineSmall),
-      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(
-          'Version ${updateInfo.title}',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-        ),
-        Text(
-          updateInfo.releaseNotes ?? 'Keine Release Notes verfügbar.',
-          style: theme.textTheme.bodyLarge,
-        )
-      ]),
+      title: Text(
+        'Neue Version verfügbar',
+        style: theme.textTheme.headlineSmall,
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Version ${updateInfo.title}',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          ),
+          Text(
+            updateInfo.releaseNotes ?? 'Keine Release Notes verfügbar.',
+            style: theme.textTheme.bodyLarge,
+          ),
+        ],
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
@@ -44,7 +51,7 @@ class UpdateInfoDialog extends StatelessWidget {
               Uri.parse(updateInfo.downloadUrl),
               mode: LaunchMode.externalApplication,
             ),
-            Navigator.of(context, rootNavigator: true).pop()
+            Navigator.of(context, rootNavigator: true).pop(),
           },
           child: Text('Download'),
         ),

@@ -23,11 +23,7 @@ class SpotDialog extends StatelessWidget {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return SpotDialog(
-          spot: spot,
-          distance: distance,
-          onTap: onTap,
-        );
+        return SpotDialog(spot: spot, distance: distance, onTap: onTap);
       },
     );
   }
@@ -35,9 +31,7 @@ class SpotDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: EdgeInsets.all(16),
         child: InkWell(
@@ -57,8 +51,10 @@ class SpotDialog extends StatelessWidget {
                           spot.title,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                        Text('${distance.toStringAsFixed(1)} km entfernt',
-                            style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          '${distance.toStringAsFixed(1)} km entfernt',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 16),
                         SpotsSubtitle(
                           spot: spot,

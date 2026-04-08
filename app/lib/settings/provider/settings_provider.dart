@@ -36,7 +36,10 @@ class SettingsProviderState extends State<SettingsProvider> {
         if (snapshot.connectionState != ConnectionState.done) {
           return Container();
         }
-        return ChangeNotifierProvider.value(value: settings, child: widget.child);
+        return ChangeNotifierProvider.value(
+          value: settings,
+          child: widget.child,
+        );
       },
     );
   }

@@ -127,7 +127,9 @@ class SpotService {
         return true;
       } else {
         if (context.mounted) {
-          final errorMessage = jsonDecode(response.body)['message'] ?? 'Fehler beim Hinzufügen des Spots';
+          final errorMessage =
+              jsonDecode(response.body)['message'] ??
+              'Fehler beim Hinzufügen des Spots';
           showSnackBar(context, errorMessage, Colors.red);
         }
         debugPrint('Response: ${response.body}');

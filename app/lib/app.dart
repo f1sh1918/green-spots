@@ -21,10 +21,7 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return FutureBuilder<List<dynamic>>(
       // ✅ Lade sowohl Spots als auch Position parallel
-      future: Future.wait([
-        _service.fetchSpots(),
-        loadUserPosition(context),
-      ]),
+      future: Future.wait([_service.fetchSpots(), loadUserPosition(context)]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -49,14 +46,17 @@ class _AppState extends State<App> {
 
         // ✅ Daten aus der Map extrahieren
         final userPosition = positionData?['position'] as Position?;
-        final permissionGiven = positionData?['permissionGiven'] as bool? ?? false;
-        final locationStatus = positionData?['locationStatus'] as LocationStatus?;
+        final permissionGiven =
+            positionData?['permissionGiven'] as bool? ?? false;
+        final locationStatus =
+            positionData?['locationStatus'] as LocationStatus?;
 
         return Home(
-            locationPermissionGiven: permissionGiven,
-            userPosition: userPosition,
-            locationStatus: locationStatus,
-            spots: sortSpotsByDistance(spots, userPosition));
+          locationPermissionGiven: permissionGiven,
+          userPosition: userPosition,
+          locationStatus: locationStatus,
+          spots: sortSpotsByDistance(spots, userPosition),
+        );
       },
     );
   }

@@ -18,13 +18,14 @@ class Home extends StatefulWidget {
   final LocationStatus? locationStatus;
   final int? initialIndex;
 
-  const Home(
-      {super.key,
-      this.spots,
-      this.locationPermissionGiven = false,
-      this.initialIndex,
-      this.locationStatus,
-      this.userPosition});
+  const Home({
+    super.key,
+    this.spots,
+    this.locationPermissionGiven = false,
+    this.initialIndex,
+    this.locationStatus,
+    this.userPosition,
+  });
 
   @override
   State<Home> createState() => _HomeState();
@@ -63,16 +64,18 @@ class _HomeState extends State<Home> {
     final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
     return <Widget>[
       MapPage(
-          // ensures that the map will be updated in the spot length change
-          key: ValueKey('map_${spotsProvider.spots.length}'),
-          activeSpot: spotsProvider.activeSpot,
-          userPosition: _userPosition,
-          locationPermissionGiven: widget.locationPermissionGiven,
-          locationStatus: widget.locationStatus),
+        // ensures that the map will be updated in the spot length change
+        key: ValueKey('map_${spotsProvider.spots.length}'),
+        activeSpot: spotsProvider.activeSpot,
+        userPosition: _userPosition,
+        locationPermissionGiven: widget.locationPermissionGiven,
+        locationStatus: widget.locationStatus,
+      ),
       Spots(
-          userPosition: _userPosition,
-          locationPermissionGiven: widget.locationPermissionGiven,
-          locationStatus: widget.locationStatus),
+        userPosition: _userPosition,
+        locationPermissionGiven: widget.locationPermissionGiven,
+        locationStatus: widget.locationStatus,
+      ),
       const Settings(),
     ];
   }
@@ -98,10 +101,15 @@ class _HomeState extends State<Home> {
             actions: [
               if (_selectedIndex == 1) ...[
                 IconButton(
-                    onPressed: spotsProvider.isLoading ? null : _handleRefresh,
-                    icon: spotsProvider.isLoading
-                        ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Icon(Icons.refresh)),
+                  onPressed: spotsProvider.isLoading ? null : _handleRefresh,
+                  icon: spotsProvider.isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(Icons.refresh),
+                ),
               ],
             ],
           ),
@@ -131,8 +139,13 @@ class _HomeState extends State<Home> {
 
   _autoLogin() {
     final settings = Provider.of<SettingsModel>(context, listen: false);
-    if (settings.refreshToken != null && _authService.isTokenExpired(settings.expireLogin) && mounted) {
-      _authService.loginWithRefreshToken(context: context, token: settings.refreshToken!);
+    if (settings.refreshToken != null &&
+        _authService.isTokenExpired(settings.expireLogin) &&
+        mounted) {
+      _authService.loginWithRefreshToken(
+        context: context,
+        token: settings.refreshToken!,
+      );
     }
   }
 }

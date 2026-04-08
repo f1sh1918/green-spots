@@ -36,7 +36,10 @@ class MapInfoDialog extends StatelessWidget {
         TextButton(
           onPressed: () => {
             Navigator.of(context, rootNavigator: true).pop(),
-            Provider.of<SettingsModel>(context, listen: false).setFirstStart(enabled: false)
+            Provider.of<SettingsModel>(
+              context,
+              listen: false,
+            ).setFirstStart(enabled: false),
           },
           child: Text('Nicht mehr anzeigen'),
         ),
