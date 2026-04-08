@@ -61,6 +61,12 @@ class SpotsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> removeFromQueue(String queueId) async {
+    await SpotCache.dequeueSpot(queueId);
+    _queuedSpots = await SpotCache.loadQueue();
+    notifyListeners();
+  }
+
   /// Tries to submit all queued spots. Returns true if queue is now empty.
   Future<bool> processQueue(
     String token,

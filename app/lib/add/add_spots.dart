@@ -566,6 +566,20 @@ class _AddSpotsState extends State<AddSpots> {
             icon: Icon(Icons.arrow_back),
             onPressed: _handleBackNavigation,
           ),
+          // TODO Add Delete Spot Dialog before delete from queue
+          actions: [
+            if (widget.queuedSpotId != null)
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () async {
+                  await Provider.of<SpotsProvider>(
+                    context,
+                    listen: false,
+                  ).removeFromQueue(widget.queuedSpotId!);
+                  if (context.mounted) Navigator.of(context).pop();
+                },
+              ),
+          ],
         ),
         body: SafeArea(
           child: Form(

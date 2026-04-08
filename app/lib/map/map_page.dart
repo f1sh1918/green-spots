@@ -138,33 +138,34 @@ class _MapPagePageState extends State<MapPage> {
     math.Point<double> point,
     clickCoordinates,
   ) async {
-    if (!mounted) return;
-    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final touchTargetSize = pixelRatio * 38.0;
-    final rect = Rect.fromCenter(
-      center: Offset(point.x, point.y),
-      width: touchTargetSize,
-      height: touchTargetSize,
-    );
-
-    final clusterFeatures = await _controller!.queryRenderedFeaturesInRect(
-      rect,
-      ['clusters-layer'],
-      null,
-    );
-    if (clusterFeatures.isNotEmpty) {
-      final coords =
-          clusterFeatures[0]['geometry']['coordinates'] as List<dynamic>;
-      final clusterLatLng = LatLng(coords[1] as double, coords[0] as double);
-      final currentZoom = _controller!.cameraPosition?.zoom ?? 7.0;
-      await _controller!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: clusterLatLng, zoom: currentZoom + 3),
-        ),
-        duration: const Duration(milliseconds: 500),
-      );
-      return;
-    }
+    // TODO 95 - enable the zoom on single click when maplibre gl 0.26.0 was released
+    // if (!mounted) return;
+    // final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    // final touchTargetSize = pixelRatio * 38.0;
+    // final rect = Rect.fromCenter(
+    //   center: Offset(point.x, point.y),
+    //   width: touchTargetSize,
+    //   height: touchTargetSize,
+    // );
+    //
+    // final clusterFeatures = await _controller!.queryRenderedFeaturesInRect(
+    //   rect,
+    //   ['clusters-layer'],
+    //   null,
+    // );
+    // if (clusterFeatures.isNotEmpty) {
+    //   final coords =
+    //       clusterFeatures[0]['geometry']['coordinates'] as List<dynamic>;
+    //   final clusterLatLng = LatLng(coords[1] as double, coords[0] as double);
+    //   final currentZoom = _controller!.cameraPosition?.zoom ?? 7.0;
+    //   await _controller!.animateCamera(
+    //     CameraUpdate.newCameraPosition(
+    //       CameraPosition(target: clusterLatLng, zoom: currentZoom + 3),
+    //     ),
+    //     duration: const Duration(milliseconds: 500),
+    //   );
+    //   return;
+    // }
 
     Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
   }

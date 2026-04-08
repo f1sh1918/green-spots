@@ -15,7 +15,11 @@
       "Read(//usr/local/bin/**)",
       "Read(//Users/afischer/development/flutter/bin/**)",
       "Read(//Users/afischer/**)",
-      "Bash(/Users/afischer/fvm/versions/stable/bin/flutter analyze:*)"
+      "Bash(/Users/afischer/fvm/versions/stable/bin/flutter analyze:*)",
+      "Bash(grep:*)",
+      "Bash(/tmp/check_imports.txt:*)",
+      "Read(//tmp/**)",
+      "Bash(flutter pub:*)"
     ]
   }
 }

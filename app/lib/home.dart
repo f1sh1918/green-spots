@@ -57,7 +57,14 @@ class _HomeState extends State<Home> {
 
   Future<void> _handleRefresh() async {
     final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+    final token = Provider.of<SettingsModel>(context, listen: false).token;
     await spotsProvider.refresh(context, _userPosition);
+    if (!spotsProvider.isOffline &&
+        spotsProvider.queuedSpotsCount > 0 &&
+        token != null &&
+        mounted) {
+      await spotsProvider.processQueue(token, context, _userPosition);
+    }
   }
 
   List<Widget> _getPages() {

@@ -41,7 +41,6 @@ class _SettingsState extends State<Settings> {
   String _version = 'N/A';
   bool _isCheckingUpdates = false;
   String _userRole = 'N/A';
-  bool _isGoingOnline = false;
 
   @override
   void initState() {
@@ -518,74 +517,21 @@ class _SettingsState extends State<Settings> {
             if (queueCount > 0) ...[
               const SizedBox(height: 6),
               Text(
-                '$queueCount Spot${queueCount == 1 ? '' : 's'} warten auf Übertragung.',
+                queueCount == 1
+                    ? '1 Spot wartet auf Übertragung.'
+                    : '$queueCount Spots warten auf Übertragung.',
                 style: TextStyle(fontSize: 13, color: Colors.black),
               ),
             ],
             const SizedBox(height: 10),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                'Online-Modus aktivieren',
-                style: TextStyle(fontSize: 14, color: Colors.black),
-              ),
-              subtitle: Text(
-                'Nur möglich wenn Netzwerk verfügbar',
-                style: TextStyle(fontSize: 12, color: Colors.black),
-              ),
-              value: false,
-              activeThumbColor: Colors.green,
-              onChanged: _isGoingOnline
-                  ? null
-                  : (_) => _goOnline(context, spotsProvider),
+            Text(
+              'Online-Modus wird automatisch aktiviert',
+              style: TextStyle(fontSize: 13, color: Colors.black54),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _goOnline(
-    BuildContext context,
-    SpotsProvider spotsProvider,
-  ) async {
-    setState(() {
-      _isGoingOnline = true;
-    });
-
-    try {
-      await spotsProvider.refresh(context, null);
-
-      if (spotsProvider.isOffline) {
-        if (mounted) {
-          showSnackBar(
-            context,
-            'Kein Netzwerk verfügbar.Bitte später erneut versuchen.',
-            Colors.red,
-            const Duration(seconds: 3),
-          );
-        }
-      } else if (spotsProvider.queuedSpotsCount > 0 && mounted) {
-        final token = Provider.of<SettingsModel>(context, listen: false).token;
-        if (token != null) {
-          await spotsProvider.processQueue(token, context, null);
-          if (mounted) {
-            showSnackBar(
-              context,
-              'Warteschlange erfolgreich synchronisiert!',
-              Colors.green,
-              const Duration(seconds: 2),
-            );
-          }
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGoingOnline = false;
-        });
-      }
-    }
   }
 
   void _register() async {
