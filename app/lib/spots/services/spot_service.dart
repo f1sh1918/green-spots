@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:spots/add/models/add_spot.dart';
 import 'package:spots/constants/api.dart';
 import 'package:spots/spots/models/spot.dart';
+import 'package:spots/spots/services/spot_cache.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 class SpotService {
@@ -70,6 +71,7 @@ class SpotService {
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
+      await SpotCache.saveSpots(response.body);
       return Spot.listFromJson(response.body);
     } else {
       // You can create a custom exception type if you like.

@@ -131,9 +131,42 @@ class _HomeState extends State<Home> {
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,
           ),
-          body: Center(child: _getPages().elementAt(_selectedIndex)),
+          body: Column(
+            children: [
+              if (spotsProvider.isOffline) _buildOfflineBanner(context),
+              Expanded(child: _getPages().elementAt(_selectedIndex)),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildOfflineBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = 2; // go to settings tab
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        color: Colors.orange.shade400,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.wifi_off, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Offline-Modus – Tippen für Einstellungen',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+          ],
+        ),
+      ),
     );
   }
 

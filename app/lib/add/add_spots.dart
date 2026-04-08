@@ -20,6 +20,8 @@ class AddSpots extends StatefulWidget {
   final LatLng? coordinates;
   final Spot? existingSpot;
   final String? title;
+  final AddSpot? queuedSpot;
+  final String? queuedSpotId;
 
   const AddSpots({
     super.key,
@@ -27,6 +29,8 @@ class AddSpots extends StatefulWidget {
     this.coordinates,
     this.existingSpot,
     this.title,
+    this.queuedSpot,
+    this.queuedSpotId,
   });
 
   @override
@@ -106,19 +110,35 @@ class _AddSpotsState extends State<AddSpots> {
       _longController.text = widget.existingSpot?.long.toString() ?? '';
     }
 
-    _titleController.text = widget.existingSpot?.title ?? widget.title ?? '';
-    _noteController.text = widget.existingSpot?.note ?? '';
-    _secure = widget.existingSpot?.secure ?? 1.0;
-    _space = widget.existingSpot?.space.toInt() ?? 1;
-    _fire = widget.existingSpot?.fire ?? false;
-    _swim = widget.existingSpot?.swim ?? false;
-    _waterquality = widget.existingSpot?.water ?? 'kein Wasser';
-    _selectedSpecials.addAll(
-      (widget.existingSpot?.specials ?? []).cast<String>(),
-    );
-
-    if (widget.existingSpot?.lastVisited != null) {
-      _selectedDate = parseDateString(widget.existingSpot!.lastVisited!);
+    if (widget.queuedSpot != null) {
+      final q = widget.queuedSpot!;
+      _titleController.text = q.title;
+      _noteController.text = q.acf.note ?? '';
+      _latController.text = q.acf.lat.toString();
+      _longController.text = q.acf.long.toString();
+      _secure = q.acf.secure;
+      _space = q.acf.space;
+      _fire = q.acf.fire;
+      _swim = q.acf.swim;
+      _waterquality = q.acf.waterquality;
+      _selectedSpecials.addAll((q.acf.specials ?? []).cast<String>());
+      if (q.acf.lastvisited.isNotEmpty) {
+        _selectedDate = parseDateString(q.acf.lastvisited);
+      }
+    } else {
+      _titleController.text = widget.existingSpot?.title ?? widget.title ?? '';
+      _noteController.text = widget.existingSpot?.note ?? '';
+      _secure = widget.existingSpot?.secure ?? 1.0;
+      _space = widget.existingSpot?.space.toInt() ?? 1;
+      _fire = widget.existingSpot?.fire ?? false;
+      _swim = widget.existingSpot?.swim ?? false;
+      _waterquality = widget.existingSpot?.water ?? 'kein Wasser';
+      _selectedSpecials.addAll(
+        (widget.existingSpot?.specials ?? []).cast<String>(),
+      );
+      if (widget.existingSpot?.lastVisited != null) {
+        _selectedDate = parseDateString(widget.existingSpot!.lastVisited!);
+      }
     }
     _lastVisitedController.text = _formatDate(_selectedDate);
   }
@@ -441,6 +461,38 @@ class _AddSpotsState extends State<AddSpots> {
       );
 
       final token = Provider.of<SettingsModel>(context, listen: false).token;
+      final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+
+      // If offline, queue (or update queued) spot instead of submitting
+      if (spotsProvider.isOffline) {
+        final queueId =
+            widget.queuedSpotId ??
+            DateTime.now().millisecondsSinceEpoch.toString();
+        final spotData = spot.toJson();
+        spotData['_queueId'] = queueId;
+        if (widget.queuedSpotId != null) {
+          await spotsProvider.updateQueuedSpot(widget.queuedSpotId!, spotData);
+        } else {
+          await spotsProvider.enqueueSpot(spotData);
+        }
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (mounted) {
+          showSnackBar(
+            context,
+            _selectedImages.isNotEmpty
+                ? 'Spot gespeichert (ohne Bilder – du bist offline).'
+                : 'Spot gespeichert – wird übertragen sobald du online bist.',
+            Colors.orange,
+            const Duration(seconds: 4),
+          );
+          Navigator.pop(context);
+        }
+        return;
+      }
 
       // Hier würden Sie die Bilder zusammen mit dem Spot hochladen
       final success = widget.existingSpot != null
@@ -485,11 +537,8 @@ class _AddSpotsState extends State<AddSpots> {
             listen: false,
           ).setActiveSpot(activeSpot);
           Navigator.pop(context);
-          final spotsProvider = Provider.of<SpotsProvider>(
-            context,
-            listen: false,
-          );
-          await spotsProvider.refresh(context, widget.userPosition);
+          final sp = Provider.of<SpotsProvider>(context, listen: false);
+          await sp.refresh(context, widget.userPosition);
         }
       }
     }
@@ -508,7 +557,11 @@ class _AddSpotsState extends State<AddSpots> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: const Text('Spot hinzufügen'),
+          title: Text(
+            widget.queuedSpotId != null
+                ? 'Entwurf bearbeiten'
+                : 'Spot hinzufügen',
+          ),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: _handleBackNavigation,
@@ -795,32 +848,68 @@ class _AddSpotsState extends State<AddSpots> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        key: _imagesSectionKey,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 48),
+                  if (Provider.of<SpotsProvider>(
+                    context,
+                    listen: false,
+                  ).isOffline) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        border: Border.all(color: Colors.orange.shade200),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.wifi_off,
+                            size: 18,
+                            color: Colors.orange.shade700,
                           ),
-                          onPressed: totalPicturesCount >= 3
-                              ? null
-                              : _pickImages,
-                          icon: const Icon(Icons.add_a_photo),
-                          label: Text(
-                            totalPicturesCount >= 3
-                                ? 'Maximum erreicht (3/3)'
-                                : 'Bilder hinzufügen ($totalPicturesCount/3)',
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Bilder können im Offline-Modus nicht hinzugefügt werden.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.orange.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          key: _imagesSectionKey,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 48),
+                            ),
+                            onPressed: totalPicturesCount >= 3
+                                ? null
+                                : _pickImages,
+                            icon: const Icon(Icons.add_a_photo),
+                            label: Text(
+                              totalPicturesCount >= 3
+                                  ? 'Maximum erreicht (3/3)'
+                                  : 'Bilder hinzufügen ($totalPicturesCount/3)',
+                            ),
                           ),
                         ),
-                      ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (widget.existingSpot != null) ...[
+                      _buildExistingThumbnails(widget.existingSpot?.images),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (widget.existingSpot != null) ...[
-                    _buildExistingThumbnails(widget.existingSpot?.images),
+                    if (_selectedImages.isNotEmpty) ...[
+                      _buildImageThumbnails(),
+                    ],
                   ],
-                  if (_selectedImages.isNotEmpty) ...[_buildImageThumbnails()],
                   const SizedBox(height: 16),
 
                   // Submit Button
@@ -835,7 +924,11 @@ class _AddSpotsState extends State<AddSpots> {
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Spot hinzufügen'),
+                          : Text(
+                              widget.queuedSpotId != null
+                                  ? 'Entwurf speichern'
+                                  : 'Spot hinzufügen',
+                            ),
                     ),
                   ),
                 ],
