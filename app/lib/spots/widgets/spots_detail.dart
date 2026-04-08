@@ -70,6 +70,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                 width: double.infinity,
                 height: 200,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
               ),
             )
             .toList();
@@ -267,6 +268,15 @@ Future<void> _launchMap(double? lat, double? long, BuildContext context) async {
   }
 }
 
+Widget _buildImagePlaceholder() {
+  return Container(
+    width: double.infinity,
+    height: double.infinity,
+    color: Colors.green.shade100,
+    child: Icon(Icons.park, size: 64, color: Colors.green.shade400),
+  );
+}
+
 void _showFullScreenCarousel(
   BuildContext context,
   List<Widget> images,
@@ -289,6 +299,7 @@ void _showFullScreenCarousel(
             fit: BoxFit.contain,
             width: double.infinity,
             height: double.infinity,
+            errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
           ),
         ),
       )

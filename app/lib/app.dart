@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import 'package:spots/home.dart';
 import 'package:spots/location/determine_position.dart';
+import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/models/spot.dart';
+import 'package:spots/spots/services/spot_cache.dart';
 import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/utils/distance.dart';
 import 'package:spots/utils/location_helper.dart';
+
+class _SpotLoadResult {
+  final List<Spot> spots;
+  final bool isOffline;
+  const _SpotLoadResult({required this.spots, required this.isOffline});
+}
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -16,48 +25,124 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   final SpotService _service = SpotService();
+  Future<List<dynamic>>? _future;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _future ??= Future.wait([_loadSpots(), loadUserPosition(context)]);
+  }
+
+  Future<_SpotLoadResult> _loadSpots() async {
+    try {
+      final spots = await _service.fetchSpots();
+      return _SpotLoadResult(spots: spots, isOffline: false);
+    } catch (e) {
+      // Any network error (SocketException, OSError, ClientException, etc.)
+      // falls back to the local cache.
+      final cached = await SpotCache.loadCachedSpots();
+      return _SpotLoadResult(spots: cached ?? [], isOffline: true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<dynamic>>(
-      // ✅ Lade sowohl Spots als auch Position parallel
-      future: Future.wait([_service.fetchSpots(), loadUserPosition(context)]),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingScreen();
         }
 
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              '❌ Error: ${snapshot.error}',
+              'Fehler: ${snapshot.error}',
               style: const TextStyle(color: Colors.red),
             ),
           );
         }
-
         final data = snapshot.data!;
-        final spots = data[0] as List<Spot>;
+        final result = data[0] as _SpotLoadResult;
         final positionData = data[1] as Map<String, dynamic>?;
 
-        if (spots.isEmpty) {
-          return const Center(child: Text('Keine Spots gefunden'));
-        }
-
-        // ✅ Daten aus der Map extrahieren
         final userPosition = positionData?['position'] as Position?;
         final permissionGiven =
             positionData?['permissionGiven'] as bool? ?? false;
         final locationStatus =
             positionData?['locationStatus'] as LocationStatus?;
 
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            final spotsProvider = Provider.of<SpotsProvider>(
+              context,
+              listen: false,
+            );
+            spotsProvider.setOffline(result.isOffline);
+            spotsProvider.loadQueue();
+          }
+        });
+
         return Home(
           locationPermissionGiven: permissionGiven,
           userPosition: userPosition,
           locationStatus: locationStatus,
-          spots: sortSpotsByDistance(spots, userPosition),
+          spots: sortSpotsByDistance(result.spots, userPosition),
         );
       },
+    );
+  }
+
+  Widget _buildLoadingScreen() {
+    return Material(
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1B5E20), Color(0xFF4CAF50)],
+          ),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.park, size: 80, color: Colors.white),
+              SizedBox(height: 24),
+              Text(
+                'Green Spots',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Naturplätze entdecken',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white70,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              SizedBox(height: 48),
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text(
+                'Spots werden geladen...',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
