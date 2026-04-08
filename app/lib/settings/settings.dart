@@ -5,6 +5,7 @@ import 'package:spots/auth/models/settings.dart';
 import 'package:spots/auth/services/auth.dart';
 import 'package:spots/constants/api.dart';
 import 'package:spots/constants/constants.dart';
+import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/updates/update_info_dialog.dart';
 import 'package:spots/updates/update_service.dart';
 import 'package:spots/user/user_service.dart';
@@ -40,6 +41,7 @@ class _SettingsState extends State<Settings> {
   String _version = 'N/A';
   bool _isCheckingUpdates = false;
   String _userRole = 'N/A';
+  bool _isGoingOnline = false;
 
   @override
   void initState() {
@@ -163,20 +165,37 @@ class _SettingsState extends State<Settings> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _isLoggedIn ? _buildLoggedInView() : _buildLoginForm(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  Column(
                     children: [
-                      Text(
-                        'Version: $_version',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      OutlinedButtonSpinner(
-                        isLoading: _isCheckingUpdates,
-                        onPressed: () => _checkUpdate(context),
-                        buttonText: 'Check for Updates',
+                      Consumer<SpotsProvider>(
+                        builder: (context, spotsProvider, _) {
+                          return Column(
+                            children: [
+                              if (spotsProvider.isOffline)
+                                _buildOfflineSection(context, spotsProvider),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text(
+                                    'Version: $_version',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  if (!spotsProvider.isOffline)
+                                    OutlinedButtonSpinner(
+                                      isLoading: _isCheckingUpdates,
+                                      onPressed: () => _checkUpdate(context),
+                                      buttonText: 'Check for Updates',
+                                    ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -469,6 +488,104 @@ class _SettingsState extends State<Settings> {
         ),
       ],
     );
+  }
+
+  Widget _buildOfflineSection(
+    BuildContext context,
+    SpotsProvider spotsProvider,
+  ) {
+    final queueCount = spotsProvider.queuedSpotsCount;
+    return Card(
+      color: Colors.orange.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.wifi_off, color: Colors.orange.shade800, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Offline-Modus aktiv',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ],
+            ),
+            if (queueCount > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                '$queueCount Spot${queueCount == 1 ? '' : 's'} warten auf Übertragung.',
+                style: TextStyle(fontSize: 13, color: Colors.orange.shade900),
+              ),
+            ],
+            const SizedBox(height: 10),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                'Online-Modus aktivieren',
+                style: TextStyle(fontSize: 14, color: Colors.orange.shade900),
+              ),
+              subtitle: Text(
+                'Nur möglich wenn Netzwerk verfügbar',
+                style: TextStyle(fontSize: 12, color: Colors.orange.shade700),
+              ),
+              value: false,
+              activeThumbColor: Colors.green,
+              onChanged: _isGoingOnline
+                  ? null
+                  : (_) => _goOnline(context, spotsProvider),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _goOnline(
+    BuildContext context,
+    SpotsProvider spotsProvider,
+  ) async {
+    setState(() {
+      _isGoingOnline = true;
+    });
+
+    try {
+      await spotsProvider.refresh(context, null);
+
+      if (spotsProvider.isOffline) {
+        if (mounted) {
+          showSnackBar(
+            context,
+            'Kein Netzwerk verfügbar – bitte später erneut versuchen.',
+            Colors.red,
+            const Duration(seconds: 3),
+          );
+        }
+      } else if (spotsProvider.queuedSpotsCount > 0 && mounted) {
+        final token = Provider.of<SettingsModel>(context, listen: false).token;
+        if (token != null) {
+          await spotsProvider.processQueue(token, context, null);
+          if (mounted) {
+            showSnackBar(
+              context,
+              'Warteschlange erfolgreich synchronisiert!',
+              Colors.green,
+              const Duration(seconds: 2),
+            );
+          }
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoingOnline = false;
+        });
+      }
+    }
   }
 
   void _register() async {

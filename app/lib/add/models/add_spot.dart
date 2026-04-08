@@ -76,7 +76,9 @@ class AddSpotACF {
       swim: json['swim'] ?? false,
       fire: json['fire'] ?? false,
       note: json['note'] ?? '',
-      specials: List<String>.from(json['specials']),
+      specials: json['specials'] != null
+          ? List<String>.from(json['specials'])
+          : null,
       waterquality: json['waterquality'] ?? 'kein Wasser',
       image: json['image'],
       image2: json['image2'],
