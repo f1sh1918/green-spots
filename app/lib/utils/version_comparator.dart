@@ -1,5 +1,8 @@
 class VersionComparator {
-  static int compare({required String currentVersion, required String latestVersion}) {
+  static int compare({
+    required String currentVersion,
+    required String latestVersion,
+  }) {
     List<int> v1 = latestVersion.split('.').map(int.parse).toList();
     List<int> v2 = currentVersion.split('.').map(int.parse).toList();
 
@@ -13,7 +16,14 @@ class VersionComparator {
     return v1[2].compareTo(v2[2]);
   }
 
-  static bool isHigher({required String currentVersion, required String latestVersion}) {
-    return compare(currentVersion: currentVersion, latestVersion: latestVersion) > 0;
+  static bool isHigher({
+    required String currentVersion,
+    required String latestVersion,
+  }) {
+    return compare(
+          currentVersion: currentVersion,
+          latestVersion: latestVersion,
+        ) >
+        0;
   }
 }

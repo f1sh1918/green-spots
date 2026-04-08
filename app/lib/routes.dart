@@ -7,9 +7,9 @@ class AppRoutes {
   static const String addSpots = '/add-spots';
 
   static Map<String, WidgetBuilder> get routes => {
-        home: (context) => const App(),
-        addSpots: (context) => const AddSpots(),
-      };
+    home: (context) => const App(),
+    addSpots: (context) => const AddSpots(),
+  };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {

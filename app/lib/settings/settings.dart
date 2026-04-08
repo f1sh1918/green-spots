@@ -94,10 +94,11 @@ class _SettingsState extends State<Settings> {
 
     try {
       final result = await _authService.login(
-          username: _usernameController.text.trim(),
-          password: _passwordController.text,
-          context: context,
-          userService: _userService);
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+        context: context,
+        userService: _userService,
+      );
 
       if (result.success) {
         // Erfolgreich eingeloggt
@@ -222,7 +223,9 @@ class _SettingsState extends State<Settings> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Colors.green, width: 2),
               ),
-              errorText: _errorMessage?.contains('Username') == true ? _errorMessage : null,
+              errorText: _errorMessage?.contains('Username') == true
+                  ? _errorMessage
+                  : null,
             ),
             keyboardType: TextInputType.name,
             textInputAction: TextInputAction.next,
@@ -377,7 +380,9 @@ class _SettingsState extends State<Settings> {
                     CircleAvatar(
                       backgroundColor: Colors.green,
                       child: Text(
-                        (_userDisplayName?.isNotEmpty == true ? _userDisplayName!.substring(0, 1).toUpperCase() : 'U'),
+                        (_userDisplayName?.isNotEmpty == true
+                            ? _userDisplayName!.substring(0, 1).toUpperCase()
+                            : 'U'),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -404,7 +409,9 @@ class _SettingsState extends State<Settings> {
                             ),
                           ),
                           Text(
-                            _loginExpires != null ? 'Expires: $_loginExpires' : 'Expires: N/A',
+                            _loginExpires != null
+                                ? 'Expires: $_loginExpires'
+                                : 'Expires: N/A',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -427,12 +434,8 @@ class _SettingsState extends State<Settings> {
                         size: 24,
                       ),
                     ] else ...[
-                      const Icon(
-                        Icons.info,
-                        color: Colors.orange,
-                        size: 24,
-                      ),
-                    ]
+                      const Icon(Icons.info, color: Colors.orange, size: 24),
+                    ],
                   ],
                 ),
               ],
@@ -444,8 +447,9 @@ class _SettingsState extends State<Settings> {
 
         if (!allowedRoles.contains(_userRole)) ...[
           AlertBox(
-              message:
-                  'Dein Account ist noch nicht freigeschaltet. Erst nach der Freischaltung kannst du Spots anlegen und editieren.'),
+            message:
+                'Dein Account ist noch nicht freigeschaltet. Erst nach der Freischaltung kannst du Spots anlegen und editieren.',
+          ),
           const SizedBox(height: 24),
         ],
         // Logout Button

@@ -11,7 +11,11 @@ class AddSpotDialog extends StatelessWidget {
   final LatLng coordinates;
   final Position? userPosition;
 
-  const AddSpotDialog({super.key, required this.coordinates, this.userPosition});
+  const AddSpotDialog({
+    super.key,
+    required this.coordinates,
+    this.userPosition,
+  });
 
   static Future<void> show(BuildContext context, LatLng coordinates) {
     return showDialog<void>(
@@ -24,14 +28,20 @@ class AddSpotDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userRole = Provider.of<SettingsModel>(context, listen: false).userRole;
+    final userRole = Provider.of<SettingsModel>(
+      context,
+      listen: false,
+    ).userRole;
     final canUserAddSpots = allowedRoles.contains(userRole);
     final theme = Theme.of(context);
     return AlertDialog(
       titlePadding: EdgeInsets.all(20),
       contentPadding: EdgeInsets.symmetric(horizontal: 20),
       actionsPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      title: Text('Neuen Spot hinzufügen', style: theme.textTheme.headlineSmall),
+      title: Text(
+        'Neuen Spot hinzufügen',
+        style: theme.textTheme.headlineSmall,
+      ),
       content: Text(
         canUserAddSpots
             ? 'Wollen Sie einen neuen Spot an dieser Stelle hinzufügen?'
@@ -48,7 +58,13 @@ class AddSpotDialog extends StatelessWidget {
             onPressed: () => {
               Navigator.of(context).pop(),
               Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => AddSpots(coordinates: coordinates, userPosition: userPosition))),
+                MaterialPageRoute(
+                  builder: (_) => AddSpots(
+                    coordinates: coordinates,
+                    userPosition: userPosition,
+                  ),
+                ),
+              ),
             },
             child: Text('Spot hinzufügen'),
           ),

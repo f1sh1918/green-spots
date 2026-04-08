@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue:*)",
+      "WebFetch(domain:maps.tuerantuer.org)",
+      "Bash(find ~/.pub-cache/hosted/pub.dev/maplibre_gl-0.22.0 -name \"CHANGELOG.md\" -exec grep -i \"cluster\" {})",
+      "Bash(find /Users/afischer/projects/green-spots/app/build -name *.java -o -name *.kt)",
+      "WebSearch",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:pub.dev)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:maplibre.org)"
+    ]
+  }
+}

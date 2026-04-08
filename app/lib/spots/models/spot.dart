@@ -86,6 +86,8 @@ class Spot {
   // --------------------------------------------------------------
   static List<Spot> listFromJson(String jsonStr) {
     final List<dynamic> decoded = json.decode(jsonStr);
-    return decoded.map((e) => Spot.fromJson(e as Map<String, dynamic>)).toList();
+    return decoded
+        .map((e) => Spot.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

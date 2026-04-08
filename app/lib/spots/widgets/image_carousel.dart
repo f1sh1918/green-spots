@@ -65,7 +65,9 @@ class ImageCarouselState extends State<ImageCarousel> {
     final int imageAmount = widget.images.length;
 
     // Bilder mit Zoom und Gesture-Handling umhüllen
-    List<Widget> carouselItems = widget.images.asMap().entries.map<Widget>((entry) {
+    List<Widget> carouselItems = widget.images.asMap().entries.map<Widget>((
+      entry,
+    ) {
       int index = entry.key;
       Widget image = entry.value;
 
@@ -151,10 +153,13 @@ class ImageCarouselState extends State<ImageCarousel> {
                         margin: EdgeInsets.symmetric(horizontal: 4.0),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)
-                              .withValues(
-                            alpha: imageIndex == index ? 0.9 : 0.4,
-                          ),
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black)
+                                  .withValues(
+                                    alpha: imageIndex == index ? 0.9 : 0.4,
+                                  ),
                         ),
                       ),
                     ),

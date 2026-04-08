@@ -129,7 +129,8 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                   if (imageWidgets.isNotEmpty) ...[
                     ImageCarousel(
                       images: imageWidgets,
-                      onImageTap: (index) => _showFullScreenCarousel(context, imageWidgets, index),
+                      onImageTap: (index) =>
+                          _showFullScreenCarousel(context, imageWidgets, index),
                     ),
                   ],
                   Padding(
@@ -146,7 +147,9 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                         ),
                         Divider(height: 50),
                         Text(
-                          widget.currentSpot.note!.isNotEmpty ? widget.currentSpot.note! : 'Keine Notiz vorhanden',
+                          widget.currentSpot.note!.isNotEmpty
+                              ? widget.currentSpot.note!
+                              : 'Keine Notiz vorhanden',
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
                         Divider(height: 50),
@@ -178,17 +181,21 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                                 ),
                                 onPressed: _isLoadingPosition
                                     ? null
-                                    : () => Navigator.of(context).pushAndRemoveUntil(
-                                          MaterialPageRoute(
-                                            builder: (_) => Home(
-                                              initialIndex: 0,
-                                              locationPermissionGiven: _currentLocationPermissionGiven,
-                                              userPosition: _currentUserPosition,
-                                              locationStatus: _currentLocationStatus,
+                                    : () => Navigator.of(context)
+                                          .pushAndRemoveUntil(
+                                            MaterialPageRoute(
+                                              builder: (_) => Home(
+                                                initialIndex: 0,
+                                                locationPermissionGiven:
+                                                    _currentLocationPermissionGiven,
+                                                userPosition:
+                                                    _currentUserPosition,
+                                                locationStatus:
+                                                    _currentLocationStatus,
+                                              ),
                                             ),
+                                            (route) => false,
                                           ),
-                                          (route) => false,
-                                        ),
                                 child: Text('Auf Karte anzeigen'),
                               ),
                               SizedBox(width: 12),

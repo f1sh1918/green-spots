@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 
-void showSnackBar(BuildContext context, String message, [Color? backgroundColor, Duration? duration]) {
+void showSnackBar(
+  BuildContext context,
+  String message, [
+  Color? backgroundColor,
+  Duration? duration,
+]) {
   if (context.mounted) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(
-      backgroundColor: backgroundColor ?? primaryColor,
-      content: Text(message),
-      duration: duration ?? Duration(seconds: 4),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: backgroundColor ?? primaryColor,
+        content: Text(message),
+        duration: duration ?? Duration(seconds: 4),
+      ),
+    );
   }
 }

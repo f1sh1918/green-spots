@@ -58,9 +58,7 @@ class RequestedPosition {
 
   RequestedPosition(this.position, this.locationStatus);
 
-  RequestedPosition.unknown()
-      : position = null,
-        locationStatus = null;
+  RequestedPosition.unknown() : position = null, locationStatus = null;
 
   bool isAvailable() {
     return position != null;
@@ -68,13 +66,21 @@ class RequestedPosition {
 
   LatLng? toLatLng() {
     final currentPosition = position;
-    return currentPosition != null ? LatLng(currentPosition.latitude, currentPosition.longitude) : null;
+    return currentPosition != null
+        ? LatLng(currentPosition.latitude, currentPosition.longitude)
+        : null;
   }
 }
 
 /// Determine the current position of the device.
-Future<RequestedPosition> determinePosition(BuildContext context, {bool requestIfNotGranted = false}) async {
-  final permission = await checkAndRequestLocationPermission(context, requestIfNotGranted: requestIfNotGranted);
+Future<RequestedPosition> determinePosition(
+  BuildContext context, {
+  bool requestIfNotGranted = false,
+}) async {
+  final permission = await checkAndRequestLocationPermission(
+    context,
+    requestIfNotGranted: requestIfNotGranted,
+  );
 
   if (!permission.isPermissionGranted()) {
     return RequestedPosition(null, permission);
@@ -132,7 +138,10 @@ Future<LocationStatus> checkAndRequestLocationPermission(
           );
 
           if (result == true && context.mounted) {
-            return checkAndRequestLocationPermission(context, requestIfNotGranted: requestIfNotGranted);
+            return checkAndRequestLocationPermission(
+              context,
+              requestIfNotGranted: requestIfNotGranted,
+            );
           }
         }
 
@@ -151,6 +160,8 @@ Future<LocationStatus> checkAndRequestLocationPermission(
   }
 }
 
-Future<void> openSettingsToGrantPermissions(BuildContext userInteractContext) async {
+Future<void> openSettingsToGrantPermissions(
+  BuildContext userInteractContext,
+) async {
   await Geolocator.openAppSettings();
 }

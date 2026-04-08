@@ -45,11 +45,17 @@ class _MapPagePageState extends State<MapPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final activeSpot = Provider.of<SpotsProvider>(context, listen: false).activeSpot;
+      final activeSpot = Provider.of<SpotsProvider>(
+        context,
+        listen: false,
+      ).activeSpot;
       if (activeSpot == null) {
         _animateToUserPosition(widget.userPosition);
       }
-      final firstStart = Provider.of<SettingsModel>(context, listen: false).firstMapStart;
+      final firstStart = Provider.of<SettingsModel>(
+        context,
+        listen: false,
+      ).firstMapStart;
       if (firstStart) {
         _showInfoDialog(context);
       }
@@ -81,11 +87,15 @@ class _MapPagePageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    final activeSpot = Provider.of<SpotsProvider>(context, listen: false).activeSpot;
+    final activeSpot = Provider.of<SpotsProvider>(
+      context,
+      listen: false,
+    ).activeSpot;
     return Stack(
       children: [
         MapLibreMap(
-          styleString: 'https://maps.tuerantuer.org/styles/integreat/style.json',
+          styleString:
+              'https://maps.tuerantuer.org/styles/integreat/style.json',
           initialCameraPosition: _initializeCamera(activeSpot),
           myLocationEnabled: widget.locationPermissionGiven,
           myLocationRenderMode: MyLocationRenderMode.normal,
@@ -105,7 +115,8 @@ class _MapPagePageState extends State<MapPage> {
           right: -4,
           child: LocationButton(
             followUserLocation: widget.locationPermissionGiven,
-            bringCameraToUser: () => _animateToUserPosition(widget.userPosition),
+            bringCameraToUser: () =>
+                _animateToUserPosition(widget.userPosition),
           ),
         ),
       ],
@@ -123,7 +134,38 @@ class _MapPagePageState extends State<MapPage> {
     );
   }
 
-  Future<void> _onMapClickShort(math.Point<double> point, clickCoordinates) async {
+  Future<void> _onMapClickShort(
+    math.Point<double> point,
+    clickCoordinates,
+  ) async {
+    if (!mounted) return;
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final touchTargetSize = pixelRatio * 38.0;
+    final rect = Rect.fromCenter(
+      center: Offset(point.x, point.y),
+      width: touchTargetSize,
+      height: touchTargetSize,
+    );
+
+    final clusterFeatures = await _controller!.queryRenderedFeaturesInRect(
+      rect,
+      ['clusters-layer'],
+      null,
+    );
+    if (clusterFeatures.isNotEmpty) {
+      final coords =
+          clusterFeatures[0]['geometry']['coordinates'] as List<dynamic>;
+      final clusterLatLng = LatLng(coords[1] as double, coords[0] as double);
+      final currentZoom = _controller!.cameraPosition?.zoom ?? 7.0;
+      await _controller!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: clusterLatLng, zoom: currentZoom + 3),
+        ),
+        duration: const Duration(milliseconds: 500),
+      );
+      return;
+    }
+
     Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
   }
 
@@ -133,7 +175,38 @@ class _MapPagePageState extends State<MapPage> {
 
     await _controller!.addSource(
       "markers-source",
-      GeojsonSourceProperties(data: geoJsonData),
+      GeojsonSourceProperties(
+        data: geoJsonData,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50,
+      ),
+    );
+
+    await _controller!.addLayer(
+      "markers-source",
+      "clusters-layer",
+      CircleLayerProperties(
+        circleColor: '#4CAF50',
+        circleRadius: 20,
+        circleStrokeWidth: 2,
+        circleStrokeColor: '#ffffff',
+      ),
+      filter: ['has', 'point_count'],
+    );
+
+    await _controller!.addLayer(
+      "markers-source",
+      "cluster-count-layer",
+      SymbolLayerProperties(
+        textField: ['get', 'point_count_abbreviated'],
+        textSize: 14,
+        textColor: '#ffffff',
+        textFont: ['Noto Sans Bold'],
+        textAllowOverlap: true,
+        textIgnorePlacement: true,
+      ),
+      filter: ['has', 'point_count'],
     );
 
     await _controller!.addLayer(
@@ -146,6 +219,10 @@ class _MapPagePageState extends State<MapPage> {
         iconAnchor: "bottom",
         iconAllowOverlap: true,
       ),
+      filter: [
+        '!',
+        ['has', 'point_count'],
+      ],
     );
   }
 
@@ -183,13 +260,12 @@ class _MapPagePageState extends State<MapPage> {
       height: touchTargetSize,
     );
 
-    final jsonFeatures = await _controller!.queryRenderedFeaturesInRect(
-        rect,
-        [
-          'markers-layer',
-        ],
-        null);
-    final features = jsonFeatures.map((e) => e as Map<String, dynamic>).toList();
+    final jsonFeatures = await _controller!.queryRenderedFeaturesInRect(rect, [
+      'markers-layer',
+    ], null);
+    final features = jsonFeatures
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
     if (features.isNotEmpty) {
       final feature = features[0]['properties'];
       final selectedSpot = spots.firstWhere((spot) => spot.id == feature['id']);
@@ -199,7 +275,10 @@ class _MapPagePageState extends State<MapPage> {
           selectedSpot,
           widget.userPosition!,
         );
-        Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(selectedSpot);
+        Provider.of<SpotsProvider>(
+          context,
+          listen: false,
+        ).setActiveSpot(selectedSpot);
         _showSpotDialog(context, selectedSpot, distance);
       }
     } else {

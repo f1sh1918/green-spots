@@ -38,8 +38,11 @@ class AuthService {
         }
         final Map<String, dynamic> data = json.decode(response.body);
         AuthResult authResult = AuthResult.fromJson(data);
-        final userRole =
-            await userService.getUserRole(userId: authResult.userId, context: context, token: authResult.token);
+        final userRole = await userService.getUserRole(
+          userId: authResult.userId,
+          context: context,
+          token: authResult.token,
+        );
         if (context.mounted) {
           final settingsModel = Provider.of<SettingsModel>(
             context,

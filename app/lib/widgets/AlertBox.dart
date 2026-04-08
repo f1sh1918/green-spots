@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class AlertBox extends StatelessWidget {
   final String message;
 
-  const AlertBox({
-    super.key,
-    required this.message,
-  });
+  const AlertBox({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -19,20 +16,9 @@ class AlertBox extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info,
-            color: Colors.orange.shade500,
-            size: 24,
-          ),
+          Icon(Icons.info, color: Colors.orange.shade500, size: 24),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
+          Expanded(child: Text(message, style: TextStyle(fontSize: 14))),
         ],
       ),
     );

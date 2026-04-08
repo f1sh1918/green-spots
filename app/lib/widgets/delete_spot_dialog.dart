@@ -11,7 +11,12 @@ class DeleteSpotDialog extends StatefulWidget {
   final SpotService spotService;
   final Position? userPosition;
 
-  const DeleteSpotDialog({super.key, required this.spot, required this.spotService, this.userPosition});
+  const DeleteSpotDialog({
+    super.key,
+    required this.spot,
+    required this.spotService,
+    this.userPosition,
+  });
 
   static Future<void> show(
     BuildContext context,
@@ -20,10 +25,7 @@ class DeleteSpotDialog extends StatefulWidget {
   ) {
     return showDialog<void>(
       context: context,
-      builder: (_) => DeleteSpotDialog(
-        spot: spot,
-        spotService: spotService,
-      ),
+      builder: (_) => DeleteSpotDialog(spot: spot, spotService: spotService),
     );
   }
 
@@ -50,7 +52,9 @@ class _DeleteSpotDialogState extends State<DeleteSpotDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isDeleting ? null : () => Navigator.of(context, rootNavigator: true).pop(),
+          onPressed: _isDeleting
+              ? null
+              : () => Navigator.of(context, rootNavigator: true).pop(),
           child: const Text('Abbrechen'),
         ),
         TextButton(
@@ -72,7 +76,11 @@ class _DeleteSpotDialogState extends State<DeleteSpotDialog> {
     setState(() => _isDeleting = true);
 
     final token = Provider.of<SettingsModel>(context, listen: false).token;
-    final success = await widget.spotService.deleteSpot(widget.spot.id, context, token);
+    final success = await widget.spotService.deleteSpot(
+      widget.spot.id,
+      context,
+      token,
+    );
 
     if (!mounted) return;
 
@@ -80,7 +88,10 @@ class _DeleteSpotDialogState extends State<DeleteSpotDialog> {
 
     if (success) {
       final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
-      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).popUntil((route) => route.isFirst);
       await spotsProvider.refresh(context, widget.userPosition);
     }
   }

@@ -3,18 +3,10 @@ class AddSpot {
   final String status;
   final AddSpotACF acf;
 
-  AddSpot({
-    required this.title,
-    this.status = 'publish',
-    required this.acf,
-  });
+  AddSpot({required this.title, this.status = 'publish', required this.acf});
 
   Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'status': status,
-      'acf': acf.toJson(),
-    };
+    return {'title': title, 'status': status, 'acf': acf.toJson()};
   }
 
   factory AddSpot.fromJson(Map<String, dynamic> json) {
@@ -71,24 +63,25 @@ class AddSpotACF {
       'image': image,
       'image2': image2,
       'image3': image3,
-      'lastvisited': lastvisited
+      'lastvisited': lastvisited,
     };
   }
 
   factory AddSpotACF.fromJson(Map<String, dynamic> json) {
     return AddSpotACF(
-        lat: (json['lat'] ?? 0.0).toDouble(),
-        long: (json['long'] ?? 0.0).toDouble(),
-        secure: (json['secure'] ?? 0.0).toDouble(),
-        space: json['space'] ?? 0,
-        swim: json['swim'] ?? false,
-        fire: json['fire'] ?? false,
-        note: json['note'] ?? '',
-        specials: List<String>.from(json['specials']),
-        waterquality: json['waterquality'] ?? 'kein Wasser',
-        image: json['image'],
-        image2: json['image2'],
-        image3: json['image3'],
-        lastvisited: json['lastvisited']);
+      lat: (json['lat'] ?? 0.0).toDouble(),
+      long: (json['long'] ?? 0.0).toDouble(),
+      secure: (json['secure'] ?? 0.0).toDouble(),
+      space: json['space'] ?? 0,
+      swim: json['swim'] ?? false,
+      fire: json['fire'] ?? false,
+      note: json['note'] ?? '',
+      specials: List<String>.from(json['specials']),
+      waterquality: json['waterquality'] ?? 'kein Wasser',
+      image: json['image'],
+      image2: json['image2'],
+      image3: json['image3'],
+      lastvisited: json['lastvisited'],
+    );
   }
 }
