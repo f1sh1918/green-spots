@@ -79,7 +79,7 @@ class AddSpotACF {
       specials: json['specials'] != null
           ? List<String>.from(json['specials'])
           : null,
-      waterquality: json['waterquality'] ?? 'kein Wasser',
+      waterquality: json['waterquality'] ?? 'keines',
       image: json['image'],
       image2: json['image2'],
       image3: json['image3'],

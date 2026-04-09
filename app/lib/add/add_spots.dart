@@ -54,9 +54,9 @@ class _AddSpotsState extends State<AddSpots> {
   final _lastVisitedController = TextEditingController();
 
   final List<String> _waterQualityOptions = [
-    'kein Wasser',
-    'stehendes Wasser',
-    'fließendes Wasser',
+    'keines',
+    'stehend',
+    'fließend',
     'Trinkwasser',
   ];
   final List<String> _availableSpecials = [
@@ -75,7 +75,7 @@ class _AddSpotsState extends State<AddSpots> {
   int _space = 1;
   bool _swim = false;
   bool _fire = false;
-  String _waterquality = 'kein Wasser';
+  String _waterquality = 'keines';
   bool _isLoading = false;
 
   @override
@@ -125,7 +125,7 @@ class _AddSpotsState extends State<AddSpots> {
       _space = widget.existingSpot?.space.toInt() ?? 1;
       _fire = widget.existingSpot?.fire ?? false;
       _swim = widget.existingSpot?.swim ?? false;
-      _waterquality = widget.existingSpot?.water ?? 'kein Wasser';
+      _waterquality = widget.existingSpot?.water ?? 'keines';
       _selectedSpecials.addAll(
         (widget.existingSpot?.specials ?? []).cast<String>(),
       );
@@ -169,7 +169,7 @@ class _AddSpotsState extends State<AddSpots> {
         _space != 1 ||
         _swim != false ||
         _fire != false ||
-        _waterquality != 'kein Wasser';
+        _waterquality != 'keines';
   }
 
   Future<bool> _showExitConfirmDialog() async {
@@ -800,7 +800,7 @@ class _AddSpotsState extends State<AddSpots> {
                     }).toList(),
                     onChanged: (String? newValue) {
                       setState(() {
-                        _waterquality = newValue ?? 'kein Wasser';
+                        _waterquality = newValue ?? 'keines';
                       });
                     },
                   ),
