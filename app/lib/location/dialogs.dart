@@ -16,7 +16,7 @@ class LocationServiceDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
         ),
         TextButton(
-          child: Text('Settings öffnen'),
+          child: Text('Einstellungen öffnen'),
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],

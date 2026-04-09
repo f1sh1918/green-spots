@@ -12,6 +12,7 @@ import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/utils/date_format.dart';
+import 'package:spots/constants/constants.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/widgets/delete_draft_dialog.dart';
 import 'models/add_spot.dart';
@@ -65,15 +66,6 @@ class _AddSpotsState extends State<AddSpots> {
     'Hängematte',
   ];
   final List<String> _selectedSpecials = [];
-
-  // Mapping für Sicherheitsstufen
-  final Map<int, String> _securityLabels = {
-    1: 'sehr unsicher',
-    2: 'unsicher',
-    3: 'ok',
-    4: 'sicher',
-    5: 'sehr sicher',
-  };
 
   // Image handling
   List<File> _selectedImages = [];
@@ -609,6 +601,8 @@ class _AddSpotsState extends State<AddSpots> {
                     controller: _noteController,
                     decoration: const InputDecoration(
                       labelText: 'Notiz',
+                      hintText:
+                          'Beschreibung, Hinweise wie Entfernung zu Wasserstelle, wann frequentiert...',
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
@@ -723,7 +717,7 @@ class _AddSpotsState extends State<AddSpots> {
                       Padding(
                         padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
                         child: Text(
-                          'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${_securityLabels[_secure.toInt()]})',
+                          'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${securityLabels[_secure.toInt()]})',
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -732,7 +726,7 @@ class _AddSpotsState extends State<AddSpots> {
                         min: 1.0,
                         max: 5.0,
                         divisions: 8,
-                        label: _securityLabels[_secure.toInt()],
+                        label: securityLabels[_secure.toInt()],
                         onChanged: (value) {
                           setState(() {
                             _secure = value;

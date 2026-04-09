@@ -176,7 +176,7 @@ class _CommentsPageState extends State<CommentsPage> {
                 : _comments.isEmpty
                 ? Center(
                     child: Text(
-                      'Noch keine Kommentare.\nSei der Erste!',
+                      'Noch keine Kommentare.\nSei der/die Erste!',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),

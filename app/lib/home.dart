@@ -123,14 +123,14 @@ class _HomeState extends State<Home> {
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Theme.of(context).colorScheme.onPrimary,
             items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
+              BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karte'),
               BottomNavigationBarItem(
                 icon: Icon(Icons.location_city),
                 label: 'Spots',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
-                label: 'Settings',
+                label: 'Einstellungen',
               ),
             ],
             selectedItemColor: Colors.green[800],
