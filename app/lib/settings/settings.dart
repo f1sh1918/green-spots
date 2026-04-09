@@ -38,7 +38,7 @@ class _SettingsState extends State<Settings> {
   String? _errorMessage;
   bool _obscurePassword = true;
   String? _loginExpires;
-  String _version = 'N/A';
+  String _version = 'unbekannt';
   bool _isCheckingUpdates = false;
   String _userRole = 'N/A';
 
@@ -76,7 +76,7 @@ class _SettingsState extends State<Settings> {
         _userEmail = userEmail ?? 'Keine Mailadresse';
         _isLoading = false;
         _loginExpires = loginExpires;
-        _userRole = userRole ?? 'N/A';
+        _userRole = userRole ?? 'unbekannt';
       });
     } else {
       if (mounted) {
@@ -107,7 +107,7 @@ class _SettingsState extends State<Settings> {
           _isLoggedIn = true;
           _userDisplayName = result.userDisplayName;
           _userEmail = result.userEmail;
-          _userRole = result.userRole ?? 'N/A';
+          _userRole = result.userRole ?? 'unbekannt';
           _usernameController.clear();
           _passwordController.clear();
           _loginExpires = _authService.loginExpirationDate().toIso8601String();
@@ -188,7 +188,7 @@ class _SettingsState extends State<Settings> {
                                     OutlinedButtonSpinner(
                                       isLoading: _isCheckingUpdates,
                                       onPressed: () => _checkUpdate(context),
-                                      buttonText: 'Check for Updates',
+                                      buttonText: 'Nach Updates suchen',
                                     ),
                                 ],
                               ),
@@ -232,7 +232,7 @@ class _SettingsState extends State<Settings> {
           TextFormField(
             controller: _usernameController,
             decoration: InputDecoration(
-              labelText: 'Username',
+              labelText: 'Nutzername',
               prefixIcon: const Icon(Icons.people, color: Colors.green),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -241,7 +241,7 @@ class _SettingsState extends State<Settings> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Colors.green, width: 2),
               ),
-              errorText: _errorMessage?.contains('Username') == true
+              errorText: _errorMessage?.contains('Nutzername') == true
                   ? _errorMessage
                   : null,
             ),
@@ -294,7 +294,7 @@ class _SettingsState extends State<Settings> {
           ),
           const SizedBox(height: 24),
 
-          if (_errorMessage != null && !_errorMessage!.contains('Username'))
+          if (_errorMessage != null && !_errorMessage!.contains('Nutzername'))
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
@@ -428,8 +428,8 @@ class _SettingsState extends State<Settings> {
                           ),
                           Text(
                             _loginExpires != null
-                                ? 'Expires: $_loginExpires'
-                                : 'Expires: N/A',
+                                ? 'Gültig bis: $_loginExpires'
+                                : 'Gültig bis: unbekannt',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,

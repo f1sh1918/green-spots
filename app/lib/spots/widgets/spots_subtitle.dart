@@ -1,3 +1,4 @@
+import 'package:spots/constants/constants.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/widgets/spots_subtitle_item.dart';
 import 'package:flutter/material.dart';
@@ -23,14 +24,18 @@ class SpotsSubtitle extends StatelessWidget {
         sizeFactor: sizeFactor,
         color: Colors.red,
         icon: Icons.health_and_safety,
-        value: spot.secure.toString(),
+        value: showLabel
+            ? '${spot.secure.toInt()} (${securityLabels[spot.secure.toInt()] ?? ''})'
+            : spot.secure.toString(),
         label: showLabel ? 'Sicherheit:' : null,
       ),
       SpotsSubtitleItem(
         sizeFactor: sizeFactor,
-        color: Colors.blue,
+        color: Colors.brown,
         icon: Icons.festival,
-        value: spot.space.toString(),
+        value: showLabel
+            ? '${spot.space.toInt()} (Anzahl kleiner Zelte)'
+            : spot.space.toString(),
         label: showLabel ? 'Platz:' : null,
       ),
       if (spot.swim == true) ...[
@@ -39,6 +44,7 @@ class SpotsSubtitle extends StatelessWidget {
           color: Colors.black,
           icon: Icons.pool,
           label: showLabel ? 'Badestelle:' : null,
+          isCheck: showLabel,
         ),
       ],
       if (spot.fire == true) ...[
@@ -47,6 +53,8 @@ class SpotsSubtitle extends StatelessWidget {
           color: Colors.orange,
           icon: Icons.local_fire_department,
           label: showLabel ? 'Feuerstelle:' : null,
+          isCheck: showLabel,
+          checkColor: Colors.black,
         ),
       ],
       SpotsSubtitleItem(
@@ -59,7 +67,8 @@ class SpotsSubtitle extends StatelessWidget {
       if (spot.specials != null && spot.specials!.isNotEmpty) ...[
         SpotsSubtitleItem(
           sizeFactor: sizeFactor,
-          color: Colors.red,
+          color: Colors.deepPurple,
+          icon: Icons.auto_awesome,
           value: spot.specials!.join(' | '),
           label: showLabel ? 'Specials:' : null,
         ),
@@ -70,20 +79,14 @@ class SpotsSubtitle extends StatelessWidget {
 
   buildItems(bool showLabel, List<Widget> items) {
     if (showLabel) {
-      return Padding(
-        padding: EdgeInsets.only(top: 8.0, bottom: 8),
-        child: Column(
-          spacing: 8,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: items,
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children:
+            items.expand((item) => [item, const SizedBox(height: 10)]).toList()
+              ..removeLast(),
       );
     } else {
-      return Wrap(
-        spacing: 6.0, // Horizontaler Abstand zwischen den Elementen
-        runSpacing: 2.0, // Vertikaler Abstand zwischen den Zeilen
-        children: items,
-      );
+      return Wrap(spacing: 6.0, runSpacing: 6.0, children: items);
     }
   }
 }

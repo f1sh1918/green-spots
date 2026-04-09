@@ -31,10 +31,8 @@ class Spots extends StatefulWidget {
 class _SpotsState extends State<Spots> {
   Widget _buildImagePlaceholder() {
     return Container(
-      width: 56,
-      height: 56,
       color: Colors.green.shade100,
-      child: Icon(Icons.park, size: 28, color: Colors.green.shade600),
+      child: Icon(Icons.park, size: 36, color: Colors.green.shade600),
     );
   }
 
@@ -119,29 +117,7 @@ class _SpotsState extends State<Spots> {
 
               final spot =
                   spotsProvider.spots[index - spotsProvider.queuedSpotsCount];
-              return ListTile(
-                leading: spot.thumbnail != null
-                    ? Image.network(
-                        spot.thumbnail!,
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-                      )
-                    : _buildImagePlaceholder(),
-                title: Text(spot.title),
-                subtitle: SpotsSubtitle(
-                  spot: spot,
-                  textStyle: Theme.of(context).textTheme.bodyMedium!,
-                  sizeFactor: 1.0,
-                  showLabel: false,
-                ),
-                trailing: widget.userPosition != null
-                    ? Text(
-                        '${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)}km',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      )
-                    : null,
+              return InkWell(
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => SpotDetailPage(
@@ -149,6 +125,79 @@ class _SpotsState extends State<Spots> {
                       userPosition: widget.userPosition,
                       locationPermissionGiven: widget.locationPermissionGiven,
                       locationStatus: widget.locationStatus,
+                    ),
+                  ),
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 90),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 90,
+                          height: 90,
+                          child: spot.thumbnail != null
+                              ? Image.network(
+                                  spot.thumbnail!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      _buildImagePlaceholder(),
+                                )
+                              : _buildImagePlaceholder(),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        spot.title,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (widget.userPosition != null) ...[
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)} km',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                SpotsSubtitle(
+                                  spot: spot,
+                                  textStyle: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall!,
+                                  sizeFactor: 0.9,
+                                  showLabel: false,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

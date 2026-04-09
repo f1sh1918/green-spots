@@ -19,7 +19,10 @@
       "Bash(grep:*)",
       "Bash(/tmp/check_imports.txt:*)",
       "Read(//tmp/**)",
-      "Bash(flutter pub:*)"
+      "Bash(flutter pub:*)",
+      "Bash(export PATH=\"$PATH:/Users/afischer/fvm/default/bin\")",
+      "Bash(/Users/afischer/.fvm_flutter/bin/flutter analyze:*)",
+      "Bash(fvm flutter:*)"
     ]
   }
 }

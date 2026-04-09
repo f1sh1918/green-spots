@@ -84,6 +84,23 @@ add_action( 'rest_api_init', function () {
 
 } );
 
+// Enable comments on the spot CPT and auto-approve comments from logged-in users.
+add_action( 'init', function () {
+    add_post_type_support( 'spot', 'comments' );
+} );
+
+add_filter( 'comments_open', function ( $open, $post_id ) {
+    $post = get_post( $post_id );
+    if ( $post && $post->post_type === 'spot' ) {
+        return true;
+    }
+    return $open;
+}, 10, 2 );
+
+add_filter( 'pre_comment_approved', function ( $approved, $data ) {
+    return is_user_logged_in() ? 1 : $approved;
+}, 10, 2 );
+
 // Adds theme support for post formats.
 if ( ! function_exists( 'twentytwentyfive_post_format_setup' ) ) :
 	/**
