@@ -16,7 +16,9 @@ import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/widgets/delete_spot_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../services/comment_service.dart';
 import '../services/spot_service.dart';
+import 'comments_page.dart';
 
 class SpotDetailPage extends StatefulWidget {
   final Spot currentSpot;
@@ -42,6 +44,8 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
   LocationStatus? _currentLocationStatus;
   final bool _isLoadingPosition = false;
   final _spotsService = SpotService();
+  final _commentService = CommentService();
+  int? _commentCount;
 
   @override
   void initState() {
@@ -50,11 +54,19 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
     _currentLocationPermissionGiven = widget.locationPermissionGiven;
     _currentLocationStatus = widget.locationStatus;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<SpotsProvider>(
-        context,
-        listen: false,
-      ).setActiveSpot(widget.currentSpot);
+      final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+      spotsProvider.setActiveSpot(widget.currentSpot);
+      if (!spotsProvider.isOffline) {
+        _loadCommentCount();
+      }
     });
+  }
+
+  Future<void> _loadCommentCount() async {
+    final count = await _commentService.fetchCommentCount(
+      widget.currentSpot.id,
+    );
+    if (mounted) setState(() => _commentCount = count);
   }
 
   @override
@@ -123,98 +135,158 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
               title: Text(widget.currentSpot.title),
               backgroundColor: Theme.of(context).colorScheme.inversePrimary,
             ),
-            body: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (imageWidgets.isNotEmpty) ...[
-                    ImageCarousel(
-                      images: imageWidgets,
-                      onImageTap: (index) =>
-                          _showFullScreenCarousel(context, imageWidgets, index),
+            body: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (imageWidgets.isNotEmpty) ...[
+                      ImageCarousel(
+                        images: imageWidgets,
+                        onImageTap: (index) => _showFullScreenCarousel(
+                          context,
+                          imageWidgets,
+                          index,
+                        ),
+                      ),
+                    ],
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Divider(height: 50),
+                          SpotsSubtitle(
+                            spot: widget.currentSpot,
+                            textStyle: Theme.of(context).textTheme.bodyLarge!,
+                            sizeFactor: 1.2,
+                            showLabel: true,
+                          ),
+                          Divider(height: 50),
+                          Text(
+                            widget.currentSpot.note!.isNotEmpty
+                                ? widget.currentSpot.note!
+                                : 'Keine Notiz vorhanden',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          Divider(height: 50),
+                          if (widget.userPosition != null) ...[
+                            Text(
+                              'Entfernung: ${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ],
+                          if (widget.currentSpot.lastVisited != null) ...[
+                            Text(
+                              'Zuletzt besucht: ${convertDateString(widget.currentSpot.lastVisited!)}',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ],
+                          Text(
+                            'Erstellt von: ${widget.currentSpot.author}',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          Divider(height: 50),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: _isLoadingPosition
+                                      ? null
+                                      : () => Navigator.of(context)
+                                            .pushAndRemoveUntil(
+                                              MaterialPageRoute(
+                                                builder: (_) => Home(
+                                                  initialIndex: 0,
+                                                  locationPermissionGiven:
+                                                      _currentLocationPermissionGiven,
+                                                  userPosition:
+                                                      _currentUserPosition,
+                                                  locationStatus:
+                                                      _currentLocationStatus,
+                                                ),
+                                              ),
+                                              (route) => false,
+                                            ),
+                                  icon: Icon(Icons.map_outlined),
+                                  label: Text('Auf Karte anzeigen'),
+                                ),
+                                SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        onPressed: () => _launchMap(
+                                          widget.currentSpot.lat,
+                                          widget.currentSpot.long,
+                                          context,
+                                        ),
+                                        icon: Icon(Icons.directions_outlined),
+                                        label: Text('Navigieren'),
+                                      ),
+                                    ),
+                                    if (!spotsProvider.isOffline) ...[
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: _commentCount == null
+                                            ? OutlinedButton.icon(
+                                                onPressed: null,
+                                                icon: SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                ),
+                                                label: Text('Kommentare'),
+                                              )
+                                            : OutlinedButton.icon(
+                                                onPressed: () async {
+                                                  await Navigator.of(
+                                                    context,
+                                                  ).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          CommentsPage(
+                                                            spotId: widget
+                                                                .currentSpot
+                                                                .id,
+                                                            spotTitle: widget
+                                                                .currentSpot
+                                                                .title,
+                                                          ),
+                                                    ),
+                                                  );
+                                                  if (mounted)
+                                                    _loadCommentCount();
+                                                },
+                                                icon: Icon(
+                                                  Icons.chat_bubble_outline,
+                                                ),
+                                                label: Text(
+                                                  'Kommentare ($_commentCount)',
+                                                ),
+                                              ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Divider(height: 50),
-                        SpotsSubtitle(
-                          spot: widget.currentSpot,
-                          textStyle: Theme.of(context).textTheme.bodyLarge!,
-                          sizeFactor: 1.2,
-                          showLabel: true,
-                        ),
-                        Divider(height: 50),
-                        Text(
-                          widget.currentSpot.note!.isNotEmpty
-                              ? widget.currentSpot.note!
-                              : 'Keine Notiz vorhanden',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        Divider(height: 50),
-                        if (widget.userPosition != null) ...[
-                          Text(
-                            'Entfernung: ${calculateDistanceFromSpot(widget.currentSpot, widget.userPosition!).toStringAsFixed(1)} km',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ],
-                        if (widget.currentSpot.lastVisited != null) ...[
-                          Text(
-                            'Zuletzt besucht: ${convertDateString(widget.currentSpot.lastVisited!)}',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ],
-                        Text(
-                          'Erstellt von: ${widget.currentSpot.author}',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        Divider(height: 50),
-                        Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Row(
-                            children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                ),
-                                onPressed: _isLoadingPosition
-                                    ? null
-                                    : () => Navigator.of(context)
-                                          .pushAndRemoveUntil(
-                                            MaterialPageRoute(
-                                              builder: (_) => Home(
-                                                initialIndex: 0,
-                                                locationPermissionGiven:
-                                                    _currentLocationPermissionGiven,
-                                                userPosition:
-                                                    _currentUserPosition,
-                                                locationStatus:
-                                                    _currentLocationStatus,
-                                              ),
-                                            ),
-                                            (route) => false,
-                                          ),
-                                child: Text('Auf Karte anzeigen'),
-                              ),
-                              SizedBox(width: 12),
-                              OutlinedButton(
-                                onPressed: () => _launchMap(
-                                  widget.currentSpot.lat,
-                                  widget.currentSpot.long,
-                                  context,
-                                ),
-                                child: Text('Navigieren'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
