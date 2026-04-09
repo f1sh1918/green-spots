@@ -13,6 +13,7 @@ import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/utils/date_format.dart';
 import 'package:spots/utils/messenger_utils.dart';
+import 'package:spots/widgets/delete_draft_dialog.dart';
 import 'models/add_spot.dart';
 
 class AddSpots extends StatefulWidget {
@@ -566,18 +567,12 @@ class _AddSpotsState extends State<AddSpots> {
             icon: Icon(Icons.arrow_back),
             onPressed: _handleBackNavigation,
           ),
-          // TODO Add Delete Spot Dialog before delete from queue
           actions: [
             if (widget.queuedSpotId != null)
               IconButton(
                 icon: const Icon(Icons.delete),
-                onPressed: () async {
-                  await Provider.of<SpotsProvider>(
-                    context,
-                    listen: false,
-                  ).removeFromQueue(widget.queuedSpotId!);
-                  if (context.mounted) Navigator.of(context).pop();
-                },
+                onPressed: () =>
+                    DeleteDraftDialog.show(context, widget.queuedSpotId!),
               ),
           ],
         ),
