@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   DateTime? _lastLinkProcessed;
   final UserService _userService = UserService();
@@ -40,6 +42,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     initDeepLinks();
     checkUserRole();
+    _initConnectivityListener();
   }
 
   @override
@@ -48,6 +51,58 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     if (state == AppLifecycleState.resumed) {
       checkUserRole();
+      _checkConnectivityOnResume();
+    }
+  }
+
+  void _initConnectivityListener() {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      _onConnectivityChanged(results);
+    });
+  }
+
+  Future<void> _onConnectivityChanged(List<ConnectivityResult> results) async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+    final hasConnection = results.any((r) => r != ConnectivityResult.none);
+
+    if (!hasConnection) {
+      // Adapter meldet kein Netz → sofort offline setzen
+      spotsProvider.setOffline(true);
+      return;
+    }
+
+    // Netz wieder vorhanden → tatsächliche Erreichbarkeit prüfen
+    final token = Provider.of<SettingsModel>(context, listen: false).token;
+    await spotsProvider.refresh(null, null);
+
+    if (!spotsProvider.isOffline &&
+        spotsProvider.queuedSpotsCount > 0 &&
+        token != null &&
+        context.mounted) {
+      await spotsProvider.processQueue(token, context, null);
+    }
+  }
+
+  Future<void> _checkConnectivityOnResume() async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+    final token = Provider.of<SettingsModel>(context, listen: false).token;
+
+    // Kein Snackbar beim Resume – Offline/Online-Banner reicht als Feedback
+    await spotsProvider.refresh(null, null);
+
+    if (!spotsProvider.isOffline &&
+        spotsProvider.queuedSpotsCount > 0 &&
+        token != null &&
+        context.mounted) {
+      await spotsProvider.processQueue(token, context, null);
     }
   }
 
@@ -55,6 +110,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _linkSubscription?.cancel();
+    _connectivitySubscription?.cancel();
     super.dispose();
   }
 

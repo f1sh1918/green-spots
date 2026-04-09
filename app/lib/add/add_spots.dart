@@ -13,6 +13,7 @@ import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/utils/date_format.dart';
 import 'package:spots/utils/messenger_utils.dart';
+import 'package:spots/widgets/delete_draft_dialog.dart';
 import 'models/add_spot.dart';
 
 class AddSpots extends StatefulWidget {
@@ -566,6 +567,14 @@ class _AddSpotsState extends State<AddSpots> {
             icon: Icon(Icons.arrow_back),
             onPressed: _handleBackNavigation,
           ),
+          actions: [
+            if (widget.queuedSpotId != null)
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () =>
+                    DeleteDraftDialog.show(context, widget.queuedSpotId!),
+              ),
+          ],
         ),
         body: SafeArea(
           child: Form(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:spots/auth/models/settings.dart';
 import 'package:spots/home.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
@@ -78,8 +79,19 @@ class _AppState extends State<App> {
               context,
               listen: false,
             );
+            final token = Provider.of<SettingsModel>(
+              context,
+              listen: false,
+            ).token;
             spotsProvider.setOffline(result.isOffline);
-            spotsProvider.loadQueue();
+            spotsProvider.loadQueue().then((_) {
+              if (!result.isOffline &&
+                  spotsProvider.queuedSpotsCount > 0 &&
+                  token != null &&
+                  mounted) {
+                spotsProvider.processQueue(token, context, userPosition);
+              }
+            });
           }
         });
 
