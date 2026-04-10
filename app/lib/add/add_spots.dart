@@ -15,6 +15,7 @@ import 'package:spots/utils/date_format.dart';
 import 'package:spots/constants/constants.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/widgets/delete_draft_dialog.dart';
+import 'package:spots/widgets/security_info_dialog.dart';
 import 'models/add_spot.dart';
 
 class AddSpots extends StatefulWidget {
@@ -716,9 +717,22 @@ class _AddSpotsState extends State<AddSpots> {
                     children: [
                       Padding(
                         padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
-                        child: Text(
-                          'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${securityLabels[_secure.toInt()]})',
-                          style: TextStyle(fontSize: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${securityLabels[_secure.toInt()]})',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => showSecurityInfoDialog(context),
+                              icon: const Icon(Icons.help_outline, size: 20),
+                              tooltip: 'Was bedeutet Sicherheit?',
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                            ),
+                          ],
                         ),
                       ),
                       Slider(
