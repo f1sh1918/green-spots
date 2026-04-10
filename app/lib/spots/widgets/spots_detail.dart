@@ -14,6 +14,7 @@ import 'package:spots/utils/date_format.dart';
 import 'package:spots/utils/distance.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/widgets/delete_spot_dialog.dart';
+import 'package:spots/widgets/security_info_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/comment_service.dart';
@@ -160,13 +161,48 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                               children: [
                                 // Eigenschaften
                                 _SectionCard(
-                                  child: SpotsSubtitle(
-                                    spot: widget.currentSpot,
-                                    textStyle: Theme.of(
-                                      context,
-                                    ).textTheme.bodyLarge!,
-                                    sizeFactor: 1.0,
-                                    showLabel: true,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          _SectionLabel('Eigenschaften'),
+                                          const Spacer(),
+                                          GestureDetector(
+                                            onTap: () =>
+                                                showSecurityInfoDialog(context),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.help_outline,
+                                                  size: 16,
+                                                  color: Colors.grey[500],
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Sicherheit',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[500],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      SpotsSubtitle(
+                                        spot: widget.currentSpot,
+                                        textStyle: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge!,
+                                        sizeFactor: 1.0,
+                                        showLabel: true,
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(height: 12),
