@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
-import 'package:spots/auth/models/settings.dart';
 import 'package:spots/location/determine_position.dart';
 import 'package:spots/location/location_button.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
@@ -17,7 +16,6 @@ import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:spots/utils/distance.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/widgets/add_spot_dialog.dart';
-import 'package:spots/widgets/map_info_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 double detailZoom = 14;
@@ -58,13 +56,6 @@ class _MapPagePageState extends State<MapPage> {
       } else {
         _setSelectedSpot(activeSpot, spotsProvider.isOffline);
         _animateToSpot(activeSpot, withSheetOffset: true);
-      }
-      final firstStart = Provider.of<SettingsModel>(
-        context,
-        listen: false,
-      ).firstMapStart;
-      if (firstStart) {
-        _showInfoDialog(context);
       }
     });
   }
@@ -153,7 +144,6 @@ class _MapPagePageState extends State<MapPage> {
                   myLocationEnabled: widget.locationPermissionGiven,
                   myLocationRenderMode: MyLocationRenderMode.normal,
                   attributionButtonMargins: const math.Point(-100, -100),
-                  onMapLongClick: _onMapLongClick,
                   onMapClick: _onMapClick,
                   onMapCreated: (c) {
                     _controller = c;
@@ -211,15 +201,6 @@ class _MapPagePageState extends State<MapPage> {
   }
 
   Future<void> _onMapClick(math.Point<double> point, clickCoordinates) async {
-    _closeSheet();
-    Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
-  }
-
-  Future<void> _onMapLongClick(
-    math.Point<double> point,
-    clickCoordinates,
-  ) async {
-    final spots = Provider.of<SpotsProvider>(context, listen: false).spots;
     if (!mounted) return;
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
     final touchTargetSize = pixelRatio * 38.0;
@@ -229,13 +210,15 @@ class _MapPagePageState extends State<MapPage> {
       height: touchTargetSize,
     );
 
+    // 1. Spot marker tap → open bottom sheet
+    if (!mounted) return;
+    final spots = Provider.of<SpotsProvider>(context, listen: false).spots;
     final jsonFeatures = await _controller!.queryRenderedFeaturesInRect(rect, [
       'markers-layer',
     ], null);
     final features = jsonFeatures
         .map((e) => e as Map<String, dynamic>)
         .toList();
-
     if (features.isNotEmpty) {
       final feature = features[0]['properties'];
       final selectedSpot = spots.firstWhere((spot) => spot.id == feature['id']);
@@ -246,14 +229,20 @@ class _MapPagePageState extends State<MapPage> {
       ).isOffline;
       _animateToSpot(selectedSpot, withSheetOffset: true);
       _setSelectedSpot(selectedSpot, isOffline);
-    } else {
-      if (mounted) {
-        _showAddSpotDialog(
-          context,
-          clickCoordinates as LatLng,
-          widget.userPosition,
-        );
-      }
+      return;
+    }
+
+    // 2. Empty tap → close sheet if open, otherwise show add dialog
+    if (!mounted) return;
+    if (_selectedSpot != null) {
+      _closeSheet();
+      Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
+    } else if (mounted) {
+      _showAddSpotDialog(
+        context,
+        clickCoordinates as LatLng,
+        widget.userPosition,
+      );
     }
   }
 
@@ -325,11 +314,13 @@ class _MapPagePageState extends State<MapPage> {
       'markers-layer',
       SymbolLayerProperties(
         iconImage: 'campsite_15',
-        iconSize: 1.8,
+        iconSize: 1.7,
         visibility: 'visible',
         iconAnchor: 'bottom',
+        textFont: ['Noto Sans Bold'],
         iconAllowOverlap: true,
       ),
+      enableInteraction: false,
       filter: [
         '!',
         ['has', 'point_count'],
@@ -385,10 +376,6 @@ class _MapPagePageState extends State<MapPage> {
         ),
       ),
     );
-  }
-
-  void _showInfoDialog(BuildContext context) {
-    showDialog(context: context, builder: (_) => MapInfoDialog());
   }
 }
 

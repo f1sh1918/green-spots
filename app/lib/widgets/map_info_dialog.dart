@@ -25,7 +25,7 @@ class MapInfoDialog extends StatelessWidget {
       actionsPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       title: Text('Nutzung der Karte', style: theme.textTheme.headlineSmall),
       content: Text(
-        'Die Interaktion mit der Karte erfolgt über einen langen Klick: \n1: Auf einen Marker -> Details ansehen\n2. Auf einen anderen Punkt -> Neuen Spot hinzufügen',
+        'Die Interaktion mit der Karte erfolgt wie folgt: \n1: Klick auf einen Marker -> Details ansehen\n2. Klick auf einen anderen Punkt -> Neuen Spot hinzufügen',
         style: theme.textTheme.bodyMedium,
       ),
       actions: [

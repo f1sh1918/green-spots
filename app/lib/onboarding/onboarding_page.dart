@@ -41,7 +41,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
+        colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
       ),
       icon: Icons.groups,
       title: 'Mach mit!',
