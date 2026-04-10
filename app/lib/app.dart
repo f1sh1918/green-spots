@@ -18,7 +18,8 @@ class _SpotLoadResult {
 }
 
 class App extends StatefulWidget {
-  const App({super.key});
+  final int initialIndex;
+  const App({super.key, this.initialIndex = 1});
 
   @override
   State<App> createState() => _AppState();
@@ -96,6 +97,7 @@ class _AppState extends State<App> {
         });
 
         return Home(
+          initialIndex: widget.initialIndex,
           locationPermissionGiven: permissionGiven,
           userPosition: userPosition,
           locationStatus: locationStatus,

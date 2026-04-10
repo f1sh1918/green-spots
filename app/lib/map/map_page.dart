@@ -521,7 +521,15 @@ class _SpotBottomSheetState extends State<_SpotBottomSheet> {
                             ),
                             child: Text(
                               widget.spot.note!,
-                              style: Theme.of(context).textTheme.bodySmall,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    fontSize:
+                                        (Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall?.fontSize ??
+                                            12) +
+                                        2,
+                                  ),
                             ),
                           ),
                         ],
