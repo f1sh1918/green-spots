@@ -41,7 +41,7 @@ class SpotsSubtitle extends StatelessWidget {
       if (spot.swim == true) ...[
         SpotsSubtitleItem(
           sizeFactor: sizeFactor,
-          color: Colors.black,
+          color: Colors.teal,
           icon: Icons.pool,
           label: showLabel ? 'Badestelle:' : null,
           isCheck: showLabel,
@@ -63,6 +63,7 @@ class SpotsSubtitle extends StatelessWidget {
         icon: Icons.water_drop,
         value: spot.water,
         label: showLabel ? 'Wasser:' : null,
+        isNegative: spot.water == 'keines',
       ),
       if (spot.specials != null && spot.specials!.isNotEmpty) ...[
         SpotsSubtitleItem(
