@@ -89,25 +89,13 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
             .toList();
 
         return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, _) async {
-            if (didPop) return;
-            if (context.mounted) {
+          canPop: true,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop) {
               Provider.of<SpotsProvider>(
                 context,
                 listen: false,
               ).setActiveSpot(null);
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (_) => Home(
-                    initialIndex: 1,
-                    locationPermissionGiven: _currentLocationPermissionGiven,
-                    userPosition: _currentUserPosition,
-                    locationStatus: _currentLocationStatus,
-                  ),
-                ),
-                (route) => false,
-              );
             }
           },
           child: Scaffold(

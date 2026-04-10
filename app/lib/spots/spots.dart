@@ -16,12 +16,14 @@ class Spots extends StatefulWidget {
   final Position? userPosition;
   final bool locationPermissionGiven;
   final LocationStatus? locationStatus;
+  final String searchQuery;
 
   const Spots({
     super.key,
     this.locationPermissionGiven = false,
     this.userPosition,
     this.locationStatus,
+    this.searchQuery = '',
   });
 
   @override
@@ -45,6 +47,13 @@ class _SpotsState extends State<Spots> {
     final canUserAddSpots = allowedRoles.contains(userRole);
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
+        final query = widget.searchQuery.toLowerCase();
+        final filteredSpots = query.isEmpty
+            ? spotsProvider.spots
+            : spotsProvider.spots
+                  .where((s) => s.title.toLowerCase().contains(query))
+                  .toList();
+
         return Scaffold(
           floatingActionButton: canUserAddSpots
               ? FloatingActionButton(
@@ -62,8 +71,7 @@ class _SpotsState extends State<Spots> {
               : null,
           body: ListView.separated(
             padding: const EdgeInsets.only(bottom: 80),
-            itemCount:
-                spotsProvider.queuedSpotsCount + spotsProvider.spots.length,
+            itemCount: spotsProvider.queuedSpotsCount + filteredSpots.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
               // Queued (offline) spots shown first
@@ -116,7 +124,7 @@ class _SpotsState extends State<Spots> {
               }
 
               final spot =
-                  spotsProvider.spots[index - spotsProvider.queuedSpotsCount];
+                  filteredSpots[index - spotsProvider.queuedSpotsCount];
               return InkWell(
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
