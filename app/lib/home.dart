@@ -35,6 +35,14 @@ class _HomeState extends State<Home> {
   final AuthService _authService = AuthService();
   late int _selectedIndex = widget.initialIndex ?? 1;
   Position? _userPosition;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void switchToMapTab() {
     setState(() {
@@ -82,13 +90,10 @@ class _HomeState extends State<Home> {
         userPosition: _userPosition,
         locationPermissionGiven: widget.locationPermissionGiven,
         locationStatus: widget.locationStatus,
+        searchQuery: _searchQuery,
       ),
       const Settings(),
     ];
-  }
-
-  List<String> _getTitles() {
-    return ['Karte', 'Übersicht', 'Einstellungen'];
   }
 
   void _onItemTapped(int index) {
@@ -104,18 +109,40 @@ class _HomeState extends State<Home> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: Text(_getTitles()[_selectedIndex]),
+            title: _selectedIndex == 1
+                ? TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    decoration: InputDecoration(
+                      hintText: 'Tippen, um zu suchen...',
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  )
+                : Text(['Karte', 'Spots', 'Einstellungen'][_selectedIndex]),
             actions: [
               if (_selectedIndex == 1) ...[
+                if (_searchQuery.isNotEmpty)
+                  IconButton(
+                    onPressed: () => setState(() {
+                      _searchController.clear();
+                      _searchQuery = '';
+                    }),
+                    icon: const Icon(Icons.close),
+                  ),
+                Icon(Icons.search),
+                const SizedBox(width: 4),
                 IconButton(
                   onPressed: spotsProvider.isLoading ? null : _handleRefresh,
                   icon: spotsProvider.isLoading
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Icon(Icons.refresh),
+                      : const Icon(Icons.refresh),
                 ),
               ],
             ],
