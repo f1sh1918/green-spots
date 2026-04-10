@@ -22,7 +22,17 @@
       "Bash(flutter pub:*)",
       "Bash(export PATH=\"$PATH:/Users/afischer/fvm/default/bin\")",
       "Bash(/Users/afischer/.fvm_flutter/bin/flutter analyze:*)",
-      "Bash(fvm flutter:*)"
+      "Bash(fvm flutter:*)",
+      "Bash(curl -s \"https://api.github.com/repos/maplibre/flutter-maplibre-gl/git/trees/release-0.26.0?recursive=1\")",
+      "Bash(curl -s \"https://api.github.com/repos/maplibre/flutter-maplibre-gl/branches/release-0.26.0\")",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/release-0.26.0/maplibre_gl/lib/src/controller.dart\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/release-0.26.0/maplibre_gl_platform_interface/lib/src/controller.dart\")",
+      "Bash(curl:*)",
+      "Bash(find ~/.pub-cache -path */flutter-maplibre-gl* -name maplibre_map_controller.dart)",
+      "Bash(find ~/.pub-cache -path *maplibre* -name *.dart)",
+      "Bash(find /Users/afischer/.pub-cache/git/flutter-maplibre-gl-027de547d048742816b8f758587427ee4cb4ca9a -name *.swift -o -name *.m)"
     ]
   }
 }
