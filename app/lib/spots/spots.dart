@@ -48,11 +48,19 @@ class _SpotsState extends State<Spots> {
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
         final query = widget.searchQuery.toLowerCase();
-        final filteredSpots = query.isEmpty
-            ? spotsProvider.spots
-            : spotsProvider.spots
-                  .where((s) => s.title.toLowerCase().contains(query))
-                  .toList();
+        final filteredSpots = (query.isEmpty
+                ? spotsProvider.spots.toList()
+                : spotsProvider.spots
+                      .where((s) => s.title.toLowerCase().contains(query))
+                      .toList())
+            ..sort((a, b) {
+              if (widget.userPosition != null) {
+                final da = calculateDistanceFromSpot(a, widget.userPosition!);
+                final db = calculateDistanceFromSpot(b, widget.userPosition!);
+                return da.compareTo(db);
+              }
+              return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+            });
 
         return Scaffold(
           floatingActionButton: canUserAddSpots

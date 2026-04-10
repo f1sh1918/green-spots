@@ -45,6 +45,7 @@ class SpotsSubtitle extends StatelessWidget {
           icon: Icons.pool,
           label: showLabel ? 'Badestelle:' : null,
           isCheck: showLabel,
+          checkColor: Colors.green,
         ),
       ],
       if (spot.fire == true) ...[
