@@ -82,10 +82,7 @@ class SpotsSubtitleItem extends StatelessWidget {
         else if (value != null)
           Text(
             value!,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
       ],
     );
