@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:spots/add/add_spots.dart';
+import 'package:spots/auth/models/settings.dart';
+import 'package:spots/onboarding/onboarding_page.dart';
 import 'app.dart';
 
 class AppRoutes {
@@ -7,18 +10,20 @@ class AppRoutes {
   static const String addSpots = '/add-spots';
 
   static Map<String, WidgetBuilder> get routes => {
-    home: (context) => const App(),
+    home: (context) => const _StartupPage(),
     addSpots: (context) => const AddSpots(),
   };
+}
 
-  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case home:
-        return MaterialPageRoute(builder: (_) => const App());
-      case addSpots:
-        return MaterialPageRoute(builder: (_) => const AddSpots());
-      default:
-        return null;
+class _StartupPage extends StatelessWidget {
+  const _StartupPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsModel>(context, listen: false);
+    if (!settings.hasSeenOnboarding) {
+      return const OnboardingPage();
     }
+    return const App();
   }
 }

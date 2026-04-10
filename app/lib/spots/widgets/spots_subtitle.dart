@@ -55,7 +55,7 @@ class SpotsSubtitle extends StatelessWidget {
           icon: Icons.local_fire_department,
           label: showLabel ? 'Feuerstelle:' : null,
           isCheck: showLabel,
-          checkColor: Colors.black,
+          checkColor: Colors.green,
         ),
       ],
       SpotsSubtitleItem(

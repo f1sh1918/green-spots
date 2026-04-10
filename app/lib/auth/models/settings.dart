@@ -59,6 +59,13 @@ class SettingsModel extends ChangeNotifier {
     return obj;
   }
 
+  String hasSeenOnboardingKey = 'hasSeenOnboarding';
+  bool get hasSeenOnboarding => _getBool(hasSeenOnboardingKey) ?? false;
+
+  Future<void> setHasSeenOnboarding() async {
+    await _preferences?.setBool(hasSeenOnboardingKey, true);
+  }
+
   String firstMapStartKey = 'firstMapStart';
   bool get firstMapStart => _getBool(firstMapStartKey) ?? true;
 
