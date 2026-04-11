@@ -6,3 +6,4 @@ const String mediaEndpoint = '/wp-json/wp/v2/media';
 const String updatesEndpoint = '/wp-json/wp/v2/version';
 const String userEndpoint = '/wp-json/wp/v2/users';
 const String commentsEndpoint = '/wp-json/wp/v2/comments';
+const String membersEndpoint = '/wp-json/green-spots/v1/members';

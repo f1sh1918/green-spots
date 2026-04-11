@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/spots/models/comment.dart';
 import 'package:spots/spots/services/comment_service.dart';
+import 'package:spots/user/community_provider.dart';
+import 'package:spots/user/profile_dialog.dart';
+import 'package:spots/user/user_avatar.dart';
+import 'package:spots/user/user_profile_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 class CommentsPage extends StatefulWidget {
@@ -25,6 +29,8 @@ class _CommentsPageState extends State<CommentsPage> {
   final _scrollController = ScrollController();
 
   List<Comment> _comments = [];
+  // authorId → effectiveAvatarUrl (custom image or gravatar)
+  final Map<int, String?> _authorAvatars = {};
   bool _loading = true;
   bool _submitting = false;
   int? _editingCommentId;
@@ -47,11 +53,53 @@ class _CommentsPageState extends State<CommentsPage> {
     try {
       final comments = await _service.fetchComments(widget.spotId);
       if (mounted) setState(() => _comments = comments);
+      _fetchAuthorAvatars(comments);
     } catch (e) {
       if (mounted) showSnackBar(context, e.toString(), Colors.red);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _fetchAuthorAvatars(List<Comment> comments) async {
+    final token = Provider.of<SettingsModel>(context, listen: false).token;
+    final communityProvider = Provider.of<CommunityProvider>(
+      context,
+      listen: false,
+    );
+
+    final uniqueIds = comments
+        .where((c) => c.authorId > 0)
+        .map((c) => c.authorId)
+        .toSet();
+
+    // Populate from cache instantly — no network needed for known members
+    final toFetch = <int>{};
+    for (final id in uniqueIds) {
+      final cached = communityProvider.getMember(id);
+      if (cached != null) {
+        _authorAvatars[id] = cached.avatarUrl;
+      } else {
+        toFetch.add(id);
+      }
+    }
+    if (_authorAvatars.isNotEmpty && mounted) setState(() {});
+
+    // Fetch remaining profiles in parallel
+    if (toFetch.isEmpty) return;
+    final profileService = UserProfileService();
+    await Future.wait(
+      toFetch.map((id) async {
+        try {
+          final profile = await profileService.fetchProfile(id, token: token);
+          if (mounted) {
+            setState(() => _authorAvatars[id] = profile.effectiveAvatarUrl);
+          }
+        } catch (_) {
+          // keep Gravatar fallback
+        }
+      }),
+    );
   }
 
   Future<void> _submitComment(String token) async {
@@ -192,14 +240,27 @@ class _CommentsPageState extends State<CommentsPage> {
                         final isOwn =
                             currentUserId != null &&
                             comment.authorId.toString() == currentUserId;
+                        // Prefer fetched profile image, fall back to gravatar
+                        final avatarUrl =
+                            _authorAvatars.containsKey(comment.authorId)
+                            ? _authorAvatars[comment.authorId]
+                            : comment.authorAvatarUrl;
                         return _CommentTile(
                           comment: comment,
+                          avatarUrl: avatarUrl,
                           isOwn: isOwn,
                           isEditing: _editingCommentId == comment.id,
                           formattedDate: _formatDate(comment.date),
                           onEdit: () => _startEditing(comment),
                           onDelete: token != null
                               ? () => _deleteComment(comment.id, token)
+                              : null,
+                          onAuthorTap: comment.authorId > 0
+                              ? () => showProfileDialog(
+                                  context,
+                                  userId: comment.authorId,
+                                  token: token,
+                                )
                               : null,
                         );
                       },
@@ -233,48 +294,66 @@ class _CommentsPageState extends State<CommentsPage> {
 
 class _CommentTile extends StatelessWidget {
   final Comment comment;
+  final String? avatarUrl;
   final bool isOwn;
   final bool isEditing;
   final String formattedDate;
   final VoidCallback onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onAuthorTap;
 
   const _CommentTile({
     required this.comment,
+    required this.avatarUrl,
     required this.isOwn,
     required this.isEditing,
     required this.formattedDate,
     required this.onEdit,
     this.onDelete,
+    this.onAuthorTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       color: isEditing
           ? Theme.of(
               context,
             ).colorScheme.primaryContainer.withValues(alpha: 0.4)
           : null,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(12, 10, 4, 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Avatar
+            GestureDetector(
+              onTap: onAuthorTap,
+              child: UserAvatar(imageUrl: avatarUrl, radius: 18),
+            ),
+            const SizedBox(width: 10),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Text(
-                        comment.authorName,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap: onAuthorTap,
+                        child: Text(
+                          comment.authorName,
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                decoration: onAuthorTap != null
+                                    ? TextDecoration.underline
+                                    : null,
+                              ),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         formattedDate,
                         style: Theme.of(
@@ -283,7 +362,7 @@ class _CommentTile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     comment.content,
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -295,13 +374,13 @@ class _CommentTile extends StatelessWidget {
               Column(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit, size: 18),
+                    icon: const Icon(Icons.edit, size: 18),
                     onPressed: onEdit,
                     visualDensity: VisualDensity.compact,
                     tooltip: 'Bearbeiten',
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete, size: 18, color: Colors.red),
+                    icon: const Icon(Icons.delete, size: 18, color: Colors.red),
                     onPressed: onDelete,
                     visualDensity: VisualDensity.compact,
                     tooltip: 'Löschen',

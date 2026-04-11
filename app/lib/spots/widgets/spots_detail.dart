@@ -299,7 +299,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                                 label: Text('Navigieren'),
                               ),
                             ),
-                            if (!spotsProvider.isOffline) ...[
+                            if (!spotsProvider.isOffline && token != null) ...[
                               SizedBox(width: 8),
                               Expanded(
                                 child: _commentCount == null

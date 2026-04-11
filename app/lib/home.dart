@@ -9,6 +9,8 @@ import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/settings/settings.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/spots.dart';
+import 'package:spots/user/community_page.dart';
+import 'package:spots/user/community_provider.dart';
 
 import 'auth/models/settings.dart';
 
@@ -35,6 +37,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final AuthService _authService = AuthService();
   late int _selectedIndex = widget.initialIndex ?? 1;
+  bool _wasLoggedIn = false;
   Position? _userPosition;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -64,11 +67,10 @@ class _HomeState extends State<Home> {
     });
   }
 
-  List<Widget> _getPages() {
+  List<Widget> _getPages({required bool isLoggedIn}) {
     final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
     return <Widget>[
       MapPage(
-        // ensures that the map will be updated in the spot length change
         key: ValueKey('map_${spotsProvider.spots.length}'),
         activeSpot: spotsProvider.activeSpot,
         userPosition: _userPosition,
@@ -81,26 +83,73 @@ class _HomeState extends State<Home> {
         locationStatus: widget.locationStatus,
         searchQuery: _searchQuery,
       ),
+      if (isLoggedIn) const CommunityPage(),
       const Settings(),
     ];
   }
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index, {required bool isLoggedIn}) {
     setState(() {
       _selectedIndex = index;
     });
+    if (isLoggedIn && index == 2) {
+      // Community tab — ensure token is synced and data is loaded
+      final token = Provider.of<SettingsModel>(context, listen: false).token;
+      Provider.of<CommunityProvider>(context, listen: false).setToken(token);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SpotsProvider>(
-      builder: (context, spotsProvider, child) {
+    return Consumer2<SpotsProvider, SettingsModel>(
+      builder: (context, spotsProvider, settings, child) {
+        final isLoggedIn = settings.token != null;
+        final settingsIndex = isLoggedIn ? 3 : 2;
+
+        // Keep current tab when login state changes (avoid jumping to Community)
+        if (isLoggedIn && !_wasLoggedIn && _selectedIndex >= 2) {
+          // Community inserted at 2 — shift index right to stay on same page
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => setState(() {
+              _selectedIndex += 1;
+              _wasLoggedIn = true;
+            }),
+          );
+        } else if (!isLoggedIn && _wasLoggedIn) {
+          // Community removed — shift index left if needed, go to Settings if on Community
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => setState(() {
+              if (_selectedIndex == 2)
+                _selectedIndex = 2; // Community→Settings
+              else if (_selectedIndex > 2)
+                _selectedIndex -= 1;
+              _wasLoggedIn = false;
+            }),
+          );
+        } else {
+          _wasLoggedIn = isLoggedIn;
+        }
+
+        // Safety clamp
+        if (!isLoggedIn && _selectedIndex == 2) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => setState(() => _selectedIndex = 2),
+          );
+        }
+
         if (spotsProvider.pendingSpotLocation != null && _selectedIndex != 0) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => setState(() => _selectedIndex = 0),
           );
         }
-        final isMapTab = _selectedIndex == 0;
+
+        final titles = isLoggedIn
+            ? ['Karte', 'Spots', 'Community', 'Einstellungen']
+            : ['Karte', 'Spots', 'Einstellungen'];
+        final pages = _getPages(isLoggedIn: isLoggedIn);
+        final safeIndex = _selectedIndex.clamp(0, pages.length - 1);
+
+        final isMapTab = safeIndex == 0;
         return Scaffold(
           extendBodyBehindAppBar: isMapTab,
           appBar: isMapTab
@@ -112,7 +161,7 @@ class _HomeState extends State<Home> {
                 )
               : AppBar(
                   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-                  title: _selectedIndex == 1
+                  title: safeIndex == 1
                       ? TextField(
                           controller: _searchController,
                           onChanged: (value) =>
@@ -125,11 +174,9 @@ class _HomeState extends State<Home> {
                           ),
                           style: Theme.of(context).textTheme.titleMedium,
                         )
-                      : Text(
-                          ['Karte', 'Spots', 'Einstellungen'][_selectedIndex],
-                        ),
+                      : Text(titles[safeIndex]),
                   actions: [
-                    if (_selectedIndex == 1) ...[
+                    if (safeIndex == 1) ...[
                       if (_searchQuery.isNotEmpty)
                         IconButton(
                           onPressed: () => setState(() {
@@ -147,26 +194,35 @@ class _HomeState extends State<Home> {
                 ),
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Theme.of(context).colorScheme.onPrimary,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karte'),
-              BottomNavigationBarItem(
+            items: <BottomNavigationBarItem>[
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.map),
+                label: 'Karte',
+              ),
+              const BottomNavigationBarItem(
                 icon: Icon(Icons.location_city),
                 label: 'Spots',
               ),
-              BottomNavigationBarItem(
+              if (isLoggedIn)
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.people_outline),
+                  label: 'Community',
+                ),
+              const BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
                 label: 'Einstellungen',
               ),
             ],
             selectedItemColor: Colors.green[800],
             type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
+            currentIndex: safeIndex,
+            onTap: (i) => _onItemTapped(i, isLoggedIn: isLoggedIn),
           ),
           body: Column(
             children: [
-              if (spotsProvider.isOffline) _buildOfflineBanner(context),
-              Expanded(child: _getPages().elementAt(_selectedIndex)),
+              if (spotsProvider.isOffline)
+                _buildOfflineBanner(context, settingsIndex),
+              Expanded(child: pages.elementAt(safeIndex)),
             ],
           ),
         );
@@ -174,11 +230,11 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildOfflineBanner(BuildContext context) {
+  Widget _buildOfflineBanner(BuildContext context, int settingsIndex) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedIndex = 2; // go to settings tab
+          _selectedIndex = settingsIndex;
         });
       },
       child: Container(
@@ -204,6 +260,15 @@ class _HomeState extends State<Home> {
 
   _autoLogin() {
     final settings = Provider.of<SettingsModel>(context, listen: false);
+    // Sync token to CommunityProvider on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<CommunityProvider>(
+          context,
+          listen: false,
+        ).setToken(settings.token);
+      }
+    });
     if (settings.refreshToken != null &&
         _authService.isTokenExpired(settings.expireLogin) &&
         mounted) {

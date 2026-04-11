@@ -80,7 +80,90 @@ add_action( 'rest_api_init', function () {
         ],
     ] );
 
+    register_rest_field( 'user', 'profile_image_url', [
+        'get_callback' => function ( $obj ) {
+            if ( ! is_user_logged_in() ) return null;
+            return get_user_meta( $obj['id'], 'profile_image_url', true ) ?: null;
+        },
+        'update_callback' => function ( $value, $user ) {
+            if ( (int) get_current_user_id() !== $user->ID ) {
+                return new WP_Error( 'forbidden', 'Nicht erlaubt', [ 'status' => 403 ] );
+            }
+            return update_user_meta( $user->ID, 'profile_image_url', sanitize_url( $value ) );
+        },
+        'schema' => [ 'type' => 'string', 'format' => 'uri', 'description' => 'Profilbild-URL' ],
+    ] );
 
+    // Custom endpoint: single member by ID regardless of published posts
+    register_rest_route( 'green-spots/v1', '/members/(?P<id>\d+)', [
+        'methods'             => 'GET',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+        'callback'            => function ( $request ) {
+            $user = get_userdata( (int) $request['id'] );
+            if ( ! $user ) {
+                return new WP_Error( 'not_found', 'Benutzer nicht gefunden', [ 'status' => 404 ] );
+            }
+            $profile_image_url = get_user_meta( $user->ID, 'profile_image_url', true ) ?: null;
+            $spot_count = (int) count_user_posts( $user->ID, 'spot' );
+            $comment_count = (int) get_comments( [
+                'user_id' => $user->ID,
+                'count'   => true,
+                'status'  => 'approve',
+            ] );
+            return rest_ensure_response( [
+                'id'            => $user->ID,
+                'name'          => $user->display_name,
+                'description'   => get_user_meta( $user->ID, 'description', true ) ?: '',
+                'avatar_urls'   => [ '48' => get_avatar_url( $user->ID, [ 'size' => 48 ] ) ],
+                'profile_image_url' => $profile_image_url,
+                'spot_count'    => $spot_count,
+                'comment_count' => $comment_count,
+            ] );
+        },
+    ] );
+
+    // Custom endpoint: all members (editor + author) with spot + comment counts
+    register_rest_route( 'green-spots/v1', '/members', [
+        'methods'             => 'GET',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+        'callback'            => function () {
+            $users = get_users( [
+                'role__in' => [ 'editor', 'author' ],
+                'fields'   => 'all',
+            ] );
+
+            $data = [];
+            foreach ( $users as $user ) {
+                $profile_image_url = get_user_meta( $user->ID, 'profile_image_url', true ) ?: null;
+
+                $spot_count = (int) count_user_posts( $user->ID, 'spot' );
+
+                $comment_count = get_comments( [
+                    'user_id' => $user->ID,
+                    'count'   => true,
+                    'status'  => 'approve',
+                ] );
+
+                $data[] = [
+                    'id'            => $user->ID,
+                    'name'          => $user->display_name,
+                    'description'   => get_user_meta( $user->ID, 'description', true ) ?: '',
+                    'avatar_urls'   => [ '48' => get_avatar_url( $user->ID, [ 'size' => 48 ] ) ],
+                    'profile_image_url' => $profile_image_url,
+                    'spot_count'    => $spot_count,
+                    'comment_count' => (int) $comment_count,
+                ];
+            }
+
+            usort( $data, fn( $a, $b ) => ( $b['spot_count'] + $b['comment_count'] ) <=> ( $a['spot_count'] + $a['comment_count'] ) );
+
+            return rest_ensure_response( $data );
+        },
+    ] );
 
 } );
 

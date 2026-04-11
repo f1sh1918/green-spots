@@ -13,6 +13,8 @@ import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/utils/string_utils.dart';
 import 'package:spots/utils/version_comparator.dart';
 import 'package:spots/auth/widgets/registration_page.dart';
+import 'package:spots/user/profile_dialog.dart';
+import 'package:spots/user/profile_edit_page.dart';
 import 'package:spots/widgets/AlertBox.dart';
 import 'package:spots/widgets/outlined_button_spinner.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -162,10 +164,10 @@ class _SettingsState extends State<Settings> {
           padding: const EdgeInsets.all(16.0),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight - 32),
-            child: IntrinsicHeight(
-              child: _isLoading
-                  ? _showSpinner()
-                  : Column(
+            child: _isLoading
+                ? _showSpinner()
+                : IntrinsicHeight(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _isLoggedIn ? _buildLoggedInView() : _buildLoginForm(),
@@ -212,7 +214,7 @@ class _SettingsState extends State<Settings> {
                         ),
                       ],
                     ),
-            ),
+                  ),
           ),
         ),
       ),
@@ -387,78 +389,90 @@ class _SettingsState extends State<Settings> {
         // Benutzer Info Card
         Card(
           elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.green,
-                      child: Text(
-                        (_userDisplayName?.isNotEmpty == true
-                            ? _userDisplayName!.substring(0, 1).toUpperCase()
-                            : 'U'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+          clipBehavior: Clip.hardEdge,
+          child: InkWell(
+            onTap: () {
+              final settings = Provider.of<SettingsModel>(
+                context,
+                listen: false,
+              );
+              final userId = int.tryParse(settings.userId ?? '');
+              if (userId == null) return;
+              showProfileDialog(context, userId: userId, token: settings.token);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.green,
+                        child: Text(
+                          (_userDisplayName?.isNotEmpty == true
+                              ? _userDisplayName!.substring(0, 1).toUpperCase()
+                              : 'U'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _userDisplayName ?? 'Unbekannt',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _userDisplayName ?? 'Unbekannt',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Text(
-                            _userEmail ?? 'Keine Mailadresse',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                            Text(
+                              _userEmail ?? 'Keine Mailadresse',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
-                          Text(
-                            _loginExpires != null
-                                ? 'Gültig bis: $_loginExpires'
-                                : 'Gültig bis: unbekannt',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                            Text(
+                              _loginExpires != null
+                                  ? 'Gültig bis: $_loginExpires'
+                                  : 'Gültig bis: unbekannt',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
-                          Text(
-                            'Rolle: ${_userRole.capitalize()}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                            Text(
+                              'Rolle: ${_userRole.capitalize()}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    if (allowedRoles.contains(_userRole)) ...[
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 24,
-                      ),
-                    ] else ...[
-                      const Icon(Icons.info, color: Colors.orange, size: 24),
+                      if (allowedRoles.contains(_userRole)) ...[
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 24,
+                        ),
+                      ] else ...[
+                        const Icon(Icons.info, color: Colors.orange, size: 24),
+                      ],
                     ],
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ), // Card
 
         const SizedBox(height: 24),
 
@@ -469,6 +483,16 @@ class _SettingsState extends State<Settings> {
           ),
           const SizedBox(height: 24),
         ],
+        // Profil bearbeiten
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ProfileEditPage())),
+          icon: const Icon(Icons.manage_accounts_outlined),
+          label: const Text('Profil bearbeiten'),
+        ),
+        const SizedBox(height: 8),
+
         // Logout Button
         FilledButton.icon(
           onPressed: () => _logout(context, false),
