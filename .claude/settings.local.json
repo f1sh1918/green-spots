@@ -33,7 +33,11 @@
       "Bash(find ~/.pub-cache -path */flutter-maplibre-gl* -name maplibre_map_controller.dart)",
       "Bash(find ~/.pub-cache -path *maplibre* -name *.dart)",
       "Bash(find /Users/afischer/.pub-cache/git/flutter-maplibre-gl-027de547d048742816b8f758587427ee4cb4ca9a -name *.swift -o -name *.m)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(flutter logs:*)",
+      "Bash(/Users/afischer/fvm/versions/stable/bin/flutter logs:*)",
+      "Bash(/Users/afischer/fvm/versions/stable/bin/flutter devices:*)",
+      "Bash(~/.fvm/versions/stable/bin/flutter analyze:*)"
     ]
   }
 }

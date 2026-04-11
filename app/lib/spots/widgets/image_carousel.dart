@@ -3,15 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class ImageCarousel extends StatefulWidget {
-  final List<Widget> images;
-  final bool isFullscreen;
+  final List<String> imageUrls;
   final Function(int)? onImageTap;
   final int? initialIndex;
 
   const ImageCarousel({
     super.key,
-    required this.images,
-    this.isFullscreen = false,
+    required this.imageUrls,
     this.onImageTap,
     this.initialIndex,
   });
@@ -31,7 +29,6 @@ class ImageCarouselState extends State<ImageCarousel> {
     super.initState();
     imageIndex = widget.initialIndex ?? 0;
 
-    // Navigate to initial index after widget is built
     if (widget.initialIndex != null && widget.initialIndex! > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         carouselController.animateToPage(widget.initialIndex!);
@@ -39,87 +36,38 @@ class ImageCarouselState extends State<ImageCarousel> {
     }
   }
 
-  Widget _wrapWithZoomAndGestures(Widget image, int index) {
-    Widget wrappedImage = image;
-
-    // Zoom-Funktionalität hinzufügen
-    wrappedImage = InteractiveViewer(
-      minScale: 1.0,
-      maxScale: 4.0,
-      child: image,
-    );
-
-    // Gesture-Handling für Tap (nur wenn nicht im Vollbildmodus)
-    if (!widget.isFullscreen && widget.onImageTap != null) {
-      wrappedImage = GestureDetector(
-        onTap: () => widget.onImageTap!(index),
-        child: wrappedImage,
-      );
-    }
-
-    return wrappedImage;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final int imageAmount = widget.images.length;
+    final int imageAmount = widget.imageUrls.length;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Bilder mit Zoom und Gesture-Handling umhüllen
-    List<Widget> carouselItems = widget.images.asMap().entries.map<Widget>((
-      entry,
-    ) {
-      int index = entry.key;
-      Widget image = entry.value;
+    final carouselItems = widget.imageUrls.asMap().entries.map<Widget>((entry) {
+      final index = entry.key;
+      final url = entry.value;
 
-      return _wrapWithZoomAndGestures(image, index);
-    }).toList();
-
-    if (widget.isFullscreen) {
-      // For fullscreen mode, use Stack to overlay indicators
-      return Stack(
-        children: [
-          Positioned.fill(
-            child: CarouselSlider(
-              items: carouselItems,
-              carouselController: carouselController,
-              options: CarouselOptions(
-                viewportFraction: 1.0,
-                enableInfiniteScroll: imageAmount > 1,
-                height: double.infinity,
-                onPageChanged: (index, reason) => _updateIndex(index),
-              ),
-            ),
+      Widget item = Hero(
+        tag: 'spot_image_$url',
+        child: Image.network(
+          url,
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: Colors.green.shade100,
+            child: Icon(Icons.park, size: 64, color: Colors.green.shade400),
           ),
-          if (imageAmount > 1)
-            Positioned(
-              bottom: 50,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: widget.images
-                    .mapIndexed(
-                      (index, value) => GestureDetector(
-                        onTap: () => carouselController.animateToPage(index),
-                        child: Container(
-                          width: 12.0,
-                          height: 12.0,
-                          margin: EdgeInsets.symmetric(horizontal: 6.0),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(
-                              alpha: imageIndex == index ? 0.9 : 0.4,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-        ],
+        ),
       );
-    }
+
+      if (widget.onImageTap != null) {
+        item = GestureDetector(
+          onTap: () => widget.onImageTap!(index),
+          child: item,
+        );
+      }
+
+      return item;
+    }).toList();
 
     return Column(
       children: [
@@ -133,7 +81,7 @@ class ImageCarouselState extends State<ImageCarousel> {
                 enableInfiniteScroll: false,
                 viewportFraction: 1.0,
                 height: constraints.maxHeight,
-                onPageChanged: (index, reason) => _updateIndex(index),
+                onPageChanged: (index, _) => setState(() => imageIndex = index),
               ),
             ),
           ),
@@ -143,23 +91,20 @@ class ImageCarouselState extends State<ImageCarousel> {
             height: indicatorHeight,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: widget.images
+              children: widget.imageUrls
                   .mapIndexed(
-                    (index, value) => GestureDetector(
+                    (index, _) => GestureDetector(
                       onTap: () => carouselController.animateToPage(index),
                       child: Container(
                         width: 8.0,
                         height: 8.0,
-                        margin: EdgeInsets.symmetric(horizontal: 4.0),
+                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color:
-                              (Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black)
-                                  .withValues(
-                                    alpha: imageIndex == index ? 0.9 : 0.4,
-                                  ),
+                          color: (isDark ? Colors.white : Colors.black)
+                              .withValues(
+                                alpha: imageIndex == index ? 0.9 : 0.4,
+                              ),
                         ),
                       ),
                     ),
@@ -169,11 +114,5 @@ class ImageCarouselState extends State<ImageCarousel> {
           ),
       ],
     );
-  }
-
-  Future<void> _updateIndex(int index) async {
-    setState(() {
-      imageIndex = index;
-    });
   }
 }
