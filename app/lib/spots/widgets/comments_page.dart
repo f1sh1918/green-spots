@@ -164,9 +164,6 @@ class _CommentsPageState extends State<CommentsPage> {
       appBar: AppBar(
         title: Text('Kommentare'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          IconButton(onPressed: _loadComments, icon: Icon(Icons.refresh)),
-        ],
       ),
       body: Column(
         children: [

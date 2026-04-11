@@ -554,6 +554,8 @@ class _AddSpotsState extends State<AddSpots> {
           title: Text(
             widget.queuedSpotId != null
                 ? 'Entwurf bearbeiten'
+                : widget.existingSpot != null
+                ? 'Spot bearbeiten'
                 : 'Spot hinzufügen',
           ),
           leading: IconButton(
@@ -567,345 +569,284 @@ class _AddSpotsState extends State<AddSpots> {
                 onPressed: () =>
                     DeleteDraftDialog.show(context, widget.queuedSpotId!),
               ),
+            if (widget.existingSpot != null || widget.queuedSpotId != null)
+              IconButton(
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check),
+                onPressed: _isLoading ? null : _submitSpot,
+              ),
           ],
         ),
         body: SafeArea(
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Allgemein',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Titel *',
-                      border: OutlineInputBorder(),
+                  // ── Allgemein ──────────────────────────────────────
+                  _FormCard(
+                    label: 'Allgemein',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: _titleController,
+                          decoration: const InputDecoration(
+                            labelText: 'Titel *',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Titel ist erforderlich';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _noteController,
+                          decoration: const InputDecoration(
+                            labelText: 'Notiz',
+                            hintText:
+                                'Beschreibung, Hinweise wie Entfernung zu Wasserstelle, wann frequentiert...',
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _lastVisitedController,
+                          readOnly: true,
+                          enableInteractiveSelection: false,
+                          decoration: InputDecoration(
+                            labelText: 'Zuletzt besucht',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.calendar_today),
+                              tooltip: 'Datum auswählen',
+                              onPressed: _pickDate,
+                            ),
+                          ),
+                          onTap: _pickDate,
+                        ),
+                      ],
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Titel ist erforderlich';
-                      }
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
-                  // Notiz
-                  TextFormField(
-                    controller: _noteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Notiz',
-                      hintText:
-                          'Beschreibung, Hinweise wie Entfernung zu Wasserstelle, wann frequentiert...',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 24),
-                  TextFormField(
-                    controller: _lastVisitedController,
-                    readOnly: true,
-                    // prevents keyboard & manual edits
-                    enableInteractiveSelection: false,
-                    // disables long‑press selection
-                    decoration: InputDecoration(
-                      labelText: 'Zuletzt besucht',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        tooltip: 'Datum auswählen',
-                        onPressed: _pickDate,
-                      ),
-                    ),
-                    onTap: _pickDate,
-                  ),
-                  Divider(height: 50),
-                  // Koordinaten
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Standort',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _latController,
-                              decoration: const InputDecoration(
-                                labelText: 'Breitengrad *',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                    signed: true,
+                  // ── Standort ───────────────────────────────────────
+                  _FormCard(
+                    label: 'Standort',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _latController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Breitengrad *',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                      signed: true,
+                                    ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
                                   ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
-                                ),
-                              ],
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Breitengrad erforderlich';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _longController,
-                              decoration: const InputDecoration(
-                                labelText: 'Längengrad *',
-                                border: OutlineInputBorder(),
+                                ],
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Breitengrad erforderlich';
+                                  }
+                                  return null;
+                                },
                               ),
-                              keyboardType: TextInputType.numberWithOptions(
-                                decimal: true,
-                                signed: true,
-                              ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
-                                ),
-                              ],
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Längengrad erforderlich';
-                                }
-                                return null;
-                              },
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _longController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Längengrad *',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType: TextInputType.numberWithOptions(
+                                  decimal: true,
+                                  signed: true,
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
+                                  ),
+                                ],
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Längengrad erforderlich';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        onPressed: () => _updateUserPosition(),
-                        icon: Icon(Icons.gps_fixed),
-                        label: Text('Nutze aktuelle Position'),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: _updateUserPosition,
+                          icon: const Icon(Icons.gps_fixed),
+                          label: const Text('Aktuelle Position verwenden'),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Divider(height: 50),
-                  const Text(
-                    'Details',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  // Sicherheit Slider
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
-                        child: Row(
+                  const SizedBox(height: 12),
+
+                  // ── Details ────────────────────────────────────────
+                  _FormCard(
+                    label: 'Details',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
                             Expanded(
                               child: Text(
                                 'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${securityLabels[_secure.toInt()]})',
-                                style: TextStyle(fontSize: 16),
                               ),
                             ),
-                            IconButton(
-                              onPressed: () => showSecurityInfoDialog(context),
-                              icon: const Icon(Icons.help_outline, size: 20),
-                              tooltip: 'Was bedeutet Sicherheit?',
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
+                            GestureDetector(
+                              onTap: () => showSecurityInfoDialog(context),
+                              child: Icon(
+                                Icons.help_outline,
+                                size: 18,
+                                color: Colors.grey[500],
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      Slider(
-                        value: _secure,
-                        min: 1.0,
-                        max: 5.0,
-                        divisions: 8,
-                        label: securityLabels[_secure.toInt()],
-                        onChanged: (value) {
-                          setState(() {
-                            _secure = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Platz Slider
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsetsGeometry.symmetric(horizontal: 22),
-                        child: Text(
-                          'Platz: $_space (Anzahl kleiner Zelte)',
-                          style: TextStyle(fontSize: 16),
+                        Slider(
+                          value: _secure,
+                          min: 1.0,
+                          max: 5.0,
+                          divisions: 8,
+                          label: securityLabels[_secure.toInt()],
+                          onChanged: (value) => setState(() => _secure = value),
                         ),
-                      ),
-                      Slider(
-                        value: _space.toDouble(),
-                        min: 1,
-                        max: 6,
-                        divisions: 5,
-                        label: _space.toString(),
-                        onChanged: (value) {
-                          setState(() {
-                            _space = value.toInt();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  SwitchListTile(
-                    title: const Text('Baden möglich'),
-                    value: _swim,
-                    onChanged: (value) {
-                      setState(() {
-                        _swim = value;
-                      });
-                    },
-                  ),
-
-                  SwitchListTile(
-                    title: const Text('Feuer erlaubt'),
-                    value: _fire,
-                    onChanged: (value) {
-                      setState(() {
-                        _fire = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Wasserqualität Dropdown
-                  DropdownButtonFormField<String>(
-                    initialValue: _waterquality,
-                    decoration: const InputDecoration(
-                      labelText: 'Wasserqualität',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _waterQualityOptions.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _waterquality = newValue ?? 'keines';
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Besonderheiten
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Divider(height: 50),
-                      const Text(
-                        'Besonderheiten',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(height: 4),
+                        Text('Platz: $_space (Anzahl kleiner Zelte)'),
+                        Slider(
+                          value: _space.toDouble(),
+                          min: 1,
+                          max: 6,
+                          divisions: 5,
+                          label: _space.toString(),
+                          onChanged: (value) =>
+                              setState(() => _space = value.toInt()),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Column(
-                        children: _availableSpecials.map((special) {
-                          return CheckboxListTile(
-                            visualDensity: const VisualDensity(
-                              horizontal: 0,
-                              vertical: -4,
-                            ),
-                            title: Text(special),
-                            value: _selectedSpecials.contains(special),
-                            onChanged: (bool? value) {
-                              setState(() {
-                                if (value == true) {
-                                  _selectedSpecials.add(special);
-                                } else {
-                                  _selectedSpecials.remove(special);
-                                }
-                              });
-                            },
-                            controlAffinity: ListTileControlAffinity.leading,
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-
-                  // Bilder-Sektion
-                  Divider(height: 50),
-                  const Text(
-                    'Bilder',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  if (Provider.of<SpotsProvider>(
-                    context,
-                    listen: false,
-                  ).isOffline) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        border: Border.all(color: Colors.orange.shade200),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.wifi_off,
-                            size: 18,
-                            color: Colors.orange.shade700,
+                        const Divider(height: 8),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Baden möglich'),
+                          value: _swim,
+                          onChanged: (value) => setState(() => _swim = value),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Feuer erlaubt'),
+                          value: _fire,
+                          onChanged: (value) => setState(() => _fire = value),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          initialValue: _waterquality,
+                          decoration: const InputDecoration(
+                            labelText: 'Wasserqualität',
+                            border: OutlineInputBorder(),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Bilder können im Offline-Modus nicht hinzugefügt werden.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.orange.shade800,
-                              ),
-                            ),
+                          items: _waterQualityOptions.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) => setState(
+                            () => _waterquality = newValue ?? 'keines',
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ] else ...[
-                    Row(
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ── Besonderheiten ─────────────────────────────────
+                  _FormCard(
+                    label: 'Besonderheiten',
+                    child: Column(
+                      children: _availableSpecials.map((special) {
+                        return CheckboxListTile(
+                          visualDensity: VisualDensity.compact,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(special),
+                          value: _selectedSpecials.contains(special),
+                          onChanged: (bool? value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedSpecials.add(special);
+                              } else {
+                                _selectedSpecials.remove(special);
+                              }
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ── Bilder ─────────────────────────────────────────
+                  _FormCard(
+                    label: 'Bilder',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          key: _imagesSectionKey,
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 48),
-                            ),
+                        if (Provider.of<SpotsProvider>(
+                          context,
+                          listen: false,
+                        ).isOffline)
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.wifi_off,
+                                size: 16,
+                                color: Colors.orange.shade700,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Bilder können im Offline-Modus nicht hinzugefügt werden.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.orange.shade800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          OutlinedButton.icon(
+                            key: _imagesSectionKey,
                             onPressed: totalPicturesCount >= 3
                                 ? null
                                 : _pickImages,
@@ -916,34 +857,46 @@ class _AddSpotsState extends State<AddSpots> {
                                   : 'Bilder hinzufügen ($totalPicturesCount/3)',
                             ),
                           ),
-                        ),
+                          if (widget.existingSpot != null) ...[
+                            const SizedBox(height: 12),
+                            _buildExistingThumbnails(
+                              widget.existingSpot?.images,
+                            ),
+                          ],
+                          if (_selectedImages.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _buildImageThumbnails(),
+                          ],
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    if (widget.existingSpot != null) ...[
-                      _buildExistingThumbnails(widget.existingSpot?.images),
-                    ],
-                    if (_selectedImages.isNotEmpty) ...[
-                      _buildImageThumbnails(),
-                    ],
-                  ],
-                  const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 24),
 
-                  // Submit Button
+                  // ── Submit ─────────────────────────────────────────
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
+                    child: FilledButton(
                       onPressed: _isLoading ? null : _submitSpot,
-                      style: ElevatedButton.styleFrom(
+                      style: FilledButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : Text(
                               widget.queuedSpotId != null
                                   ? 'Entwurf speichern'
+                                  : widget.existingSpot != null
+                                  ? 'Spot speichern'
                                   : 'Spot hinzufügen',
                             ),
                     ),
@@ -957,7 +910,7 @@ class _AddSpotsState extends State<AddSpots> {
     );
   }
 
-  _updateUserPosition() {
+  void _updateUserPosition() {
     if (widget.userPosition?.latitude != null &&
         widget.userPosition?.longitude != null) {
       setState(() {
@@ -978,5 +931,38 @@ class _AddSpotsState extends State<AddSpots> {
         Duration(seconds: 3),
       );
     }
+  }
+}
+
+class _FormCard extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const _FormCard({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Colors.grey[600],
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
   }
 }

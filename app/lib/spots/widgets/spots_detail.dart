@@ -415,57 +415,167 @@ void _showFullScreenCarousel(
   List<Widget> images,
   int initialIndex,
 ) {
-  // Extract image URLs from the widgets
-  List<String> imageUrls = [];
-  for (Widget imageWidget in images) {
-    if (imageWidget is Image && imageWidget.image is NetworkImage) {
-      imageUrls.add((imageWidget.image as NetworkImage).url);
+  final imageUrls = <String>[];
+  for (final w in images) {
+    if (w is Image && w.image is NetworkImage) {
+      imageUrls.add((w.image as NetworkImage).url);
     }
   }
-
-  // Create fullscreen versions of images
-  List<Widget> fullscreenImages = imageUrls
-      .map(
-        (url) => InteractiveViewer(
-          child: Image.network(
-            url,
-            fit: BoxFit.contain,
-            width: double.infinity,
-            height: double.infinity,
-            errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-          ),
-        ),
-      )
-      .toList();
-
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: '',
     barrierColor: Colors.black,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            ImageCarousel(
-              images: fullscreenImages,
-              isFullscreen: true,
-              initialIndex: initialIndex,
+    pageBuilder: (context, _, __) =>
+        _FullScreenGallery(imageUrls: imageUrls, initialIndex: initialIndex),
+  );
+}
+
+class _FullScreenGallery extends StatefulWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  const _FullScreenGallery({
+    required this.imageUrls,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_FullScreenGallery> createState() => _FullScreenGalleryState();
+}
+
+class _FullScreenGalleryState extends State<_FullScreenGallery> {
+  late final PageController _pageController;
+  late int _currentIndex;
+  bool _isZoomed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            physics: _isZoomed
+                ? const NeverScrollableScrollPhysics()
+                : const ClampingScrollPhysics(),
+            itemCount: widget.imageUrls.length,
+            onPageChanged: (i) => setState(() => _currentIndex = i),
+            itemBuilder: (context, index) => _ZoomablePage(
+              imageUrl: widget.imageUrls[index],
+              onZoomChanged: (zoomed) => setState(() => _isZoomed = zoomed),
             ),
+          ),
+          if (widget.imageUrls.length > 1)
             Positioned(
-              top: 40,
-              right: 10,
-              child: IconButton(
-                icon: Icon(Icons.close, color: Colors.white, size: 30),
-                onPressed: () => Navigator.of(context).pop(),
+              bottom: 50,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.imageUrls.length, (i) {
+                  return GestureDetector(
+                    onTap: () => _pageController.animateToPage(
+                      i,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    ),
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(
+                          alpha: _currentIndex == i ? 0.9 : 0.4,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
               ),
             ),
-          ],
-        ),
-      );
-    },
-  );
+          Positioned(
+            top: topPadding + 8,
+            right: 10,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ZoomablePage extends StatefulWidget {
+  final String imageUrl;
+  final ValueChanged<bool> onZoomChanged;
+
+  const _ZoomablePage({required this.imageUrl, required this.onZoomChanged});
+
+  @override
+  State<_ZoomablePage> createState() => _ZoomablePageState();
+}
+
+class _ZoomablePageState extends State<_ZoomablePage> {
+  final _transformationController = TransformationController();
+  bool _zoomed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _transformationController.addListener(_onTransformChanged);
+  }
+
+  void _onTransformChanged() {
+    final scale = _transformationController.value.getMaxScaleOnAxis();
+    final zoomed = scale > 1.05;
+    if (zoomed != _zoomed) {
+      setState(() => _zoomed = zoomed);
+      widget.onZoomChanged(zoomed);
+    }
+  }
+
+  @override
+  void dispose() {
+    _transformationController.removeListener(_onTransformChanged);
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InteractiveViewer(
+      transformationController: _transformationController,
+      minScale: 1.0,
+      maxScale: 4.0,
+      panEnabled: _zoomed,
+      child: Image.network(
+        widget.imageUrl,
+        fit: BoxFit.contain,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+      ),
+    );
+  }
 }
 
 class _SectionCard extends StatelessWidget {
