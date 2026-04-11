@@ -72,7 +72,7 @@ class SpotsSubtitle extends StatelessWidget {
           color: Colors.deepPurple,
           icon: Icons.auto_awesome,
           value: spot.specials!.join(' | '),
-          label: showLabel ? 'Specials:' : null,
+          label: showLabel ? 'Besonderheiten:' : null,
         ),
       ],
     ];

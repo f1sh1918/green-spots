@@ -64,18 +64,6 @@ class _HomeState extends State<Home> {
     });
   }
 
-  Future<void> _handleRefresh() async {
-    final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
-    final token = Provider.of<SettingsModel>(context, listen: false).token;
-    await spotsProvider.refresh(context, _userPosition);
-    if (!spotsProvider.isOffline &&
-        spotsProvider.queuedSpotsCount > 0 &&
-        token != null &&
-        mounted) {
-      await spotsProvider.processQueue(token, context, _userPosition);
-    }
-  }
-
   List<Widget> _getPages() {
     final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
     return <Widget>[
@@ -150,21 +138,9 @@ class _HomeState extends State<Home> {
                           }),
                           icon: const Icon(Icons.close),
                         ),
-                      Icon(Icons.search),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        onPressed: spotsProvider.isLoading
-                            ? null
-                            : _handleRefresh,
-                        icon: spotsProvider.isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.refresh),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Icon(Icons.search),
                       ),
                     ],
                   ],

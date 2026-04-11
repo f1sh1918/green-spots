@@ -258,6 +258,7 @@ class _MapPagePageState extends State<MapPage> {
       final feature = features[0]['properties'];
       final selectedSpot = spots.firstWhere((spot) => spot.id == feature['id']);
       if (!mounted) return;
+      if (_selectedSpot?.id == selectedSpot.id) return;
       final isOffline = Provider.of<SpotsProvider>(
         context,
         listen: false,
