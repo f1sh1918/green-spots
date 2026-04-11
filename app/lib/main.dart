@@ -8,6 +8,7 @@ import 'package:spots/constants/constants.dart';
 import 'package:spots/routes.dart';
 import 'package:spots/settings/provider/settings_provider.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
+import 'package:spots/user/community_provider.dart';
 import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/geo_link_helper.dart';
 import 'package:spots/utils/messenger_utils.dart';
@@ -114,7 +115,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => SpotsProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => SpotsProvider()),
+        ChangeNotifierProvider(create: (_) => CommunityProvider()),
+      ],
       child: MaterialApp(
         title: 'Green Spots',
         // Für Deep Link Navigation

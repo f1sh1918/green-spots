@@ -9,6 +9,8 @@ import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/settings/settings.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/spots.dart';
+import 'package:spots/user/community_page.dart';
+import 'package:spots/user/community_provider.dart';
 
 import 'auth/models/settings.dart';
 
@@ -68,7 +70,6 @@ class _HomeState extends State<Home> {
     final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
     return <Widget>[
       MapPage(
-        // ensures that the map will be updated in the spot length change
         key: ValueKey('map_${spotsProvider.spots.length}'),
         activeSpot: spotsProvider.activeSpot,
         userPosition: _userPosition,
@@ -81,6 +82,7 @@ class _HomeState extends State<Home> {
         locationStatus: widget.locationStatus,
         searchQuery: _searchQuery,
       ),
+      const CommunityPage(),
       const Settings(),
     ];
   }
@@ -89,6 +91,11 @@ class _HomeState extends State<Home> {
     setState(() {
       _selectedIndex = index;
     });
+    if (index == 2) {
+      // Community tab — ensure token is synced and data is loaded
+      final token = Provider.of<SettingsModel>(context, listen: false).token;
+      Provider.of<CommunityProvider>(context, listen: false).setToken(token);
+    }
   }
 
   @override
@@ -126,7 +133,12 @@ class _HomeState extends State<Home> {
                           style: Theme.of(context).textTheme.titleMedium,
                         )
                       : Text(
-                          ['Karte', 'Spots', 'Einstellungen'][_selectedIndex],
+                          [
+                            'Karte',
+                            'Spots',
+                            'Community',
+                            'Einstellungen',
+                          ][_selectedIndex],
                         ),
                   actions: [
                     if (_selectedIndex == 1) ...[
@@ -154,6 +166,10 @@ class _HomeState extends State<Home> {
                 label: 'Spots',
               ),
               BottomNavigationBarItem(
+                icon: Icon(Icons.people_outline),
+                label: 'Community',
+              ),
+              BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
                 label: 'Einstellungen',
               ),
@@ -178,7 +194,7 @@ class _HomeState extends State<Home> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedIndex = 2; // go to settings tab
+          _selectedIndex = 3; // go to settings tab
         });
       },
       child: Container(
@@ -204,6 +220,15 @@ class _HomeState extends State<Home> {
 
   _autoLogin() {
     final settings = Provider.of<SettingsModel>(context, listen: false);
+    // Sync token to CommunityProvider on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<CommunityProvider>(
+          context,
+          listen: false,
+        ).setToken(settings.token);
+      }
+    });
     if (settings.refreshToken != null &&
         _authService.isTokenExpired(settings.expireLogin) &&
         mounted) {
