@@ -9,6 +9,13 @@ import 'package:spots/spots/services/spot_service.dart';
 import 'package:spots/utils/distance.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
+class PendingSpotLocation {
+  final double lat;
+  final double lng;
+  final String? title;
+  const PendingSpotLocation({required this.lat, required this.lng, this.title});
+}
+
 // Provides spots within the app and can trigger refetch
 class SpotsProvider extends ChangeNotifier {
   final SpotService _service = SpotService();
@@ -17,6 +24,7 @@ class SpotsProvider extends ChangeNotifier {
   bool _isOffline = false;
   Spot? _activeSpot;
   List<Map<String, dynamic>> _queuedSpots = [];
+  PendingSpotLocation? _pendingSpotLocation;
 
   List<Spot> get spots => _spots;
   bool get isLoading => _isLoading;
@@ -24,9 +32,15 @@ class SpotsProvider extends ChangeNotifier {
   Spot? get activeSpot => _activeSpot;
   List<Map<String, dynamic>> get queuedSpots => _queuedSpots;
   int get queuedSpotsCount => _queuedSpots.length;
+  PendingSpotLocation? get pendingSpotLocation => _pendingSpotLocation;
 
   void setActiveSpot(Spot? activeSpot) {
     _activeSpot = activeSpot;
+    notifyListeners();
+  }
+
+  void setPendingSpotLocation(PendingSpotLocation? location) {
+    _pendingSpotLocation = location;
     notifyListeners();
   }
 

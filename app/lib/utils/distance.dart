@@ -5,8 +5,8 @@ double calculateDistanceFromSpot(Spot spot, Position userPosition) {
   final distance = Geolocator.distanceBetween(
     spot.lat!,
     spot.long!,
-    userPosition!.latitude,
-    userPosition!.longitude,
+    userPosition.latitude,
+    userPosition.longitude,
   );
   return distance / 1000;
 }

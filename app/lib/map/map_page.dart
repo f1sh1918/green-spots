@@ -14,8 +14,10 @@ import 'package:spots/spots/widgets/comments_page.dart';
 import 'package:spots/spots/widgets/spots_detail.dart';
 import 'package:spots/spots/widgets/spots_subtitle.dart';
 import 'package:spots/utils/distance.dart';
+import 'package:spots/add/add_spots.dart';
+import 'package:spots/auth/models/settings.dart';
+import 'package:spots/constants/constants.dart';
 import 'package:spots/utils/messenger_utils.dart';
-import 'package:spots/widgets/add_spot_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 double detailZoom = 14;
@@ -44,6 +46,9 @@ class _MapPagePageState extends State<MapPage> {
   Spot? _selectedSpot;
   int? _commentCount;
   final _commentService = CommentService();
+  Symbol? _pendingMarker;
+  LatLng? _pendingCoords;
+  String? _pendingTitle;
 
   @override
   void initState() {
@@ -109,7 +114,8 @@ class _MapPagePageState extends State<MapPage> {
       // Shift camera south so spot appears centered in the visible area above sheet.
       // Single animation — no double-centering.
       final renderBox = context.findRenderObject() as RenderBox?;
-      final mapHeight = renderBox?.size.height ?? 400;
+      final topPadding = MediaQuery.of(context).padding.top;
+      final mapHeight = (renderBox?.size.height ?? 400) - topPadding;
       final metersPerPixel =
           (156543.03392 * math.cos(spot.lat! * math.pi / 180)) /
           math.pow(2, detailZoom);
@@ -129,7 +135,14 @@ class _MapPagePageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, _) {
+        final pending = spotsProvider.pendingSpotLocation;
+        if (pending != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _handlePendingSpotLocation(pending, spotsProvider);
+          });
+        }
         final sheetOpen = _selectedSpot != null;
+        final cardOpen = _pendingCoords != null && !sheetOpen;
         return LayoutBuilder(
           builder: (context, constraints) {
             final maxSheetHeight = constraints.maxHeight / 2;
@@ -151,7 +164,7 @@ class _MapPagePageState extends State<MapPage> {
                   },
                   onStyleLoadedCallback: _addGeoJsonMarkers,
                 ),
-                // GPS button + optional bottom sheet stacked at the bottom
+                // GPS button + optional bottom sheet/card stacked at the bottom
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -180,6 +193,28 @@ class _MapPagePageState extends State<MapPage> {
                             final spot = _selectedSpot!;
                             _closeSheet();
                             _openSpotDetails(spot);
+                          },
+                        ),
+                      if (cardOpen)
+                        _AddSpotCard(
+                          userRole: Provider.of<SettingsModel>(
+                            context,
+                            listen: false,
+                          ).userRole,
+                          onCancel: _dismissPendingSpot,
+                          onConfirm: () {
+                            final coords = _pendingCoords!;
+                            final title = _pendingTitle;
+                            _dismissPendingSpot();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AddSpots(
+                                  coordinates: coords,
+                                  title: title,
+                                  userPosition: widget.userPosition,
+                                ),
+                              ),
+                            );
                           },
                         ),
                     ],
@@ -227,6 +262,7 @@ class _MapPagePageState extends State<MapPage> {
         context,
         listen: false,
       ).isOffline;
+      _dismissPendingSpot();
       _animateToSpot(selectedSpot, withSheetOffset: true);
       _setSelectedSpot(selectedSpot, isOffline);
       return;
@@ -238,11 +274,7 @@ class _MapPagePageState extends State<MapPage> {
       _closeSheet();
       Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
     } else if (mounted) {
-      _showAddSpotDialog(
-        context,
-        clickCoordinates as LatLng,
-        widget.userPosition,
-      );
+      _showAddSpotCard(clickCoordinates as LatLng, null);
     }
   }
 
@@ -350,16 +382,55 @@ class _MapPagePageState extends State<MapPage> {
     };
   }
 
-  void _showAddSpotDialog(
-    BuildContext context,
-    LatLng coordinates,
-    Position? userPosition,
-  ) {
-    showDialog(
-      context: context,
-      builder: (_) =>
-          AddSpotDialog(coordinates: coordinates, userPosition: userPosition),
+  Future<void> _dismissPendingSpot() async {
+    if (_pendingMarker != null && _controller != null) {
+      await _controller!.removeSymbol(_pendingMarker!);
+      _pendingMarker = null;
+    }
+    if (mounted) {
+      setState(() {
+        _pendingCoords = null;
+        _pendingTitle = null;
+      });
+    }
+  }
+
+  Future<void> _handlePendingSpotLocation(
+    PendingSpotLocation pending,
+    SpotsProvider spotsProvider,
+  ) async {
+    spotsProvider.setPendingSpotLocation(null);
+    final controller = await _controllerCompleter.future;
+    await controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(pending.lat, pending.lng),
+          zoom: detailZoom,
+        ),
+      ),
+      duration: const Duration(milliseconds: 500),
     );
+    if (mounted) {
+      _showAddSpotCard(LatLng(pending.lat, pending.lng), pending.title);
+    }
+  }
+
+  Future<void> _showAddSpotCard(LatLng coordinates, String? title) async {
+    await _dismissPendingSpot();
+    _pendingMarker = await _controller?.addSymbol(
+      SymbolOptions(
+        geometry: coordinates,
+        iconImage: 'marker_40_active',
+        iconSize: 1.0,
+        iconAnchor: 'bottom',
+      ),
+    );
+    if (mounted) {
+      setState(() {
+        _pendingCoords = coordinates;
+        _pendingTitle = title;
+      });
+    }
   }
 
   void _showFeatureDisabled(BuildContext context) {
@@ -595,6 +666,102 @@ class _SpotBottomSheetState extends State<_SpotBottomSheet> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddSpotCard extends StatelessWidget {
+  final String? userRole;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  const _AddSpotCard({
+    required this.userRole,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final canAdd = allowedRoles.contains(userRole);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    return Material(
+      elevation: 8,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 10, 16, 12 + bottomPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Spacer(),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: onCancel,
+                      child: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Icon(
+                  Icons.add_location_alt_outlined,
+                  color: Colors.green[700],
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    canAdd
+                        ? 'Neuen Spot hier erstellen?'
+                        : 'Du musst eingeloggt und freigeschaltet sein, um Spots hinzuzufügen.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(onPressed: onCancel, child: const Text('Abbrechen')),
+                if (canAdd) ...[
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: onConfirm,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Erstellen'),
+                  ),
+                ],
+              ],
+            ),
+          ],
         ),
       ),
     );
