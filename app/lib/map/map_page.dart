@@ -119,7 +119,7 @@ class _MapPagePageState extends State<MapPage> {
       final metersPerPixel =
           (156543.03392 * math.cos(spot.lat! * math.pi / 180)) /
           math.pow(2, detailZoom);
-      final latOffset = (mapHeight / 8 * metersPerPixel) / 111320;
+      final latOffset = (mapHeight / 12 * metersPerPixel) / 111320;
       targetLat = spot.lat! - latOffset;
     }
 
