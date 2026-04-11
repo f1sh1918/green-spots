@@ -75,17 +75,9 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
     final token = Provider.of<SettingsModel>(context, listen: false).token;
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
-        List<Widget> imageWidgets = (widget.currentSpot.images ?? [])
+        final imageUrls = (widget.currentSpot.images ?? [])
             .where((url) => url is String && url.trim().isNotEmpty)
-            .map<Widget>(
-              (url) => Image.network(
-                url,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-              ),
-            )
+            .cast<String>()
             .toList();
 
         return PopScope(
@@ -133,12 +125,12 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (imageWidgets.isNotEmpty)
+                          if (imageUrls.isNotEmpty)
                             ImageCarousel(
-                              images: imageWidgets,
+                              imageUrls: imageUrls,
                               onImageTap: (index) => _showFullScreenCarousel(
                                 context,
-                                imageWidgets,
+                                imageUrls,
                                 index,
                               ),
                             ),
@@ -412,20 +404,17 @@ Widget _buildImagePlaceholder() {
 
 void _showFullScreenCarousel(
   BuildContext context,
-  List<Widget> images,
+  List<String> imageUrls,
   int initialIndex,
 ) {
-  final imageUrls = <String>[];
-  for (final w in images) {
-    if (w is Image && w.image is NetworkImage) {
-      imageUrls.add((w.image as NetworkImage).url);
-    }
-  }
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: '',
-    barrierColor: Colors.black,
+    barrierColor: Colors.transparent,
+    transitionDuration: const Duration(milliseconds: 300),
+    transitionBuilder: (ctx, anim, _, child) =>
+        FadeTransition(opacity: anim, child: child),
     pageBuilder: (context, _, __) =>
         _FullScreenGallery(imageUrls: imageUrls, initialIndex: initialIndex),
   );
@@ -448,6 +437,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
   late final PageController _pageController;
   late int _currentIndex;
   bool _isZoomed = false;
+  double _dragOffset = 0.0;
 
   @override
   void initState() {
@@ -462,63 +452,95 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
     super.dispose();
   }
 
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    setState(() => _dragOffset += details.delta.dy);
+  }
+
+  void _onVerticalDragEnd(DragEndDetails details) {
+    final velocity = details.velocity.pixelsPerSecond.dy.abs();
+    if (_dragOffset.abs() > 100 || velocity > 500) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _dragOffset = 0.0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            physics: _isZoomed
-                ? const NeverScrollableScrollPhysics()
-                : const ClampingScrollPhysics(),
-            itemCount: widget.imageUrls.length,
-            onPageChanged: (i) => setState(() => _currentIndex = i),
-            itemBuilder: (context, index) => _ZoomablePage(
-              imageUrl: widget.imageUrls[index],
-              onZoomChanged: (zoomed) => setState(() => _isZoomed = zoomed),
+    final opacity = (1.0 - _dragOffset.abs() / 250).clamp(0.0, 1.0);
+    return GestureDetector(
+      onVerticalDragUpdate: _isZoomed ? null : _onVerticalDragUpdate,
+      onVerticalDragEnd: _isZoomed ? null : _onVerticalDragEnd,
+      child: Opacity(
+        opacity: opacity,
+        child: Transform.translate(
+          offset: Offset(0, _dragOffset * 0.4),
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: Stack(
+              children: [
+                PageView.builder(
+                  controller: _pageController,
+                  physics: _isZoomed
+                      ? const NeverScrollableScrollPhysics()
+                      : const ClampingScrollPhysics(),
+                  itemCount: widget.imageUrls.length,
+                  onPageChanged: (i) => setState(() {
+                    _currentIndex = i;
+                    _isZoomed = false;
+                  }),
+                  itemBuilder: (context, index) => _ZoomablePage(
+                    imageUrl: widget.imageUrls[index],
+                    onZoomChanged: (zoomed) =>
+                        setState(() => _isZoomed = zoomed),
+                  ),
+                ),
+                if (widget.imageUrls.length > 1)
+                  Positioned(
+                    bottom: 50,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(widget.imageUrls.length, (i) {
+                        return GestureDetector(
+                          onTap: () => _pageController.animateToPage(
+                            i,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          ),
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(
+                                alpha: _currentIndex == i ? 0.9 : 0.4,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                Positioned(
+                  top: topPadding + 8,
+                  right: 10,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ],
             ),
           ),
-          if (widget.imageUrls.length > 1)
-            Positioned(
-              bottom: 50,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(widget.imageUrls.length, (i) {
-                  return GestureDetector(
-                    onTap: () => _pageController.animateToPage(
-                      i,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    ),
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(
-                          alpha: _currentIndex == i ? 0.9 : 0.4,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          Positioned(
-            top: topPadding + 8,
-            right: 10,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 30),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -553,6 +575,19 @@ class _ZoomablePageState extends State<_ZoomablePage> {
     }
   }
 
+  void _onDoubleTapDown(TapDownDetails details) {
+    if (_zoomed) {
+      _transformationController.value = Matrix4.identity();
+    } else {
+      final position = details.localPosition;
+      final x = -position.dx * 1.5;
+      final y = -position.dy * 1.5;
+      _transformationController.value = Matrix4.identity()
+        ..translateByDouble(x, y, 0, 1)
+        ..scaleByDouble(2.5, 2.5, 1, 1);
+    }
+  }
+
   @override
   void dispose() {
     _transformationController.removeListener(_onTransformChanged);
@@ -562,17 +597,25 @@ class _ZoomablePageState extends State<_ZoomablePage> {
 
   @override
   Widget build(BuildContext context) {
-    return InteractiveViewer(
-      transformationController: _transformationController,
-      minScale: 1.0,
-      maxScale: 4.0,
-      panEnabled: _zoomed,
-      child: Image.network(
-        widget.imageUrl,
-        fit: BoxFit.contain,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+    return GestureDetector(
+      onDoubleTapDown: _onDoubleTapDown,
+      onDoubleTap: () {},
+      child: InteractiveViewer(
+        transformationController: _transformationController,
+        minScale: 1.0,
+        maxScale: 4.0,
+        panEnabled: _zoomed,
+        scaleEnabled: true,
+        child: Hero(
+          tag: 'spot_image_${widget.imageUrl}',
+          child: Image.network(
+            widget.imageUrl,
+            fit: BoxFit.contain,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+          ),
+        ),
       ),
     );
   }
