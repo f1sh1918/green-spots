@@ -211,16 +211,23 @@ class SpotService {
         body: jsonEncode(spot.toJson()),
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        showSnackBar(context, 'Spot erfolgreich aktualisiert!', Colors.green);
         return true;
       } else {
         debugPrint(
           'Fehler beim Aktualisieren des Spots: ${response.statusCode}',
         );
         debugPrint('Response: ${response.body}');
+        showSnackBar(
+          context,
+          'Fehler beim Aktualisieren des Spots!',
+          Colors.red,
+        );
         return false;
       }
     } catch (e) {
       debugPrint('Fehler beim Aktualisieren des Spots: $e');
+      showSnackBar(context, 'Fehler beim Aktualisieren des Spots!', Colors.red);
       return false;
     }
   }
