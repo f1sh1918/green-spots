@@ -12,6 +12,7 @@ import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/messenger_utils.dart';
 import 'package:spots/utils/string_utils.dart';
 import 'package:spots/utils/version_comparator.dart';
+import 'package:spots/auth/widgets/registration_page.dart';
 import 'package:spots/widgets/AlertBox.dart';
 import 'package:spots/widgets/outlined_button_spinner.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -156,50 +157,64 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _isLoading
-            ? _showSpinner()
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _isLoggedIn ? _buildLoggedInView() : _buildLoginForm(),
-                  Column(
-                    children: [
-                      Consumer<SpotsProvider>(
-                        builder: (context, spotsProvider, _) {
-                          return Column(
-                            children: [
-                              if (spotsProvider.isOffline)
-                                _buildOfflineSection(context, spotsProvider),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text(
-                                    'Version: $_version',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
+      body: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 32),
+            child: IntrinsicHeight(
+              child: _isLoading
+                  ? _showSpinner()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _isLoggedIn ? _buildLoggedInView() : _buildLoginForm(),
+                        const Spacer(),
+                        Consumer<SpotsProvider>(
+                          builder: (context, spotsProvider, _) {
+                            return Column(
+                              children: [
+                                if (spotsProvider.isOffline)
+                                  _buildOfflineSection(context, spotsProvider),
+                                const SizedBox(height: 8),
+                                Card(
+                                  elevation: 2,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Version: $_version',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        if (!spotsProvider.isOffline)
+                                          OutlinedButtonSpinner(
+                                            isLoading: _isCheckingUpdates,
+                                            onPressed: () =>
+                                                _checkUpdate(context),
+                                            buttonText: 'Nach Updates suchen',
+                                          ),
+                                      ],
                                     ),
                                   ),
-                                  if (!spotsProvider.isOffline)
-                                    OutlinedButtonSpinner(
-                                      isLoading: _isCheckingUpdates,
-                                      onPressed: () => _checkUpdate(context),
-                                      buttonText: 'Nach Updates suchen',
-                                    ),
-                                ],
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -318,53 +333,37 @@ class _SettingsState extends State<Settings> {
             ),
 
           // Login Button
-          SizedBox(
-            height: 48,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _login,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text(
-                      'Anmelden',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+          FilledButton.icon(
+            onPressed: _isLoading ? null : _login,
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            icon: _isLoading
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
-            ),
+                  )
+                : const Icon(Icons.login),
+            label: const Text('Anmelden'),
           ),
+          const SizedBox(height: 8),
 
-          // Register
-          SizedBox(
-            height: 48,
-            child: TextButton(
-              onPressed: _register,
-              child: const Text(
-                'Registrieren',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
+          // Register + Lost Password
+          TextButton.icon(
+            onPressed: _register,
+            icon: const Icon(Icons.person_add_outlined),
+            label: const Text('Registrieren'),
           ),
-          SizedBox(
-            height: 48,
-            child: TextButton(
-              onPressed: _lostPassword,
-              child: const Text(
-                'Passwort vergessen',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
+          TextButton.icon(
+            onPressed: _lostPassword,
+            icon: const Icon(Icons.lock_reset_outlined),
+            label: const Text('Passwort vergessen'),
           ),
         ],
       ),
@@ -466,24 +465,20 @@ class _SettingsState extends State<Settings> {
         if (!allowedRoles.contains(_userRole)) ...[
           AlertBox(
             message:
-                'Dein Account ist noch nicht freigeschaltet. Erst nach der Freischaltung kannst du Spots anlegen und editieren.',
+                'Dein Account muss noch von einem Admin freigeschaltet werden. Erst nach der Freischaltung kannst du Spots anlegen und editieren.',
           ),
           const SizedBox(height: 24),
         ],
         // Logout Button
-        SizedBox(
-          height: 48,
-          child: ElevatedButton(
-            onPressed: () => _logout(context, false),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text(
-              'Abmelden',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+        FilledButton.icon(
+          onPressed: () => _logout(context, false),
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
           ),
+          icon: const Icon(Icons.logout),
+          label: const Text('Abmelden'),
         ),
       ],
     );
@@ -534,9 +529,10 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  void _register() async {
-    final Uri url = Uri.parse('$baseUrl/wp-login.php?action=register');
-    launchUrl(url, mode: LaunchMode.externalApplication);
+  void _register() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const RegistrationPage()));
   }
 
   void _lostPassword() async {

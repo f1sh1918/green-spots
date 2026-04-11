@@ -583,325 +583,336 @@ class _AddSpotsState extends State<AddSpots> {
           ],
         ),
         body: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Allgemein ──────────────────────────────────────
-                  _FormCard(
-                    label: 'Allgemein',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: _titleController,
-                          decoration: const InputDecoration(
-                            labelText: 'Titel *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Titel ist erforderlich';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _noteController,
-                          decoration: const InputDecoration(
-                            labelText: 'Notiz',
-                            hintText:
-                                'Beschreibung, Hinweise wie Entfernung zu Wasserstelle, wann frequentiert...',
-                            border: OutlineInputBorder(),
-                          ),
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _lastVisitedController,
-                          readOnly: true,
-                          enableInteractiveSelection: false,
-                          decoration: InputDecoration(
-                            labelText: 'Zuletzt besucht',
-                            border: const OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.calendar_today),
-                              tooltip: 'Datum auswählen',
-                              onPressed: _pickDate,
-                            ),
-                          ),
-                          onTap: _pickDate,
-                        ),
-                      ],
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              inputDecorationTheme: Theme.of(context).inputDecorationTheme
+                  .copyWith(
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green, width: 2),
                     ),
                   ),
-                  const SizedBox(height: 12),
-
-                  // ── Standort ───────────────────────────────────────
-                  _FormCard(
-                    label: 'Standort',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _latController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Breitengrad *',
-                                  border: OutlineInputBorder(),
-                                ),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                      signed: true,
-                                    ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
-                                  ),
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Breitengrad erforderlich';
-                                  }
-                                  return null;
-                                },
-                              ),
+            ),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Allgemein ──────────────────────────────────────
+                    _FormCard(
+                      label: 'Allgemein',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: _titleController,
+                            decoration: const InputDecoration(
+                              labelText: 'Titel *',
+                              border: OutlineInputBorder(),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _longController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Längengrad *',
-                                  border: OutlineInputBorder(),
-                                ),
-                                keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true,
-                                  signed: true,
-                                ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
-                                  ),
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Längengrad erforderlich';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _updateUserPosition,
-                          icon: const Icon(Icons.gps_fixed),
-                          label: const Text('Aktuelle Position verwenden'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ── Details ────────────────────────────────────────
-                  _FormCard(
-                    label: 'Details',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${securityLabels[_secure.toInt()]})',
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => showSecurityInfoDialog(context),
-                              child: Icon(
-                                Icons.help_outline,
-                                size: 18,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                        Slider(
-                          value: _secure,
-                          min: 1.0,
-                          max: 5.0,
-                          divisions: 8,
-                          label: securityLabels[_secure.toInt()],
-                          onChanged: (value) => setState(() => _secure = value),
-                        ),
-                        const SizedBox(height: 4),
-                        Text('Platz: $_space (Anzahl kleiner Zelte)'),
-                        Slider(
-                          value: _space.toDouble(),
-                          min: 1,
-                          max: 6,
-                          divisions: 5,
-                          label: _space.toString(),
-                          onChanged: (value) =>
-                              setState(() => _space = value.toInt()),
-                        ),
-                        const Divider(height: 8),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Baden möglich'),
-                          value: _swim,
-                          onChanged: (value) => setState(() => _swim = value),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Feuer erlaubt'),
-                          value: _fire,
-                          onChanged: (value) => setState(() => _fire = value),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          initialValue: _waterquality,
-                          decoration: const InputDecoration(
-                            labelText: 'Wasserqualität',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: _waterQualityOptions.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) => setState(
-                            () => _waterquality = newValue ?? 'keines',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ── Besonderheiten ─────────────────────────────────
-                  _FormCard(
-                    label: 'Besonderheiten',
-                    child: Column(
-                      children: _availableSpecials.map((special) {
-                        return CheckboxListTile(
-                          visualDensity: VisualDensity.compact,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(special),
-                          value: _selectedSpecials.contains(special),
-                          onChanged: (bool? value) {
-                            setState(() {
-                              if (value == true) {
-                                _selectedSpecials.add(special);
-                              } else {
-                                _selectedSpecials.remove(special);
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Titel ist erforderlich';
                               }
-                            });
-                          },
-                          controlAffinity: ListTileControlAffinity.leading,
-                        );
-                      }).toList(),
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _noteController,
+                            decoration: const InputDecoration(
+                              labelText: 'Notiz',
+                              hintText:
+                                  'Beschreibung, Hinweise wie Entfernung zu Wasserstelle, wann frequentiert...',
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _lastVisitedController,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            decoration: InputDecoration(
+                              labelText: 'Zuletzt besucht',
+                              border: const OutlineInputBorder(),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.calendar_today),
+                                tooltip: 'Datum auswählen',
+                                onPressed: _pickDate,
+                              ),
+                            ),
+                            onTap: _pickDate,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // ── Bilder ─────────────────────────────────────────
-                  _FormCard(
-                    label: 'Bilder',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (Provider.of<SpotsProvider>(
-                          context,
-                          listen: false,
-                        ).isOffline)
+                    // ── Standort ───────────────────────────────────────
+                    _FormCard(
+                      label: 'Standort',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Row(
                             children: [
-                              Icon(
-                                Icons.wifi_off,
-                                size: 16,
-                                color: Colors.orange.shade700,
-                              ),
-                              const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  'Bilder können im Offline-Modus nicht hinzugefügt werden.',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.orange.shade800,
+                                child: TextFormField(
+                                  controller: _latController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Breitengrad *',
+                                    border: OutlineInputBorder(),
                                   ),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                        signed: true,
+                                      ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
+                                    ),
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Breitengrad erforderlich';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _longController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Längengrad *',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true,
+                                    signed: true,
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'^-?\d{1,3}\.?\d{0,6}$'),
+                                    ),
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Längengrad erforderlich';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ),
                             ],
-                          )
-                        else ...[
+                          ),
+                          const SizedBox(height: 12),
                           OutlinedButton.icon(
-                            key: _imagesSectionKey,
-                            onPressed: totalPicturesCount >= 3
-                                ? null
-                                : _pickImages,
-                            icon: const Icon(Icons.add_a_photo),
-                            label: Text(
-                              totalPicturesCount >= 3
-                                  ? 'Maximum erreicht (3/3)'
-                                  : 'Bilder hinzufügen ($totalPicturesCount/3)',
+                            onPressed: _updateUserPosition,
+                            icon: const Icon(Icons.gps_fixed),
+                            label: const Text('Aktuelle Position verwenden'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // ── Details ────────────────────────────────────────
+                    _FormCard(
+                      label: 'Details',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Sicherheit: ${_secure.toStringAsFixed(1)}/5 (${securityLabels[_secure.toInt()]})',
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => showSecurityInfoDialog(context),
+                                child: Icon(
+                                  Icons.help_outline,
+                                  size: 18,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                          Slider(
+                            value: _secure,
+                            min: 1.0,
+                            max: 5.0,
+                            divisions: 8,
+                            label: securityLabels[_secure.toInt()],
+                            onChanged: (value) =>
+                                setState(() => _secure = value),
+                          ),
+                          const SizedBox(height: 4),
+                          Text('Platz: $_space (Anzahl kleiner Zelte)'),
+                          Slider(
+                            value: _space.toDouble(),
+                            min: 1,
+                            max: 6,
+                            divisions: 5,
+                            label: _space.toString(),
+                            onChanged: (value) =>
+                                setState(() => _space = value.toInt()),
+                          ),
+                          const Divider(height: 8),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Baden möglich'),
+                            value: _swim,
+                            onChanged: (value) => setState(() => _swim = value),
+                          ),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Feuer erlaubt'),
+                            value: _fire,
+                            onChanged: (value) => setState(() => _fire = value),
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            initialValue: _waterquality,
+                            decoration: const InputDecoration(
+                              labelText: 'Wasserqualität',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: _waterQualityOptions.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) => setState(
+                              () => _waterquality = newValue ?? 'keines',
                             ),
                           ),
-                          if (widget.existingSpot != null) ...[
-                            const SizedBox(height: 12),
-                            _buildExistingThumbnails(
-                              widget.existingSpot?.images,
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // ── Besonderheiten ─────────────────────────────────
+                    _FormCard(
+                      label: 'Besonderheiten',
+                      child: Column(
+                        children: _availableSpecials.map((special) {
+                          return CheckboxListTile(
+                            visualDensity: VisualDensity.compact,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(special),
+                            value: _selectedSpecials.contains(special),
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value == true) {
+                                  _selectedSpecials.add(special);
+                                } else {
+                                  _selectedSpecials.remove(special);
+                                }
+                              });
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // ── Bilder ─────────────────────────────────────────
+                    _FormCard(
+                      label: 'Bilder',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (Provider.of<SpotsProvider>(
+                            context,
+                            listen: false,
+                          ).isOffline)
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.wifi_off,
+                                  size: 16,
+                                  color: Colors.orange.shade700,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Bilder können im Offline-Modus nicht hinzugefügt werden.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.orange.shade800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else ...[
+                            OutlinedButton.icon(
+                              key: _imagesSectionKey,
+                              onPressed: totalPicturesCount >= 3
+                                  ? null
+                                  : _pickImages,
+                              icon: const Icon(Icons.add_a_photo),
+                              label: Text(
+                                totalPicturesCount >= 3
+                                    ? 'Maximum erreicht (3/3)'
+                                    : 'Bilder hinzufügen ($totalPicturesCount/3)',
+                              ),
                             ),
-                          ],
-                          if (_selectedImages.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildImageThumbnails(),
+                            if (widget.existingSpot != null) ...[
+                              const SizedBox(height: 12),
+                              _buildExistingThumbnails(
+                                widget.existingSpot?.images,
+                              ),
+                            ],
+                            if (_selectedImages.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              _buildImageThumbnails(),
+                            ],
                           ],
                         ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Submit ─────────────────────────────────────────
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _isLoading ? null : _submitSpot,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              widget.queuedSpotId != null
-                                  ? 'Entwurf speichern'
-                                  : widget.existingSpot != null
-                                  ? 'Spot speichern'
-                                  : 'Spot hinzufügen',
-                            ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+
+                    // ── Submit ─────────────────────────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _isLoading ? null : _submitSpot,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                widget.queuedSpotId != null
+                                    ? 'Entwurf speichern'
+                                    : widget.existingSpot != null
+                                    ? 'Spot speichern'
+                                    : 'Spot hinzufügen',
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

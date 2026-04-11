@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/app.dart';
 import 'package:spots/auth/models/settings.dart';
+import 'package:spots/auth/widgets/registration_page.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -174,7 +175,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: () => _finish(initialIndex: 2),
+                            onPressed: () async {
+                              await _finish();
+                              if (!mounted) return;
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const RegistrationPage(),
+                                ),
+                              );
+                            },
                             child: const Text(
                               'Registrierung',
                               style: TextStyle(
