@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:spots/auth/services/auth.dart';
@@ -106,47 +107,68 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
+        if (spotsProvider.pendingSpotLocation != null && _selectedIndex != 0) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => setState(() => _selectedIndex = 0),
+          );
+        }
+        final isMapTab = _selectedIndex == 0;
         return Scaffold(
-          appBar: AppBar(
-            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: _selectedIndex == 1
-                ? TextField(
-                    controller: _searchController,
-                    onChanged: (value) => setState(() => _searchQuery = value),
-                    decoration: InputDecoration(
-                      hintText: 'Tippen, um zu suchen...',
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  )
-                : Text(['Karte', 'Spots', 'Einstellungen'][_selectedIndex]),
-            actions: [
-              if (_selectedIndex == 1) ...[
-                if (_searchQuery.isNotEmpty)
-                  IconButton(
-                    onPressed: () => setState(() {
-                      _searchController.clear();
-                      _searchQuery = '';
-                    }),
-                    icon: const Icon(Icons.close),
-                  ),
-                Icon(Icons.search),
-                const SizedBox(width: 4),
-                IconButton(
-                  onPressed: spotsProvider.isLoading ? null : _handleRefresh,
-                  icon: spotsProvider.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+          extendBodyBehindAppBar: isMapTab,
+          appBar: isMapTab
+              ? AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  toolbarHeight: 0,
+                  systemOverlayStyle: SystemUiOverlayStyle.dark,
+                )
+              : AppBar(
+                  backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                  title: _selectedIndex == 1
+                      ? TextField(
+                          controller: _searchController,
+                          onChanged: (value) =>
+                              setState(() => _searchQuery = value),
+                          decoration: InputDecoration(
+                            hintText: 'Tippen, um zu suchen...',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          style: Theme.of(context).textTheme.titleMedium,
                         )
-                      : const Icon(Icons.refresh),
+                      : Text(
+                          ['Karte', 'Spots', 'Einstellungen'][_selectedIndex],
+                        ),
+                  actions: [
+                    if (_selectedIndex == 1) ...[
+                      if (_searchQuery.isNotEmpty)
+                        IconButton(
+                          onPressed: () => setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          }),
+                          icon: const Icon(Icons.close),
+                        ),
+                      Icon(Icons.search),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        onPressed: spotsProvider.isLoading
+                            ? null
+                            : _handleRefresh,
+                        icon: spotsProvider.isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.refresh),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-            ],
-          ),
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Theme.of(context).colorScheme.onPrimary,
             items: const <BottomNavigationBarItem>[

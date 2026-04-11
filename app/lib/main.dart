@@ -2,17 +2,14 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
-import 'package:spots/add/add_spots.dart';
 import 'package:spots/constants/constants.dart';
 import 'package:spots/routes.dart';
 import 'package:spots/settings/provider/settings_provider.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/user/user_service.dart';
 import 'package:spots/utils/geo_link_helper.dart';
-import 'package:spots/utils/location_helper.dart';
 import 'package:spots/utils/messenger_utils.dart';
 
 import 'auth/models/settings.dart';
@@ -189,17 +186,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return;
       }
       if (deepLinkObject['lat'] != null && deepLinkObject['lng'] != null) {
-        Map<String, dynamic>? userPosition = await loadUserPosition(context);
-
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (_) => AddSpots(
-              coordinates: LatLng(deepLinkObject['lat'], deepLinkObject['lng']),
-              title: deepLinkObject['title'],
-              userPosition: userPosition?['position'],
-            ),
+        final spotsProvider = Provider.of<SpotsProvider>(
+          context,
+          listen: false,
+        );
+        spotsProvider.setPendingSpotLocation(
+          PendingSpotLocation(
+            lat: deepLinkObject['lat'],
+            lng: deepLinkObject['lng'],
+            title: deepLinkObject['title'],
           ),
         );
+        navigatorKey.currentState?.popUntil((route) => route.isFirst);
       } else {
         showSnackBar(context, 'Ungültiger Link: $uri', Colors.red);
       }

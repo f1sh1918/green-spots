@@ -69,7 +69,7 @@ class _AddSpotsState extends State<AddSpots> {
   final List<String> _selectedSpecials = [];
 
   // Image handling
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
 
   // Form Values
   double _secure = 1.0;

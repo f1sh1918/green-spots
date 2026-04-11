@@ -8,15 +8,14 @@ Future<Map<String, dynamic>?> loadUserPosition(BuildContext context) async {
       requestIfNotGranted: true,
     );
 
-    if (requestedPosition != null) {
-      return {
-        'position': requestedPosition.position,
-        'permissionGiven': true,
-        'locationStatus': requestedPosition.locationStatus,
-      };
-    }
+    return {
+      'position': requestedPosition.position,
+      'permissionGiven': true,
+      'locationStatus': requestedPosition.locationStatus,
+    };
   } catch (e) {
     debugPrint('Fehler beim Laden der Position: $e');
     return {'position': null, 'permissionGiven': false, 'locationStatus': null};
   }
+  return null;
 }
