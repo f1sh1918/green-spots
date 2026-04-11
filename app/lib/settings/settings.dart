@@ -488,6 +488,9 @@ class _SettingsState extends State<Settings> {
           onPressed: () => Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const ProfileEditPage())),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
           icon: const Icon(Icons.manage_accounts_outlined),
           label: const Text('Profil bearbeiten'),
         ),

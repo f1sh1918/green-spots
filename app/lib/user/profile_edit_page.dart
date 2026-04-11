@@ -117,12 +117,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 )
-              : TextButton(
+              : IconButton(
                   onPressed: _save,
-                  child: const Text(
-                    'Speichern',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  icon: const Icon(Icons.check),
+                  tooltip: 'Speichern',
                 ),
         ],
       ),
