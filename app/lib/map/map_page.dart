@@ -58,9 +58,7 @@ class _MapPagePageState extends State<MapPage> {
       final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
       _lastFocusCount = spotsProvider.focusUserLocationCount;
       final activeSpot = spotsProvider.activeSpot;
-      if (activeSpot == null) {
-        _animateToUserPosition(widget.userPosition);
-      } else {
+      if (activeSpot != null) {
         _setSelectedSpot(activeSpot, spotsProvider.isOffline);
         _animateToSpot(activeSpot, withSheetOffset: true);
       }
@@ -86,6 +84,7 @@ class _MapPagePageState extends State<MapPage> {
       _selectedSpot = null;
       _commentCount = null;
     });
+    Provider.of<SpotsProvider>(context, listen: false).setActiveSpot(null);
   }
 
   Future<void> _animateToUserPosition(Position? position) async {
@@ -215,7 +214,9 @@ class _MapPagePageState extends State<MapPage> {
                         ),
                       if (cardOpen)
                         _AddSpotCard(
-                          userRole: Provider.of<SettingsModel>(context).userRole,
+                          userRole: Provider.of<SettingsModel>(
+                            context,
+                          ).userRole,
                           onCancel: _dismissPendingSpot,
                           onConfirm: () {
                             final coords = _pendingCoords!;
