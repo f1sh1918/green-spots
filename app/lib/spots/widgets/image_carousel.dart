@@ -52,9 +52,15 @@ class ImageCarouselState extends State<ImageCarousel> {
           width: double.infinity,
           height: double.infinity,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            color: Colors.green.shade100,
-            child: Icon(Icons.park, size: 64, color: Colors.green.shade400),
+          errorBuilder: (_, __, ___) => SizedBox.expand(
+            child: ColoredBox(
+              color: Colors.green.shade100,
+              child: Icon(
+                Icons.broken_image,
+                size: 64,
+                color: Colors.green.shade300,
+              ),
+            ),
           ),
         ),
       );

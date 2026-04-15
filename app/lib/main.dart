@@ -39,7 +39,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     initDeepLinks();
-    checkUserRole();
+    WidgetsBinding.instance.addPostFrameCallback((_) => checkUserRole());
     _initConnectivityListener();
   }
 
@@ -210,29 +210,52 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   Future<void> checkUserRole() async {
     final context = navigatorKey.currentContext;
-    if (context != null) {
-      final settings = Provider.of<SettingsModel>(context, listen: false);
-      final userId = settings.userId;
-      if (userId != null && !allowedRoles.contains(settings.userRole)) {
-        final newRole = await _userService.getUserRole(
-          userId: userId,
-          context: context,
-          token: settings.token,
-        );
-        if (context.mounted) {
-          Provider.of<SettingsModel>(
-            context,
-            listen: false,
-          ).setUserRole(userRole: newRole.role);
-          if (allowedRoles.contains(newRole.role)) {
-            showSnackBar(
-              context,
-              'Dein Account wurde aktiviert!',
-              Colors.green,
-            );
-          }
-        }
-      }
+    if (context == null) return;
+
+    final settings = Provider.of<SettingsModel>(context, listen: false);
+    final userId = settings.userId;
+    if (userId == null) return;
+
+    final result = await _userService.getUserRole(
+      userId: userId,
+      context: context,
+      token: settings.token,
+      silent: true,
+    );
+
+    // Network / socket error — keep existing role unchanged
+    if (result == null || !context.mounted) return;
+
+    // Empty role means the server responded but the user no longer exists
+    if (result.role.isEmpty) {
+      showSnackBar(
+        context,
+        'Account nicht mehr verfügbar. Du wirst abgemeldet.',
+        Colors.red,
+        const Duration(seconds: 4),
+      );
+      await Provider.of<SettingsModel>(context, listen: false).clearUserData();
+      return;
+    }
+
+    final oldRole = settings.userRole;
+    final newRole = result.role;
+    if (oldRole == newRole) return;
+
+    Provider.of<SettingsModel>(context, listen: false).setUserRole(
+      userRole: newRole,
+    );
+
+    if (!allowedRoles.contains(oldRole) && allowedRoles.contains(newRole)) {
+      showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);
+    } else if (allowedRoles.contains(oldRole) &&
+        !allowedRoles.contains(newRole)) {
+      showSnackBar(
+        context,
+        'Deine Berechtigungen wurden geändert.',
+        Colors.orange,
+        const Duration(seconds: 4),
+      );
     }
   }
 }

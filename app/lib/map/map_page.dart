@@ -215,10 +215,7 @@ class _MapPagePageState extends State<MapPage> {
                         ),
                       if (cardOpen)
                         _AddSpotCard(
-                          userRole: Provider.of<SettingsModel>(
-                            context,
-                            listen: false,
-                          ).userRole,
+                          userRole: Provider.of<SettingsModel>(context).userRole,
                           onCancel: _dismissPendingSpot,
                           onConfirm: () {
                             final coords = _pendingCoords!;

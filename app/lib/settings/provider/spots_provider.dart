@@ -25,6 +25,7 @@ class SpotsProvider extends ChangeNotifier {
   bool _isOffline = false;
   Spot? _activeSpot;
   List<Map<String, dynamic>> _queuedSpots = [];
+  bool _isProcessingQueue = false;
   PendingSpotLocation? _pendingSpotLocation;
   Position? _userPosition;
   StreamSubscription<Position>? _positionSubscription;
@@ -113,6 +114,7 @@ class SpotsProvider extends ChangeNotifier {
 
   Future<void> removeFromQueue(String queueId) async {
     await SpotCache.dequeueSpot(queueId);
+    await SpotCache.deleteQueuedImages(queueId);
     _queuedSpots = await SpotCache.loadQueue();
     notifyListeners();
   }
@@ -123,35 +125,56 @@ class SpotsProvider extends ChangeNotifier {
     BuildContext context,
     Position? userPosition,
   ) async {
+    if (_isProcessingQueue) return _queuedSpots.isEmpty;
     if (_queuedSpots.isEmpty) return true;
+    _isProcessingQueue = true;
 
     int processed = 0;
     final queue = List<Map<String, dynamic>>.from(_queuedSpots);
 
-    for (final item in queue) {
-      final queueId = item['_queueId'] as String;
-      final spotData = Map<String, dynamic>.from(item)..remove('_queueId');
-      try {
-        final spot = AddSpot.fromJson(spotData);
-        final success = await _service.addSpot(spot, token, context);
-        if (success) {
+    try {
+      for (final item in queue) {
+        final queueId = item['_queueId'] as String;
+        final spotData = Map<String, dynamic>.from(item)
+          ..remove('_queueId')
+          ..remove('_imagePaths');
+        final imagePaths =
+            (item['_imagePaths'] as List<dynamic>?)?.cast<String>() ?? [];
+        try {
+          final spot = AddSpot.fromJson(spotData);
+          final images = imagePaths
+              .map((p) => File(p))
+              .where((f) => f.existsSync())
+              .toList();
+          final success = await _service.addSpot(
+            spot,
+            token,
+            context,
+            images: images.isNotEmpty ? images : null,
+          );
+          if (success) {
+            await SpotCache.dequeueSpot(queueId);
+            await SpotCache.deleteQueuedImages(queueId);
+            processed++;
+          }
+        } on SocketException {
+          break; // still offline
+        } catch (_) {
+          // malformed entry – remove it
           await SpotCache.dequeueSpot(queueId);
+          await SpotCache.deleteQueuedImages(queueId);
           processed++;
         }
-      } on SocketException {
-        break; // still offline
-      } catch (_) {
-        // malformed entry – remove it
-        await SpotCache.dequeueSpot(queueId);
-        processed++;
       }
-    }
 
-    _queuedSpots = await SpotCache.loadQueue();
-    notifyListeners();
+      _queuedSpots = await SpotCache.loadQueue();
+      notifyListeners();
 
-    if (processed > 0 && context.mounted) {
-      await refresh(context, userPosition);
+      if (processed > 0 && context.mounted) {
+        await refresh(context, userPosition);
+      }
+    } finally {
+      _isProcessingQueue = false;
     }
 
     return _queuedSpots.isEmpty;

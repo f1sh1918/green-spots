@@ -40,10 +40,7 @@ class _SpotsState extends State<Spots> {
 
   @override
   Widget build(BuildContext context) {
-    final userRole = Provider.of<SettingsModel>(
-      context,
-      listen: false,
-    ).userRole;
+    final userRole = Provider.of<SettingsModel>(context).userRole;
     final canUserAddSpots = allowedRoles.contains(userRole);
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
@@ -163,8 +160,14 @@ class _SpotsState extends State<Spots> {
                               ? Image.network(
                                   spot.thumbnail!,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      _buildImagePlaceholder(),
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: Colors.green.shade100,
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 36,
+                                      color: Colors.green.shade300,
+                                    ),
+                                  ),
                                 )
                               : _buildImagePlaceholder(),
                         ),
