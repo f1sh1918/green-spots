@@ -181,15 +181,17 @@ class _MapPagePageState extends State<MapPage> {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: LocationButton(
                           followUserLocation: widget.locationPermissionGiven,
-                          bringCameraToUser: () =>
-                              _animateToUserPosition(widget.userPosition),
+                          bringCameraToUser: () => _animateToUserPosition(
+                            spotsProvider.userPosition ?? widget.userPosition,
+                          ),
                         ),
                       ),
                       if (sheetOpen)
                         _SpotBottomSheet(
                           spot: _selectedSpot!,
                           maxHeight: maxSheetHeight,
-                          userPosition: widget.userPosition,
+                          userPosition:
+                              spotsProvider.userPosition ?? widget.userPosition,
                           isOffline: spotsProvider.isOffline,
                           commentCount: _commentCount,
                           onClose: _closeSheet,

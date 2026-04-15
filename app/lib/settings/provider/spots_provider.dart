@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -25,6 +26,8 @@ class SpotsProvider extends ChangeNotifier {
   Spot? _activeSpot;
   List<Map<String, dynamic>> _queuedSpots = [];
   PendingSpotLocation? _pendingSpotLocation;
+  Position? _userPosition;
+  StreamSubscription<Position>? _positionSubscription;
 
   List<Spot> get spots => _spots;
   bool get isLoading => _isLoading;
@@ -33,6 +36,32 @@ class SpotsProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get queuedSpots => _queuedSpots;
   int get queuedSpotsCount => _queuedSpots.length;
   PendingSpotLocation? get pendingSpotLocation => _pendingSpotLocation;
+  Position? get userPosition => _userPosition;
+
+  void setUserPosition(Position? position) {
+    _userPosition = position;
+    notifyListeners();
+  }
+
+  void startLocationTracking() {
+    _positionSubscription?.cancel();
+    _positionSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          ),
+        ).listen((position) {
+          _userPosition = position;
+          notifyListeners();
+        });
+  }
+
+  @override
+  void dispose() {
+    _positionSubscription?.cancel();
+    super.dispose();
+  }
 
   void setActiveSpot(Spot? activeSpot) {
     _activeSpot = activeSpot;
