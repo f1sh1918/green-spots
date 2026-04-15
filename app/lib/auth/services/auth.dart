@@ -50,7 +50,9 @@ class AuthService {
           );
           await _saveToken(authResult.token, settingsModel);
           await _saveUserInfo(authResult, settingsModel);
-          await settingsModel.setUserRole(userRole: userRole?.role ?? 'subscriber');
+          await settingsModel.setUserRole(
+            userRole: userRole?.role ?? 'subscriber',
+          );
         }
         // TODO find a way to make it shorter
         return AuthResult(

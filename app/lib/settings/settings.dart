@@ -114,7 +114,9 @@ class _SettingsState extends State<Settings> {
             _userRole = result.userRole ?? 'unbekannt';
             _usernameController.clear();
             _passwordController.clear();
-            _loginExpires = _authService.loginExpirationDate().toIso8601String();
+            _loginExpires = _authService
+                .loginExpirationDate()
+                .toIso8601String();
           });
           showSnackBar(
             context,

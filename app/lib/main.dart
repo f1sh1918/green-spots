@@ -242,9 +242,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final newRole = result.role;
     if (oldRole == newRole) return;
 
-    Provider.of<SettingsModel>(context, listen: false).setUserRole(
-      userRole: newRole,
-    );
+    Provider.of<SettingsModel>(
+      context,
+      listen: false,
+    ).setUserRole(userRole: newRole);
 
     if (!allowedRoles.contains(oldRole) && allowedRoles.contains(newRole)) {
       showSnackBar(context, 'Dein Account wurde aktiviert!', Colors.green);

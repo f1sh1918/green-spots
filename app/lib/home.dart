@@ -52,15 +52,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
-    final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
     final communityProvider = Provider.of<CommunityProvider>(
       context,
       listen: false,
     );
-    // Map tab → zur aktuellen Position animieren
-    if (_selectedIndex == 0) {
-      spotsProvider.focusUserLocation();
-    }
     // Community tab → Daten neu laden
     if (_selectedIndex == 2 && communityProvider.token != null) {
       communityProvider.load(force: true);
