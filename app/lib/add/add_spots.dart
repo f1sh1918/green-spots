@@ -204,6 +204,11 @@ class _AddSpotsState extends State<AddSpots> {
   Future<void> _handleBackNavigation() async {
     final shouldExit = await _showExitConfirmDialog();
     if (shouldExit && mounted) {
+      for (final file in _selectedImages) {
+        try {
+          if (await file.exists()) await file.delete();
+        } catch (_) {}
+      }
       Navigator.of(context).pop();
     }
   }
@@ -512,6 +517,13 @@ class _AddSpotsState extends State<AddSpots> {
       setState(() {
         _isLoading = false;
       });
+
+      // Temp-Dateien löschen (resized_*.jpg)
+      for (final file in _selectedImages) {
+        try {
+          if (await file.exists()) await file.delete();
+        } catch (_) {}
+      }
 
       if (success) {
         if (mounted) {

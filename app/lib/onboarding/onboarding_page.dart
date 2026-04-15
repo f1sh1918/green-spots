@@ -45,7 +45,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         colors: [Color(0xFF4E342E), Color(0xFF8D6E63)],
       ),
       icon: Icons.delete_outline,
-      title: 'Leave no trace',
+      title: 'Hinterlasse keine Spuren',
       body:
           'Hinterlasse keinen Müll und nimm alles wieder mit. Respektiere die Natur, halte Abstände zu Gewässern und Wildtieren und vermeide Lärm. Nur so bleiben diese Plätze für alle erhalten.',
     ),
