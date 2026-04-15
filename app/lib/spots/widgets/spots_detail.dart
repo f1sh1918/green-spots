@@ -79,7 +79,6 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
             .where((url) => url is String && url.trim().isNotEmpty)
             .cast<String>()
             .toList();
-
         return PopScope(
           canPop: true,
           onPopInvokedWithResult: (didPop, _) {
@@ -101,7 +100,7 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                   ),
                   icon: Icon(Icons.edit),
                 ),
-                if (token != null) ...[
+                if (token != null && !spotsProvider.isOffline) ...[
                   IconButton(
                     onPressed: () => _deleteSpot(
                       widget.currentSpot,
@@ -393,15 +392,6 @@ Future<void> _launchMap(double? lat, double? long, BuildContext context) async {
   }
 }
 
-Widget _buildImagePlaceholder() {
-  return Container(
-    width: double.infinity,
-    height: double.infinity,
-    color: Colors.green.shade100,
-    child: Icon(Icons.park, size: 64, color: Colors.green.shade400),
-  );
-}
-
 void _showFullScreenCarousel(
   BuildContext context,
   List<String> imageUrls,
@@ -613,7 +603,14 @@ class _ZoomablePageState extends State<_ZoomablePage> {
             fit: BoxFit.contain,
             width: double.infinity,
             height: double.infinity,
-            errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+            errorBuilder: (_, __, ___) => Container(
+              color: Colors.green.shade100,
+              child: Icon(
+                Icons.broken_image,
+                size: 64,
+                color: Colors.green.shade300,
+              ),
+            ),
           ),
         ),
       ),

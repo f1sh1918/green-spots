@@ -115,7 +115,7 @@ class SettingsModel extends ChangeNotifier {
   String? get userRole => _getString(userRoleKey);
 
   Future<void> setUserRole({required String userRole}) async {
-    String? currentUserRole = userRole;
+    final currentUserRole = this.userRole;
     await _preferences?.setString(userRoleKey, userRole);
     _notifyChange(currentUserRole, userRole);
   }

@@ -174,33 +174,61 @@ class SpotService {
     String? token,
     BuildContext context, {
     List<File>? images,
+    List<int>? keptImageIds,
   }) async {
     bool tokenExists = _checkTokenExists(token, context);
 
-    if (tokenExists && existingSpot.imageIds!.isNotEmpty) {
-      List<int> existingImageIds = existingSpot.imageIds!;
+    if (tokenExists) {
+      final originalIds = existingSpot.imageIds ?? [];
+      final remaining = keptImageIds ?? originalIds;
+
+      // Delete media items that were removed
+      final removedIds = originalIds
+          .where((id) => !remaining.contains(id))
+          .toList();
+      for (final id in removedIds) {
+        try {
+          await http.delete(
+            Uri.parse('$baseUrl$mediaEndpoint/$id?force=true'),
+            headers: {'Authorization': 'Bearer $token'},
+          );
+        } catch (e) {
+          debugPrint('Fehler beim Löschen des Mediums $id: $e');
+        }
+      }
+
       List<int> uploadedImageIds = [];
       if (images != null && images.isNotEmpty) {
         showSnackBar(context, 'Bilder werden hochgeladen...', Colors.orange);
         uploadedImageIds = await uploadImagesAndGetIds(images, token!, context);
       }
-      List<int> allImageIds = [...existingImageIds, ...uploadedImageIds];
+      final allImageIds = [...remaining, ...uploadedImageIds];
 
-      spot.acf.image = allImageIds[0].toString();
-      if (allImageIds.length > 1) spot.acf.image2 = allImageIds[1].toString();
-      if (allImageIds.length > 2) spot.acf.image3 = allImageIds[2].toString();
+      spot.acf.image = allImageIds.isNotEmpty
+          ? allImageIds[0].toString()
+          : null;
+      spot.acf.image2 = allImageIds.length > 1
+          ? allImageIds[1].toString()
+          : null;
+      spot.acf.image3 = allImageIds.length > 2
+          ? allImageIds[2].toString()
+          : null;
 
-      if (uploadedImageIds.length != images?.length) {
-        showSnackBar(
-          context,
-          'Nicht alle Bilder konnten hochgeladen werden',
-          Colors.red,
-        );
+      if (images != null && uploadedImageIds.length != images.length) {
+        if (context.mounted) {
+          showSnackBar(
+            context,
+            'Nicht alle Bilder konnten hochgeladen werden',
+            Colors.red,
+          );
+        }
       }
     }
 
     try {
       final url = Uri.parse('$baseUrl$spotsEndpoint/${existingSpot.id}');
+      final requestBody = jsonEncode(spot.toJson());
+      debugPrint('updateSpot body: $requestBody');
       final response = await http.put(
         url,
         headers: {
@@ -208,7 +236,7 @@ class SpotService {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode(spot.toJson()),
+        body: requestBody,
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
         showSnackBar(context, 'Spot erfolgreich aktualisiert!', Colors.green);

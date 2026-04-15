@@ -34,7 +34,7 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with WidgetsBindingObserver {
   final AuthService _authService = AuthService();
   late int _selectedIndex = widget.initialIndex ?? 1;
   bool _wasLoggedIn = false;
@@ -44,8 +44,27 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+    final communityProvider = Provider.of<CommunityProvider>(
+      context,
+      listen: false,
+    );
+    // Map tab → zur aktuellen Position animieren
+    if (_selectedIndex == 0) {
+      spotsProvider.focusUserLocation();
+    }
+    // Community tab → Daten neu laden
+    if (_selectedIndex == 2 && communityProvider.token != null) {
+      communityProvider.load(force: true);
+    }
   }
 
   void switchToMapTab() {
@@ -57,6 +76,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _userPosition = widget.userPosition;
     _autoLogin();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -93,9 +113,14 @@ class _HomeState extends State<Home> {
       _selectedIndex = index;
     });
     if (isLoggedIn && index == 2) {
-      // Community tab — ensure token is synced and data is loaded
+      // Community tab — sync token and force refresh
       final token = Provider.of<SettingsModel>(context, listen: false).token;
-      Provider.of<CommunityProvider>(context, listen: false).setToken(token);
+      final communityProvider = Provider.of<CommunityProvider>(
+        context,
+        listen: false,
+      );
+      communityProvider.setToken(token);
+      communityProvider.load(force: true);
     }
   }
 

@@ -49,12 +49,14 @@ class _MapPagePageState extends State<MapPage> {
   Symbol? _pendingMarker;
   LatLng? _pendingCoords;
   String? _pendingTitle;
+  int _lastFocusCount = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+      _lastFocusCount = spotsProvider.focusUserLocationCount;
       final activeSpot = spotsProvider.activeSpot;
       if (activeSpot == null) {
         _animateToUserPosition(widget.userPosition);
@@ -141,6 +143,16 @@ class _MapPagePageState extends State<MapPage> {
             if (mounted) _handlePendingSpotLocation(pending, spotsProvider);
           });
         }
+        if (spotsProvider.focusUserLocationCount != _lastFocusCount) {
+          _lastFocusCount = spotsProvider.focusUserLocationCount;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _animateToUserPosition(
+                spotsProvider.userPosition ?? widget.userPosition,
+              );
+            }
+          });
+        }
         final sheetOpen = _selectedSpot != null;
         final cardOpen = _pendingCoords != null && !sheetOpen;
         return LayoutBuilder(
@@ -157,6 +169,10 @@ class _MapPagePageState extends State<MapPage> {
                   myLocationEnabled: widget.locationPermissionGiven,
                   myLocationRenderMode: MyLocationRenderMode.normal,
                   attributionButtonMargins: const math.Point(-100, -100),
+                  compassViewMargins: math.Point(
+                    8,
+                    MediaQuery.of(context).padding.top + 8,
+                  ),
                   onMapClick: _onMapClick,
                   onMapCreated: (c) {
                     _controller = c;
@@ -177,15 +193,17 @@ class _MapPagePageState extends State<MapPage> {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: LocationButton(
                           followUserLocation: widget.locationPermissionGiven,
-                          bringCameraToUser: () =>
-                              _animateToUserPosition(widget.userPosition),
+                          bringCameraToUser: () => _animateToUserPosition(
+                            spotsProvider.userPosition ?? widget.userPosition,
+                          ),
                         ),
                       ),
                       if (sheetOpen)
                         _SpotBottomSheet(
                           spot: _selectedSpot!,
                           maxHeight: maxSheetHeight,
-                          userPosition: widget.userPosition,
+                          userPosition:
+                              spotsProvider.userPosition ?? widget.userPosition,
                           isOffline: spotsProvider.isOffline,
                           commentCount: _commentCount,
                           onClose: _closeSheet,
@@ -197,10 +215,7 @@ class _MapPagePageState extends State<MapPage> {
                         ),
                       if (cardOpen)
                         _AddSpotCard(
-                          userRole: Provider.of<SettingsModel>(
-                            context,
-                            listen: false,
-                          ).userRole,
+                          userRole: Provider.of<SettingsModel>(context).userRole,
                           onCancel: _dismissPendingSpot,
                           onConfirm: () {
                             final coords = _pendingCoords!;

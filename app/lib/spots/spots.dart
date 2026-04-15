@@ -40,10 +40,7 @@ class _SpotsState extends State<Spots> {
 
   @override
   Widget build(BuildContext context) {
-    final userRole = Provider.of<SettingsModel>(
-      context,
-      listen: false,
-    ).userRole;
+    final userRole = Provider.of<SettingsModel>(context).userRole;
     final canUserAddSpots = allowedRoles.contains(userRole);
     return Consumer<SpotsProvider>(
       builder: (context, spotsProvider, child) {
@@ -55,9 +52,10 @@ class _SpotsState extends State<Spots> {
                         .where((s) => s.title.toLowerCase().contains(query))
                         .toList())
               ..sort((a, b) {
-                if (widget.userPosition != null) {
-                  final da = calculateDistanceFromSpot(a, widget.userPosition!);
-                  final db = calculateDistanceFromSpot(b, widget.userPosition!);
+                final pos = spotsProvider.userPosition ?? widget.userPosition;
+                if (pos != null) {
+                  final da = calculateDistanceFromSpot(a, pos);
+                  final db = calculateDistanceFromSpot(b, pos);
                   return da.compareTo(db);
                 }
                 return a.title.toLowerCase().compareTo(b.title.toLowerCase());
@@ -69,8 +67,10 @@ class _SpotsState extends State<Spots> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            AddSpots(userPosition: widget.userPosition),
+                        builder: (_) => AddSpots(
+                          userPosition:
+                              spotsProvider.userPosition ?? widget.userPosition,
+                        ),
                       ),
                     );
                   },
@@ -122,7 +122,8 @@ class _SpotsState extends State<Spots> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => AddSpots(
-                          userPosition: widget.userPosition,
+                          userPosition:
+                              spotsProvider.userPosition ?? widget.userPosition,
                           queuedSpot: addSpot,
                           queuedSpotId: queueId,
                         ),
@@ -139,7 +140,8 @@ class _SpotsState extends State<Spots> {
                   MaterialPageRoute(
                     builder: (_) => SpotDetailPage(
                       currentSpot: spot,
-                      userPosition: widget.userPosition,
+                      userPosition:
+                          spotsProvider.userPosition ?? widget.userPosition,
                       locationPermissionGiven: widget.locationPermissionGiven,
                       locationStatus: widget.locationStatus,
                     ),
@@ -158,8 +160,14 @@ class _SpotsState extends State<Spots> {
                               ? Image.network(
                                   spot.thumbnail!,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      _buildImagePlaceholder(),
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: Colors.green.shade100,
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 36,
+                                      color: Colors.green.shade300,
+                                    ),
+                                  ),
                                 )
                               : _buildImagePlaceholder(),
                         ),
@@ -189,10 +197,12 @@ class _SpotsState extends State<Spots> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    if (widget.userPosition != null) ...[
+                                    if ((spotsProvider.userPosition ??
+                                            widget.userPosition) !=
+                                        null) ...[
                                       const SizedBox(width: 8),
                                       Text(
-                                        '${calculateDistanceFromSpot(spot, widget.userPosition!).toStringAsFixed(1)} km',
+                                        '${calculateDistanceFromSpot(spot, (spotsProvider.userPosition ?? widget.userPosition)!).toStringAsFixed(1)} km',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall

@@ -106,17 +106,16 @@ class _SettingsState extends State<Settings> {
 
       if (result.success) {
         // Erfolgreich eingeloggt
-        setState(() {
-          _isLoggedIn = true;
-          _userDisplayName = result.userDisplayName;
-          _userEmail = result.userEmail;
-          _userRole = result.userRole ?? 'unbekannt';
-          _usernameController.clear();
-          _passwordController.clear();
-          _loginExpires = _authService.loginExpirationDate().toIso8601String();
-        });
-
         if (mounted) {
+          setState(() {
+            _isLoggedIn = true;
+            _userDisplayName = result.userDisplayName;
+            _userEmail = result.userEmail;
+            _userRole = result.userRole ?? 'unbekannt';
+            _usernameController.clear();
+            _passwordController.clear();
+            _loginExpires = _authService.loginExpirationDate().toIso8601String();
+          });
           showSnackBar(
             context,
             'Erfolgreich angemeldet als ${result.userDisplayName}!',
@@ -126,18 +125,24 @@ class _SettingsState extends State<Settings> {
         }
       } else {
         // Login fehlgeschlagen
-        setState(() {
-          _errorMessage = result.errorMessage ?? 'Login fehlgeschlagen';
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = result.errorMessage ?? 'Login fehlgeschlagen';
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Unerwarteter Fehler: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Unerwarteter Fehler: $e';
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

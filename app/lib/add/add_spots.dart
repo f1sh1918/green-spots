@@ -11,6 +11,7 @@ import 'package:spots/auth/models/settings.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/models/spot.dart';
 import 'package:spots/spots/services/spot_service.dart';
+import 'package:spots/spots/services/spot_cache.dart';
 import 'package:spots/utils/date_format.dart';
 import 'package:spots/constants/constants.dart';
 import 'package:spots/utils/messenger_utils.dart';
@@ -70,6 +71,11 @@ class _AddSpotsState extends State<AddSpots> {
 
   // Image handling
   final List<File> _selectedImages = [];
+  // Paths of images already saved to permanent draft storage (must not be deleted on back)
+  final Set<String> _persistedImagePaths = {};
+  // Mutable copies of existing spot images (for delete-on-save)
+  late List<String> _existingImageUrls;
+  late List<int> _existingImageIds;
 
   // Form Values
   double _secure = 1.0;
@@ -78,6 +84,23 @@ class _AddSpotsState extends State<AddSpots> {
   bool _fire = false;
   String _waterquality = 'keines';
   bool _isLoading = false;
+
+  // Initial count of existing images for change detection
+  late int _initExistingImageCount;
+
+  // Initial state snapshot for change detection
+  late String _initTitle;
+  late String _initNote;
+  late String _initLat;
+  late String _initLong;
+  late double _initSecure;
+  late int _initSpace;
+  late bool _initSwim;
+  late bool _initFire;
+  late String _initWaterquality;
+  late List<String> _initSpecials;
+  late DateTime _initDate;
+  late int _initImageCount;
 
   @override
   void dispose() {
@@ -95,6 +118,12 @@ class _AddSpotsState extends State<AddSpots> {
   @override
   void initState() {
     super.initState();
+    _existingImageUrls = (widget.existingSpot?.images ?? [])
+        .where((e) => e != null && e.toString().trim().isNotEmpty)
+        .map((e) => e.toString())
+        .toList();
+    _existingImageIds = List<int>.from(widget.existingSpot?.imageIds ?? []);
+    _initExistingImageCount = _existingImageIds.length;
     if (widget.coordinates != null) {
       _latController.text = widget.coordinates!.latitude.toString();
       _longController.text = widget.coordinates!.longitude.toString();
@@ -119,6 +148,17 @@ class _AddSpotsState extends State<AddSpots> {
       if (q.acf.lastvisited.isNotEmpty) {
         _selectedDate = parseDateString(q.acf.lastvisited);
       }
+      if (widget.queuedSpotId != null) {
+        SpotCache.loadQueuedImages(widget.queuedSpotId!).then((files) {
+          if (mounted && files.isNotEmpty) {
+            setState(() {
+              _selectedImages.addAll(files);
+              _persistedImagePaths.addAll(files.map((f) => f.path));
+              _initImageCount = files.length;
+            });
+          }
+        });
+      }
     } else {
       _titleController.text = widget.existingSpot?.title ?? widget.title ?? '';
       _noteController.text = widget.existingSpot?.note ?? '';
@@ -135,6 +175,20 @@ class _AddSpotsState extends State<AddSpots> {
       }
     }
     _lastVisitedController.text = _formatDate(_selectedDate);
+
+    // Snapshot for change detection (images loaded async, handled separately)
+    _initTitle = _titleController.text;
+    _initNote = _noteController.text;
+    _initLat = _latController.text;
+    _initLong = _longController.text;
+    _initSecure = _secure;
+    _initSpace = _space;
+    _initSwim = _swim;
+    _initFire = _fire;
+    _initWaterquality = _waterquality;
+    _initSpecials = List.unmodifiable(_selectedSpecials);
+    _initDate = _selectedDate;
+    _initImageCount = 0; // updated once draft images finish loading
   }
 
   String _formatDate(DateTime date) => DateFormat('dd.MM.yyyy').format(date);
@@ -160,17 +214,28 @@ class _AddSpotsState extends State<AddSpots> {
   }
 
   bool _hasUnsavedChanges() {
-    return _titleController.text.isNotEmpty ||
-        _noteController.text.isNotEmpty ||
-        _latController.text.isNotEmpty ||
-        _longController.text.isNotEmpty ||
-        _selectedImages.isNotEmpty ||
-        _selectedSpecials.isNotEmpty ||
-        _secure != 1.0 ||
-        _space != 1 ||
-        _swim != false ||
-        _fire != false ||
-        _waterquality != 'keines';
+    if (_titleController.text != _initTitle) return true;
+    if (_noteController.text != _initNote) return true;
+    if (_latController.text != _initLat) return true;
+    if (_longController.text != _initLong) return true;
+    if (_secure != _initSecure) return true;
+    if (_space != _initSpace) return true;
+    if (_swim != _initSwim) return true;
+    if (_fire != _initFire) return true;
+    if (_waterquality != _initWaterquality) return true;
+    if (_selectedDate != _initDate) return true;
+    if (_selectedImages.length != _initImageCount) return true;
+    if (_existingImageIds.length != _initExistingImageCount) return true;
+    if (!_listsEqual(_selectedSpecials, _initSpecials)) return true;
+    return false;
+  }
+
+  bool _listsEqual(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   Future<bool> _showExitConfirmDialog() async {
@@ -204,6 +269,13 @@ class _AddSpotsState extends State<AddSpots> {
   Future<void> _handleBackNavigation() async {
     final shouldExit = await _showExitConfirmDialog();
     if (shouldExit && mounted) {
+      for (final file in _selectedImages) {
+        if (!_persistedImagePaths.contains(file.path)) {
+          try {
+            if (await file.exists()) await file.delete();
+          } catch (_) {}
+        }
+      }
       Navigator.of(context).pop();
     }
   }
@@ -330,7 +402,7 @@ class _AddSpotsState extends State<AddSpots> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.existingSpot != null
+          _existingImageIds.isNotEmpty
               ? 'Zusätzliche Bilder'
               : 'Ausgewählte Bilder',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
@@ -385,15 +457,8 @@ class _AddSpotsState extends State<AddSpots> {
     );
   }
 
-  Widget _buildExistingThumbnails(List<dynamic>? images) {
-    if (images == null || images.isEmpty) {
-      return Container();
-    }
-    // Filter null values
-    List<String> imageUrls = images
-        .where((item) => item != null)
-        .toList()
-        .cast<String>();
+  Widget _buildExistingThumbnails({required bool canDelete}) {
+    if (_existingImageUrls.isEmpty) return Container();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -406,7 +471,7 @@ class _AddSpotsState extends State<AddSpots> {
           height: 100,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: imageUrls.length,
+            itemCount: _existingImageUrls.length,
             itemBuilder: (context, index) {
               return Container(
                 margin: const EdgeInsets.only(right: 8),
@@ -415,12 +480,44 @@ class _AddSpotsState extends State<AddSpots> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        imageUrls[index],
+                        _existingImageUrls[index],
                         width: 100,
                         height: 100,
                         fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 100,
+                          height: 100,
+                          color: Colors.green.shade100,
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.green.shade300,
+                          ),
+                        ),
                       ),
                     ),
+                    if (canDelete)
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => setState(() {
+                            _existingImageUrls.removeAt(index);
+                            _existingImageIds.removeAt(index);
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.black,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               );
@@ -464,10 +561,33 @@ class _AddSpotsState extends State<AddSpots> {
             DateTime.now().millisecondsSinceEpoch.toString();
         final spotData = spot.toJson();
         spotData['_queueId'] = queueId;
+
+        List<String> savedPaths = [];
+        if (_selectedImages.isNotEmpty) {
+          savedPaths = await SpotCache.saveQueuedImages(
+            queueId,
+            _selectedImages,
+          );
+          spotData['_imagePaths'] = savedPaths;
+          _persistedImagePaths
+            ..clear()
+            ..addAll(savedPaths);
+        }
+
         if (widget.queuedSpotId != null) {
           await spotsProvider.updateQueuedSpot(widget.queuedSpotId!, spotData);
         } else {
           await spotsProvider.enqueueSpot(spotData);
+        }
+
+        // Nur Temp-Dateien löschen, nicht die gerade gespeicherten Draft-Bilder
+        final savedSet = savedPaths.toSet();
+        for (final file in _selectedImages) {
+          if (!savedSet.contains(file.path)) {
+            try {
+              if (await file.exists()) await file.delete();
+            } catch (_) {}
+          }
         }
 
         setState(() {
@@ -477,9 +597,7 @@ class _AddSpotsState extends State<AddSpots> {
         if (mounted) {
           showSnackBar(
             context,
-            _selectedImages.isNotEmpty
-                ? 'Spot gespeichert (ohne Bilder – du bist offline).'
-                : 'Spot gespeichert – wird übertragen sobald du online bist.',
+            'Spot gespeichert – wird übertragen sobald du online bist.',
             Colors.orange,
             const Duration(seconds: 4),
           );
@@ -496,6 +614,7 @@ class _AddSpotsState extends State<AddSpots> {
               token,
               context,
               images: _selectedImages,
+              keptImageIds: _existingImageIds,
             )
           : await _spotsService.addSpot(
               spot,
@@ -507,6 +626,13 @@ class _AddSpotsState extends State<AddSpots> {
       setState(() {
         _isLoading = false;
       });
+
+      // Temp-Dateien löschen (resized_*.jpg)
+      for (final file in _selectedImages) {
+        try {
+          if (await file.exists()) await file.delete();
+        } catch (_) {}
+      }
 
       if (success) {
         if (mounted) {
@@ -540,8 +666,18 @@ class _AddSpotsState extends State<AddSpots> {
 
   @override
   Widget build(BuildContext context) {
-    final existingSpotImagesCount = widget.existingSpot?.imageIds?.length ?? 0;
-    final totalPicturesCount = existingSpotImagesCount + _selectedImages.length;
+    final isOffline = Provider.of<SpotsProvider>(
+      context,
+      listen: false,
+    ).isOffline;
+    final settings = Provider.of<SettingsModel>(context, listen: false);
+    final canDeleteExisting =
+        !isOffline &&
+        widget.existingSpot != null &&
+        settings.user != null &&
+        settings.user == widget.existingSpot!.author;
+    final totalPicturesCount =
+        _existingImageIds.length + _selectedImages.length;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -715,6 +851,10 @@ class _AddSpotsState extends State<AddSpots> {
                             onPressed: _updateUserPosition,
                             icon: const Icon(Icons.gps_fixed),
                             label: const Text('Aktuelle Position verwenden'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.green,
+                              side: const BorderSide(color: Colors.green),
+                            ),
                           ),
                         ],
                       ),
@@ -750,6 +890,7 @@ class _AddSpotsState extends State<AddSpots> {
                             max: 5.0,
                             divisions: 8,
                             label: securityLabels[_secure.toInt()],
+                            activeColor: Colors.green,
                             onChanged: (value) =>
                                 setState(() => _secure = value),
                           ),
@@ -761,6 +902,7 @@ class _AddSpotsState extends State<AddSpots> {
                             max: 6,
                             divisions: 5,
                             label: _space.toString(),
+                            activeColor: Colors.green,
                             onChanged: (value) =>
                                 setState(() => _space = value.toInt()),
                           ),
@@ -769,12 +911,14 @@ class _AddSpotsState extends State<AddSpots> {
                             contentPadding: EdgeInsets.zero,
                             title: const Text('Baden möglich'),
                             value: _swim,
+                            activeThumbColor: Colors.green,
                             onChanged: (value) => setState(() => _swim = value),
                           ),
                           SwitchListTile(
                             contentPadding: EdgeInsets.zero,
                             title: const Text('Feuer erlaubt'),
                             value: _fire,
+                            activeThumbColor: Colors.green,
                             onChanged: (value) => setState(() => _fire = value),
                           ),
                           const SizedBox(height: 8),
@@ -809,6 +953,7 @@ class _AddSpotsState extends State<AddSpots> {
                             contentPadding: EdgeInsets.zero,
                             title: Text(special),
                             value: _selectedSpecials.contains(special),
+                            activeColor: Colors.green,
                             onChanged: (bool? value) {
                               setState(() {
                                 if (value == true) {
@@ -831,30 +976,7 @@ class _AddSpotsState extends State<AddSpots> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (Provider.of<SpotsProvider>(
-                            context,
-                            listen: false,
-                          ).isOffline)
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.wifi_off,
-                                  size: 16,
-                                  color: Colors.orange.shade700,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Bilder können im Offline-Modus nicht hinzugefügt werden.',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.orange.shade800,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          else ...[
+                          ...[
                             OutlinedButton.icon(
                               key: _imagesSectionKey,
                               onPressed: totalPicturesCount >= 3
@@ -866,11 +988,15 @@ class _AddSpotsState extends State<AddSpots> {
                                     ? 'Maximum erreicht (3/3)'
                                     : 'Bilder hinzufügen ($totalPicturesCount/3)',
                               ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.green,
+                                side: const BorderSide(color: Colors.green),
+                              ),
                             ),
-                            if (widget.existingSpot != null) ...[
+                            if (_existingImageUrls.isNotEmpty) ...[
                               const SizedBox(height: 12),
                               _buildExistingThumbnails(
-                                widget.existingSpot?.images,
+                                canDelete: canDeleteExisting,
                               ),
                             ],
                             if (_selectedImages.isNotEmpty) ...[

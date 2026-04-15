@@ -85,6 +85,12 @@ class _AppState extends State<App> {
               listen: false,
             ).token;
             spotsProvider.setOffline(result.isOffline);
+            if (userPosition != null) {
+              spotsProvider.setUserPosition(userPosition);
+            }
+            if (permissionGiven) {
+              spotsProvider.startLocationTracking();
+            }
             spotsProvider.loadQueue().then((_) {
               if (!result.isOffline &&
                   spotsProvider.queuedSpotsCount > 0 &&
