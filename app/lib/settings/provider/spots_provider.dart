@@ -28,6 +28,7 @@ class SpotsProvider extends ChangeNotifier {
   PendingSpotLocation? _pendingSpotLocation;
   Position? _userPosition;
   StreamSubscription<Position>? _positionSubscription;
+  int _focusUserLocationCount = 0;
 
   List<Spot> get spots => _spots;
   bool get isLoading => _isLoading;
@@ -37,6 +38,12 @@ class SpotsProvider extends ChangeNotifier {
   int get queuedSpotsCount => _queuedSpots.length;
   PendingSpotLocation? get pendingSpotLocation => _pendingSpotLocation;
   Position? get userPosition => _userPosition;
+  int get focusUserLocationCount => _focusUserLocationCount;
+
+  void focusUserLocation() {
+    _focusUserLocationCount++;
+    notifyListeners();
+  }
 
   void setUserPosition(Position? position) {
     _userPosition = position;

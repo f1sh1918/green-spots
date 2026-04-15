@@ -49,12 +49,14 @@ class _MapPagePageState extends State<MapPage> {
   Symbol? _pendingMarker;
   LatLng? _pendingCoords;
   String? _pendingTitle;
+  int _lastFocusCount = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
+      _lastFocusCount = spotsProvider.focusUserLocationCount;
       final activeSpot = spotsProvider.activeSpot;
       if (activeSpot == null) {
         _animateToUserPosition(widget.userPosition);
@@ -139,6 +141,16 @@ class _MapPagePageState extends State<MapPage> {
         if (pending != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) _handlePendingSpotLocation(pending, spotsProvider);
+          });
+        }
+        if (spotsProvider.focusUserLocationCount != _lastFocusCount) {
+          _lastFocusCount = spotsProvider.focusUserLocationCount;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _animateToUserPosition(
+                spotsProvider.userPosition ?? widget.userPosition,
+              );
+            }
           });
         }
         final sheetOpen = _selectedSpot != null;
