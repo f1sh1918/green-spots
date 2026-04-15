@@ -42,6 +42,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
       gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
+        colors: [Color(0xFF4E342E), Color(0xFF8D6E63)],
+      ),
+      icon: Icons.delete_outline,
+      title: 'Leave no trace',
+      body:
+          'Hinterlasse keinen Müll und nimm alles wieder mit. Respektiere die Natur, halte Abstände zu Gewässern und Wildtieren und vermeide Lärm. Nur so bleiben diese Plätze für alle erhalten.',
+    ),
+    _SlideData(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
         colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
       ),
       icon: Icons.groups,

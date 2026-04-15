@@ -157,6 +157,10 @@ class _MapPagePageState extends State<MapPage> {
                   myLocationEnabled: widget.locationPermissionGiven,
                   myLocationRenderMode: MyLocationRenderMode.normal,
                   attributionButtonMargins: const math.Point(-100, -100),
+                  compassViewMargins: math.Point(
+                    8,
+                    MediaQuery.of(context).padding.top + 8,
+                  ),
                   onMapClick: _onMapClick,
                   onMapCreated: (c) {
                     _controller = c;

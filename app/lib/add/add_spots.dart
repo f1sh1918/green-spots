@@ -330,7 +330,11 @@ class _AddSpotsState extends State<AddSpots> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.existingSpot != null
+          widget.existingSpot != null &&
+                  (widget.existingSpot!.images
+                          ?.where((e) => e != null)
+                          .isNotEmpty ??
+                      false)
               ? 'Zusätzliche Bilder'
               : 'Ausgewählte Bilder',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
@@ -394,6 +398,7 @@ class _AddSpotsState extends State<AddSpots> {
         .where((item) => item != null)
         .toList()
         .cast<String>();
+    if (imageUrls.isEmpty) return Container();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -715,6 +720,10 @@ class _AddSpotsState extends State<AddSpots> {
                             onPressed: _updateUserPosition,
                             icon: const Icon(Icons.gps_fixed),
                             label: const Text('Aktuelle Position verwenden'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.green,
+                              side: const BorderSide(color: Colors.green),
+                            ),
                           ),
                         ],
                       ),
@@ -750,6 +759,7 @@ class _AddSpotsState extends State<AddSpots> {
                             max: 5.0,
                             divisions: 8,
                             label: securityLabels[_secure.toInt()],
+                            activeColor: Colors.green,
                             onChanged: (value) =>
                                 setState(() => _secure = value),
                           ),
@@ -761,6 +771,7 @@ class _AddSpotsState extends State<AddSpots> {
                             max: 6,
                             divisions: 5,
                             label: _space.toString(),
+                            activeColor: Colors.green,
                             onChanged: (value) =>
                                 setState(() => _space = value.toInt()),
                           ),
@@ -769,12 +780,14 @@ class _AddSpotsState extends State<AddSpots> {
                             contentPadding: EdgeInsets.zero,
                             title: const Text('Baden möglich'),
                             value: _swim,
+                            activeThumbColor: Colors.green,
                             onChanged: (value) => setState(() => _swim = value),
                           ),
                           SwitchListTile(
                             contentPadding: EdgeInsets.zero,
                             title: const Text('Feuer erlaubt'),
                             value: _fire,
+                            activeThumbColor: Colors.green,
                             onChanged: (value) => setState(() => _fire = value),
                           ),
                           const SizedBox(height: 8),
@@ -809,6 +822,7 @@ class _AddSpotsState extends State<AddSpots> {
                             contentPadding: EdgeInsets.zero,
                             title: Text(special),
                             value: _selectedSpecials.contains(special),
+                            activeColor: Colors.green,
                             onChanged: (bool? value) {
                               setState(() {
                                 if (value == true) {
@@ -866,8 +880,13 @@ class _AddSpotsState extends State<AddSpots> {
                                     ? 'Maximum erreicht (3/3)'
                                     : 'Bilder hinzufügen ($totalPicturesCount/3)',
                               ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.green,
+                                side: const BorderSide(color: Colors.green),
+                              ),
                             ),
-                            if (widget.existingSpot != null) ...[
+                            if (widget.existingSpot?.images?.isNotEmpty ??
+                                false) ...[
                               const SizedBox(height: 12),
                               _buildExistingThumbnails(
                                 widget.existingSpot?.images,
