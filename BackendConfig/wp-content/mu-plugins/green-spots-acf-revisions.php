@@ -6,6 +6,12 @@
  * Problem: wp_save_post_revision() wird aufgerufen BEVOR ACF die neuen Werte via REST speichert.
  * Lösung:  Nach dem ACF-Save (rest_after_insert / acf/save_post) erneut wp_save_post_revision()
  *          aufrufen und danach die neuste Revision mit den aktuellen ACF-Werten synchronisieren.
+ *
+ * Hinweis zur Diff-Anzeige: Wir benutzen NICHT _wp_post_revision_fields, weil WordPress die
+ * dort eingetragenen Felder in wp_save_post_revision_post_has_changed() über $post->to_array()
+ * liest und ACF dabei Array-Werte als dynamische Properties am WP_Post-Objekt setzen kann.
+ * normalize_whitespace() erwartet einen String → TypeError / Fatal. Stattdessen nutzen wir
+ * wp_get_revision_ui_diff, das direkt aus post meta liest.
  */
 
 defined('ABSPATH') || exit;
@@ -27,25 +33,29 @@ const GS_ACF_FIELDS = [
 ];
 
 // ---------------------------------------------------------------------------
-// 1. Revisionsvergleich: ACF-Felder einblenden
+// 1. Revisionsvergleich: ACF-Felder im Diff-UI anzeigen
+//    Liest direkt aus post meta der Revisionen – kein to_array(), kein Crash.
 // ---------------------------------------------------------------------------
 
-add_filter('_wp_post_revision_fields', function (array $fields): array {
-    foreach (GS_ACF_FIELDS as $key => $label) {
-        $fields[$key] = $label;
-    }
-    return $fields;
-});
+add_filter('wp_get_revision_ui_diff', function (array $return, WP_Post $compare_from, WP_Post $compare_to): array {
+    foreach (GS_ACF_FIELDS as $field_key => $label) {
+        $from_raw = get_post_meta($compare_from->ID, $field_key, true);
+        $to_raw   = get_post_meta($compare_to->ID,   $field_key, true);
 
-foreach (array_keys(GS_ACF_FIELDS) as $field_key) {
-    add_filter("_wp_post_revision_field_{$field_key}", function ($value, string $field, WP_Post $post) {
-        $raw = get_post_meta($post->ID, $field, true);
-        if (is_array($raw)) {
-            return implode(', ', $raw);
+        $from = is_array($from_raw) ? implode(', ', $from_raw) : (($from_raw !== '' && $from_raw !== false) ? (string) $from_raw : '');
+        $to   = is_array($to_raw)   ? implode(', ', $to_raw)   : (($to_raw   !== '' && $to_raw   !== false) ? (string) $to_raw   : '');
+
+        $field_diff = wp_text_diff($from, $to);
+        if ($field_diff) {
+            $return[] = [
+                'id'   => 'acf_' . $field_key,
+                'name' => esc_html($label),
+                'diff' => $field_diff,
+            ];
         }
-        return ($raw !== '' && $raw !== false) ? (string) $raw : '—';
-    }, 10, 3);
-}
+    }
+    return $return;
+}, 10, 3);
 
 // ---------------------------------------------------------------------------
 // 2. Revision erzwingen wenn ACF-Felder sich geändert haben
@@ -96,9 +106,7 @@ function gs_sync_acf_to_latest_revision($post_id) {
 // ---------------------------------------------------------------------------
 
 add_action('rest_after_insert_spot', function (WP_Post $post) {
-    // ACF hat jetzt gespeichert → Revision erstellen falls ACF sich geändert hat
     wp_save_post_revision($post->ID);
-    // Neuste Revision mit den gerade gespeicherten ACF-Werten aktualisieren
     gs_sync_acf_to_latest_revision($post->ID);
 }, 20);
 

@@ -64,7 +64,7 @@ class SpotsSubtitle extends StatelessWidget {
         icon: Icons.water_drop,
         value: spot.water,
         label: showLabel ? 'Wasser:' : null,
-        isNegative: spot.water == 'keines',
+        isNegative: spot.water == 'keine',
       ),
       if (spot.specials != null && spot.specials!.isNotEmpty) ...[
         SpotsSubtitleItem(
