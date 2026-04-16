@@ -63,7 +63,7 @@ class SpotsSubtitle extends StatelessWidget {
         color: Colors.blue,
         icon: Icons.water_drop,
         value: spot.water,
-        label: showLabel ? 'Wasser:' : null,
+        label: showLabel ? 'Wasserqualität:' : null,
         isNegative: spot.water == 'keine',
       ),
       if (spot.specials != null && spot.specials!.isNotEmpty) ...[
