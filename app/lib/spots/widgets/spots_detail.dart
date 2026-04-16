@@ -92,14 +92,15 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
           child: Scaffold(
             appBar: AppBar(
               actions: [
-                IconButton(
-                  onPressed: () => _openEditPage(
-                    widget.currentSpot,
-                    widget.userPosition,
-                    context,
+                if (!spotsProvider.isOffline)
+                  IconButton(
+                    onPressed: () => _openEditPage(
+                      widget.currentSpot,
+                      widget.userPosition,
+                      context,
+                    ),
+                    icon: Icon(Icons.edit),
                   ),
-                  icon: Icon(Icons.edit),
-                ),
                 if (token != null && !spotsProvider.isOffline) ...[
                   IconButton(
                     onPressed: () => _deleteSpot(
