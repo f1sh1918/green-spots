@@ -46,6 +46,14 @@
       font-size: 10px;
       opacity: 0.7;
     }
+
+    /* Hide built-in MapLibre controls — the app has its own */
+    .maplibregl-ctrl-geolocate,
+    .maplibregl-ctrl-zoom-in,
+    .maplibregl-ctrl-zoom-out,
+    .maplibregl-ctrl-compass {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
