@@ -21,3 +21,8 @@ samples, guidance on mobile development, and a full API reference.
 fvm flutter build apk --release
 ```
 
+## Build web / deploy
+```bash
+bash deploy.sh
+```
+
