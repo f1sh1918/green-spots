@@ -1,0 +1,4 @@
+<IfModule mod_headers.c>
+    SetEnvIf Origin "https://f1sh1918.github.io" CORS_ALLOW=1
+    Header set Access-Control-Allow-Origin "https://f1sh1918.github.io" env=CORS_ALLOW
+</IfModule>
