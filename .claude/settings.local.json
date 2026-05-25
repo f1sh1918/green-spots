@@ -37,7 +37,13 @@
       "Bash(flutter logs:*)",
       "Bash(/Users/afischer/fvm/versions/stable/bin/flutter logs:*)",
       "Bash(/Users/afischer/fvm/versions/stable/bin/flutter devices:*)",
-      "Bash(~/.fvm/versions/stable/bin/flutter analyze:*)"
+      "Bash(~/.fvm/versions/stable/bin/flutter analyze:*)",
+      "Bash(find /Users/afischer/projects/green-spots -type f -name .env* -o -name *secret* -o -name *credentials* -o -name *config*)",
+      "Bash(find /Users/afischer/projects/green-spots -type f \\\\\\(-name *.php -o -name *.py -o -name *.js -o -name *.env \\\\\\))",
+      "Bash(find /Users/afischer/projects/green-spots -type f \\\\\\(-name *.json \\\\\\) ! -path */node_modules/* ! -path */Pods/* ! -path */build/*)",
+      "Bash(find /Users/afischer/projects/green-spots -type f -name *.example -o -name *.sample -o -name *template*)",
+      "Bash(find /Users/afischer/projects/green-spots -name .* -type f)",
+      "Bash(ls:*)"
     ]
   }
 }

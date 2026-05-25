@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,7 +22,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   UserProfile? _profile;
   bool _loadingProfile = true;
   bool _saving = false;
-  File? _pendingImage;
+  XFile? _pendingImage;
+  Uint8List? _pendingImageBytes;
   String? _currentImageUrl;
 
   @override
@@ -68,7 +69,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       imageQuality: 85,
     );
     if (picked != null && mounted) {
-      setState(() => _pendingImage = File(picked.path));
+      final bytes = await picked.readAsBytes();
+      setState(() {
+        _pendingImage = picked;
+        _pendingImageBytes = bytes;
+      });
     }
   }
 
@@ -140,8 +145,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                         CircleAvatar(
                           radius: 52,
                           backgroundColor: Colors.green.shade100,
-                          backgroundImage: _pendingImage != null
-                              ? FileImage(_pendingImage!)
+                          backgroundImage: _pendingImageBytes != null
+                              ? MemoryImage(_pendingImageBytes!)
                               : (_currentImageUrl != null
                                         ? NetworkImage(_currentImageUrl!)
                                         : null)

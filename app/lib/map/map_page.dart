@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -50,6 +51,7 @@ class _MapPagePageState extends State<MapPage> {
   LatLng? _pendingCoords;
   String? _pendingTitle;
   int _lastFocusCount = 0;
+  Position? _webUserPosition;
 
   @override
   void initState() {
@@ -151,6 +153,15 @@ class _MapPagePageState extends State<MapPage> {
               );
             }
           });
+        }
+        if (kIsWeb) {
+          final pos = spotsProvider.userPosition ?? widget.userPosition;
+          if (pos != null && pos != _webUserPosition && _controller != null) {
+            _webUserPosition = pos;
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _updateWebUserLocation(pos),
+            );
+          }
         }
         final sheetOpen = _selectedSpot != null;
         final cardOpen = _pendingCoords != null && !sheetOpen;
@@ -318,9 +329,66 @@ class _MapPagePageState extends State<MapPage> {
         });
   }
 
+  Map<String, dynamic> _userLocationGeoJson(Position? pos) {
+    return {
+      'type': 'FeatureCollection',
+      'features': pos == null
+          ? []
+          : [
+              {
+                'type': 'Feature',
+                'geometry': {
+                  'type': 'Point',
+                  'coordinates': [pos.longitude, pos.latitude],
+                },
+                'properties': {},
+              },
+            ],
+    };
+  }
+
+  Future<void> _updateWebUserLocation(Position pos) async {
+    if (_controller == null) return;
+    await _controller!.setGeoJsonSource(
+      'user-location-source',
+      _userLocationGeoJson(pos),
+    );
+  }
+
   Future<void> _addGeoJsonMarkers() async {
     final spots = Provider.of<SpotsProvider>(context, listen: false).spots;
     final geoJsonData = spotsToGeoJson(spots);
+
+    if (kIsWeb) {
+      final initialPos =
+          Provider.of<SpotsProvider>(context, listen: false).userPosition ??
+          widget.userPosition;
+      await _controller!.addSource(
+        'user-location-source',
+        GeojsonSourceProperties(data: _userLocationGeoJson(initialPos)),
+      );
+      await _controller!.addLayer(
+        'user-location-source',
+        'user-location-halo',
+        CircleLayerProperties(
+          circleRadius: 14,
+          circleColor: '#4dabf7',
+          circleOpacity: 0.25,
+          circleStrokeWidth: 0,
+        ),
+      );
+      await _controller!.addLayer(
+        'user-location-source',
+        'user-location-dot',
+        CircleLayerProperties(
+          circleRadius: 7,
+          circleColor: '#1971c2',
+          circleStrokeWidth: 2,
+          circleStrokeColor: '#ffffff',
+        ),
+      );
+      if (initialPos != null) _webUserPosition = initialPos;
+    }
 
     await _controller!.addSource(
       'markers-source',

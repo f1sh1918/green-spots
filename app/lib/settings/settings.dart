@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -204,7 +205,7 @@ class _SettingsState extends State<Settings> {
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        if (!spotsProvider.isOffline)
+                                        if (!kIsWeb && !spotsProvider.isOffline)
                                           OutlinedButtonSpinner(
                                             isLoading: _isCheckingUpdates,
                                             onPressed: () =>

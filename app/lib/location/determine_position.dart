@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -86,7 +87,10 @@ Future<RequestedPosition> determinePosition(
     return RequestedPosition(null, permission);
   }
 
-  var position = await Geolocator.getLastKnownPosition();
+  Position? position;
+  if (!kIsWeb) {
+    position = await Geolocator.getLastKnownPosition();
+  }
   position ??= await Geolocator.getCurrentPosition();
 
   return RequestedPosition(position, permission);

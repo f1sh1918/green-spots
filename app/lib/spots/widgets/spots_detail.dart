@@ -240,12 +240,13 @@ class _SpotDetailPageState extends State<SpotDetailPage> {
                                         ),
                                         const SizedBox(height: 10),
                                       ],
-                                      _MetaRow(
-                                        icon: Icons.person_outline,
-                                        color: Colors.green,
-                                        label: 'Erstellt von',
-                                        value: widget.currentSpot.author,
-                                      ),
+                                      if (token != null)
+                                        _MetaRow(
+                                          icon: Icons.person_outline,
+                                          color: Colors.green,
+                                          label: 'Erstellt von',
+                                          value: widget.currentSpot.author,
+                                        ),
                                     ],
                                   ),
                                 ),

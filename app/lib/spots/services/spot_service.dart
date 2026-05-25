@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:spots/add/models/add_spot.dart';
 import 'package:spots/constants/api.dart';
 import 'package:spots/spots/models/spot.dart';
@@ -11,13 +11,13 @@ import 'package:spots/utils/messenger_utils.dart';
 
 class SpotService {
   Future<List<int>> uploadImagesAndGetIds(
-    List<File> images,
+    List<XFile> images,
     String token,
     BuildContext context,
   ) async {
     List<int> imageIds = [];
 
-    for (File image in images) {
+    for (XFile image in images) {
       try {
         var request = http.MultipartRequest(
           'POST',
@@ -26,10 +26,11 @@ class SpotService {
 
         request.headers['Authorization'] = 'Bearer $token';
 
+        final bytes = await image.readAsBytes();
         request.files.add(
-          await http.MultipartFile.fromPath(
+          http.MultipartFile.fromBytes(
             'file',
-            image.path,
+            bytes,
             filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
           ),
         );
@@ -85,7 +86,7 @@ class SpotService {
     AddSpot spot,
     String? token,
     BuildContext context, {
-    List<File>? images,
+    List<XFile>? images,
   }) async {
     bool tokenExists = _checkTokenExists(token, context);
 
@@ -175,7 +176,7 @@ class SpotService {
     AddSpot spot,
     String? token,
     BuildContext context, {
-    List<File>? images,
+    List<XFile>? images,
     List<int>? keptImageIds,
   }) async {
     bool tokenExists = _checkTokenExists(token, context);

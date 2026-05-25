@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:spots/constants/api.dart';
 import 'package:spots/user/user_profile_model.dart';
 
@@ -61,16 +61,17 @@ class UserProfileService {
   }
 
   /// Uploads [imageFile] to the WP media library and returns the full URL.
-  Future<String> uploadProfileImage(File imageFile, String token) async {
+  Future<String> uploadProfileImage(XFile imageFile, String token) async {
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl$mediaEndpoint'),
     );
     request.headers['Authorization'] = 'Bearer $token';
+    final bytes = await imageFile.readAsBytes();
     request.files.add(
-      await http.MultipartFile.fromPath(
+      http.MultipartFile.fromBytes(
         'file',
-        imageFile.path,
+        bytes,
         filename: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
       ),
     );

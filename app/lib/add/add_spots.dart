@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -6,7 +10,6 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
-import 'dart:io';
 import 'package:spots/auth/models/settings.dart';
 import 'package:spots/settings/provider/spots_provider.dart';
 import 'package:spots/spots/models/spot.dart';
@@ -70,7 +73,8 @@ class _AddSpotsState extends State<AddSpots> {
   final List<String> _selectedSpecials = [];
 
   // Image handling
-  final List<File> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
+  final List<Uint8List> _selectedImageBytes = [];
   // Paths of images already saved to permanent draft storage (must not be deleted on back)
   final Set<String> _persistedImagePaths = {};
   // Mutable copies of existing spot images (for delete-on-save)
@@ -149,13 +153,20 @@ class _AddSpotsState extends State<AddSpots> {
         _selectedDate = parseDateString(q.acf.lastvisited);
       }
       if (widget.queuedSpotId != null) {
-        SpotCache.loadQueuedImages(widget.queuedSpotId!).then((files) {
+        SpotCache.loadQueuedImages(widget.queuedSpotId!).then((files) async {
           if (mounted && files.isNotEmpty) {
-            setState(() {
-              _selectedImages.addAll(files);
-              _persistedImagePaths.addAll(files.map((f) => f.path));
-              _initImageCount = files.length;
-            });
+            final xfiles = files.map((f) => XFile(f.path)).toList();
+            final bytesList = await Future.wait(
+              xfiles.map((x) => x.readAsBytes()),
+            );
+            if (mounted) {
+              setState(() {
+                _selectedImages.addAll(xfiles);
+                _selectedImageBytes.addAll(bytesList);
+                _persistedImagePaths.addAll(files.map((f) => f.path));
+                _initImageCount = files.length;
+              });
+            }
           }
         });
       }
@@ -269,26 +280,28 @@ class _AddSpotsState extends State<AddSpots> {
   Future<void> _handleBackNavigation() async {
     final shouldExit = await _showExitConfirmDialog();
     if (shouldExit && mounted) {
-      for (final file in _selectedImages) {
-        if (!_persistedImagePaths.contains(file.path)) {
-          try {
-            if (await file.exists()) await file.delete();
-          } catch (_) {}
+      if (!kIsWeb) {
+        for (final file in _selectedImages) {
+          if (!_persistedImagePaths.contains(file.path)) {
+            try {
+              final f = File(file.path);
+              if (await f.exists()) await f.delete();
+            } catch (_) {}
+          }
         }
       }
       Navigator.of(context).pop();
     }
   }
 
-  Future<File?> _resizeImage(File imageFile) async {
+  Future<XFile?> _resizeImage(XFile xfile) async {
+    if (kIsWeb) return null; // pickImage already applies quality/size on web
     try {
-      // Bild laden
-      final Uint8List imageBytes = await imageFile.readAsBytes();
+      final Uint8List imageBytes = await xfile.readAsBytes();
       final img.Image? originalImage = img.decodeImage(imageBytes);
 
       if (originalImage == null) return null;
 
-      // Größe berechnen (max 1024 Breite, Seitenverhältnis beibehalten)
       int newWidth = originalImage.width;
       int newHeight = originalImage.height;
 
@@ -297,23 +310,21 @@ class _AddSpotsState extends State<AddSpots> {
         newHeight = (originalImage.height * 1024 / originalImage.width).round();
       }
 
-      // Bild verkleinern
       final img.Image resizedImage = img.copyResize(
         originalImage,
         width: newWidth,
         height: newHeight,
       );
 
-      // Als JPEG speichern
       final List<int> resizedBytes = img.encodeJpg(resizedImage, quality: 85);
 
-      // Temporäre Datei erstellen
       final String fileName =
           'resized_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final File resizedFile = File('${imageFile.parent.path}/$fileName');
+      final File original = File(xfile.path);
+      final File resizedFile = File('${original.parent.path}/$fileName');
       await resizedFile.writeAsBytes(resizedBytes);
 
-      return resizedFile;
+      return XFile(resizedFile.path);
     } catch (e) {
       debugPrint('Fehler beim Verkleinern des Bildes: $e');
       return null;
@@ -321,6 +332,10 @@ class _AddSpotsState extends State<AddSpots> {
   }
 
   Future<void> _pickImages() async {
+    if (kIsWeb) {
+      _getImage(ImageSource.gallery);
+      return;
+    }
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -359,20 +374,15 @@ class _AddSpotsState extends State<AddSpots> {
       );
 
       if (pickedFile != null) {
-        File imageFile = File(pickedFile.path);
+        XFile? resizedImage = await _resizeImage(pickedFile);
+        final XFile imageToAdd = resizedImage ?? pickedFile;
+        final Uint8List bytes = await imageToAdd.readAsBytes();
 
-        // Bild verkleinern
-        File? resizedImage = await _resizeImage(imageFile);
-        if (resizedImage != null) {
-          setState(() {
-            _selectedImages.add(resizedImage);
-          });
-        } else {
-          // Fallback: Originalbild verwenden
-          setState(() {
-            _selectedImages.add(imageFile);
-          });
-        }
+        setState(() {
+          _selectedImages.add(imageToAdd);
+          _selectedImageBytes.add(bytes);
+        });
+
         Future.delayed(const Duration(milliseconds: 300), () {
           if (_imagesSectionKey.currentContext != null) {
             Scrollable.ensureVisible(
@@ -390,6 +400,7 @@ class _AddSpotsState extends State<AddSpots> {
   void _removeImage(int index) {
     setState(() {
       _selectedImages.removeAt(index);
+      _selectedImageBytes.removeAt(index);
     });
   }
 
@@ -420,8 +431,8 @@ class _AddSpotsState extends State<AddSpots> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        _selectedImages[index],
+                      child: Image.memory(
+                        _selectedImageBytes[index],
                         width: 100,
                         height: 100,
                         fit: BoxFit.cover,
@@ -555,7 +566,7 @@ class _AddSpotsState extends State<AddSpots> {
       final spotsProvider = Provider.of<SpotsProvider>(context, listen: false);
 
       // If offline, queue (or update queued) spot instead of submitting
-      if (spotsProvider.isOffline) {
+      if (spotsProvider.isOffline && !kIsWeb) {
         final queueId =
             widget.queuedSpotId ??
             DateTime.now().millisecondsSinceEpoch.toString();
@@ -564,10 +575,8 @@ class _AddSpotsState extends State<AddSpots> {
 
         List<String> savedPaths = [];
         if (_selectedImages.isNotEmpty) {
-          savedPaths = await SpotCache.saveQueuedImages(
-            queueId,
-            _selectedImages,
-          );
+          final files = _selectedImages.map((x) => File(x.path)).toList();
+          savedPaths = await SpotCache.saveQueuedImages(queueId, files);
           spotData['_imagePaths'] = savedPaths;
           _persistedImagePaths
             ..clear()
@@ -582,10 +591,11 @@ class _AddSpotsState extends State<AddSpots> {
 
         // Nur Temp-Dateien löschen, nicht die gerade gespeicherten Draft-Bilder
         final savedSet = savedPaths.toSet();
-        for (final file in _selectedImages) {
-          if (!savedSet.contains(file.path)) {
+        for (final xfile in _selectedImages) {
+          if (!savedSet.contains(xfile.path)) {
             try {
-              if (await file.exists()) await file.delete();
+              final f = File(xfile.path);
+              if (await f.exists()) await f.delete();
             } catch (_) {}
           }
         }
@@ -628,10 +638,13 @@ class _AddSpotsState extends State<AddSpots> {
       });
 
       // Temp-Dateien löschen (resized_*.jpg)
-      for (final file in _selectedImages) {
-        try {
-          if (await file.exists()) await file.delete();
-        } catch (_) {}
+      if (!kIsWeb) {
+        for (final xfile in _selectedImages) {
+          try {
+            final f = File(xfile.path);
+            if (await f.exists()) await f.delete();
+          } catch (_) {}
+        }
       }
 
       if (success) {
@@ -923,7 +936,7 @@ class _AddSpotsState extends State<AddSpots> {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            initialValue: _waterquality,
+                            value: _waterquality,
                             decoration: const InputDecoration(
                               labelText: 'Wasserqualität',
                               border: OutlineInputBorder(),

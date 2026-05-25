@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:spots/add/models/add_spot.dart';
 import 'package:spots/spots/models/spot.dart';
@@ -143,8 +144,8 @@ class SpotsProvider extends ChangeNotifier {
         try {
           final spot = AddSpot.fromJson(spotData);
           final images = imagePaths
-              .map((p) => File(p))
-              .where((f) => f.existsSync())
+              .map((p) => XFile(p))
+              .where((x) => File(x.path).existsSync())
               .toList();
           final success = await _service.addSpot(
             spot,

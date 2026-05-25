@@ -23,13 +23,13 @@
 define( 'DB_NAME', 'dbs14992941' );
 
 /** Database username */
-define( 'DB_USER', 'dbu1201925' );
+define( 'DB_USER', 'db user here' );
 
 /** Database password */
 define( 'DB_PASSWORD', 'db_password_here' );
 
 /** Database hostname */
-define( 'DB_HOST', 'db5019055899.hosting-data.io' );
+define( 'DB_HOST', 'db host here' );
 
 /** Database charset to use in creating database tables. */
 define( 'DB_CHARSET', 'utf8' );
