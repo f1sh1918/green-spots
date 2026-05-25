@@ -1,0 +1,30 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: app
+
+      - name: Build web
+        run: flutter build web --release --web-renderer canvaskit --base-href /green-spots/
+        working-directory: app
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: app/build/web
