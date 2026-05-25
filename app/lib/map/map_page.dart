@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
@@ -201,10 +202,12 @@ class _MapPagePageState extends State<MapPage> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: LocationButton(
-                          followUserLocation: widget.locationPermissionGiven,
-                          bringCameraToUser: () => _animateToUserPosition(
-                            spotsProvider.userPosition ?? widget.userPosition,
+                        child: PointerInterceptor(
+                          child: LocationButton(
+                            followUserLocation: widget.locationPermissionGiven,
+                            bringCameraToUser: () => _animateToUserPosition(
+                              spotsProvider.userPosition ?? widget.userPosition,
+                            ),
                           ),
                         ),
                       ),
