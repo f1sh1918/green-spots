@@ -128,13 +128,15 @@ class SpotService {
         }
         return true;
       } else {
-        if (context.mounted) {
-          final errorMessage =
-              jsonDecode(response.body)['message'] ??
-              'Fehler beim Hinzufügen des Spots';
-          showSnackBar(context, errorMessage, Colors.red);
-        }
         debugPrint('Response: ${response.body}');
+        if (context.mounted) {
+          showSnackBar(
+            context,
+            _spotErrorMessage(response.statusCode, response.body),
+            Colors.red,
+            const Duration(seconds: 6),
+          );
+        }
         return false;
       }
     } catch (e) {
@@ -246,11 +248,14 @@ class SpotService {
           'Fehler beim Aktualisieren des Spots: ${response.statusCode}',
         );
         debugPrint('Response: ${response.body}');
-        showSnackBar(
-          context,
-          'Fehler beim Aktualisieren des Spots!',
-          Colors.red,
-        );
+        if (context.mounted) {
+          showSnackBar(
+            context,
+            _spotErrorMessage(response.statusCode, response.body),
+            Colors.red,
+            const Duration(seconds: 6),
+          );
+        }
         return false;
       }
     } catch (e) {
@@ -294,6 +299,26 @@ class SpotService {
       );
       return false;
     }
+  }
+
+  String _spotErrorMessage(int statusCode, String responseBody) {
+    const errorMessage =
+        "Keine ausreichende Berechtigung. Gehe auf Einstellungen und prüfe, ob du die Rolle Editor hast. Falls ja kann ein erneutes ab- und anmelden helfen.";
+    if (statusCode == 401 || statusCode == 403) {
+      return errorMessage;
+    }
+    try {
+      final body = jsonDecode(responseBody) as Map<String, dynamic>;
+      final params = body['data']?['params'];
+      if (params is Map && params.containsKey('acf')) {
+        return errorMessage;
+      }
+      final code = body['code'] as String? ?? '';
+      if (code.contains('forbidden') || code.contains('unauthorized')) {
+        return errorMessage;
+      }
+    } catch (_) {}
+    return 'Fehler beim Speichern des Spots.';
   }
 
   bool _checkTokenExists(String? token, BuildContext context) {

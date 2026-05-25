@@ -56,7 +56,7 @@ class _AddSpotsState extends State<AddSpots> {
   final _lastVisitedController = TextEditingController();
 
   final List<String> _waterQualityOptions = [
-    'keines',
+    'keine',
     'stehend',
     'fließend',
     'Trinkwasser',
